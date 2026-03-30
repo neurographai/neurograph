@@ -135,16 +135,18 @@ impl LlmClient for OpenAiClient {
             .and_then(|c| c.message.content.clone())
             .unwrap_or_default();
 
-        let input_tokens = response.usage.as_ref().map(|u| u.prompt_tokens).unwrap_or(0);
+        let input_tokens = response
+            .usage
+            .as_ref()
+            .map(|u| u.prompt_tokens)
+            .unwrap_or(0);
         let output_tokens = response
             .usage
             .as_ref()
             .map(|u| u.completion_tokens)
             .unwrap_or(0);
 
-        let cost_usd = self
-            .config
-            .calculate_cost(input_tokens, output_tokens);
+        let cost_usd = self.config.calculate_cost(input_tokens, output_tokens);
 
         Ok(CompletionResponse {
             content,

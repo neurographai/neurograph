@@ -120,9 +120,7 @@ impl SchemaValidator {
 
         // Check relationship type against ontology
         let valid_rel_types = &self.ontology.relationship_types;
-        if !valid_rel_types.is_empty()
-            && !valid_rel_types.contains_key(&rel.relationship_type)
-        {
+        if !valid_rel_types.is_empty() && !valid_rel_types.contains_key(&rel.relationship_type) {
             return ValidationResult::pass().with_warning(format!(
                 "Relationship type '{}' not in ontology, will be auto-registered",
                 rel.relationship_type

@@ -3,8 +3,11 @@
 
 //! Tiered memory system: L1–L4 hierarchy with automatic promotion/demotion.
 
-pub mod tiered;
 pub mod evolution;
+pub mod tiered;
 
-pub use tiered::{TieredMemory, ConsolidationConfig, PromotionPolicy, TieredStats, Episode, LearnedRule, QueryContext};
-pub use evolution::{MemoryEvolution, DecayPolicy, RetentionPolicy, EvolutionResult};
+pub use evolution::{DecayPolicy, EvolutionResult, MemoryEvolution, RetentionPolicy};
+pub use tiered::{
+    ConsolidationConfig, Episode, LearnedRule, PromotionPolicy, QueryContext, TieredMemory,
+    TieredStats,
+};

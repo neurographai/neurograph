@@ -106,12 +106,7 @@ impl QueryStrategy for LocalStrategy {
 
         // Step 3: Build context
         let context_builder = ContextBuilder::new(self.context_tokens);
-        let assembled = context_builder.build(
-            &entities,
-            &all_relationships,
-            &[],
-            &ctx.query,
-        );
+        let assembled = context_builder.build(&entities, &all_relationships, &[], &ctx.query);
 
         // Step 4: Generate answer if LLM is available
         let answer = if let Some(ref llm) = ctx.llm {

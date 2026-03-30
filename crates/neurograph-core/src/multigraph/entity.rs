@@ -140,23 +140,25 @@ impl RelationExtractor {
                 "founded".to_string(),
             ),
             (
-                regex::Regex::new(r"(?i)(.+?)\s+(?:is located in|based in|headquartered in)\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(
+                    r"(?i)(.+?)\s+(?:is located in|based in|headquartered in)\s+(.+)",
+                )
+                .unwrap(),
                 "located_in".to_string(),
             ),
             (
-                regex::Regex::new(r"(?i)(.+?)\s+(?:acquired|bought|merged with)\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(r"(?i)(.+?)\s+(?:acquired|bought|merged with)\s+(.+)").unwrap(),
                 "acquired".to_string(),
             ),
             (
-                regex::Regex::new(r"(?i)(.+?)\s+(?:is a|is an|serves as)\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(r"(?i)(.+?)\s+(?:is a|is an|serves as)\s+(.+)").unwrap(),
                 "is_a".to_string(),
             ),
             (
-                regex::Regex::new(r"(?i)(.+?)\s+(?:collaborates with|partners with|works with)\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(
+                    r"(?i)(.+?)\s+(?:collaborates with|partners with|works with)\s+(.+)",
+                )
+                .unwrap(),
                 "collaborates_with".to_string(),
             ),
         ];
@@ -238,10 +240,11 @@ impl EntityGraph {
                 .copied();
 
             if let (Some(source_id), Some(target_id)) = (subj_id, obj_id) {
-                self.relationships
-                    .entry(source_id)
-                    .or_default()
-                    .push((target_id, rel_type.clone(), 1.0));
+                self.relationships.entry(source_id).or_default().push((
+                    target_id,
+                    rel_type.clone(),
+                    1.0,
+                ));
                 self.total_edges += 1;
 
                 new_edges.push(GraphEdge {
@@ -262,14 +265,16 @@ impl EntityGraph {
         let entity_ids: Vec<Uuid> = local_entity_ids.values().copied().collect();
         for i in 0..entity_ids.len() {
             for j in (i + 1)..entity_ids.len() {
-                self.relationships
-                    .entry(entity_ids[i])
-                    .or_default()
-                    .push((entity_ids[j], "co_occurs_with".to_string(), 0.5));
-                self.relationships
-                    .entry(entity_ids[j])
-                    .or_default()
-                    .push((entity_ids[i], "co_occurs_with".to_string(), 0.5));
+                self.relationships.entry(entity_ids[i]).or_default().push((
+                    entity_ids[j],
+                    "co_occurs_with".to_string(),
+                    0.5,
+                ));
+                self.relationships.entry(entity_ids[j]).or_default().push((
+                    entity_ids[i],
+                    "co_occurs_with".to_string(),
+                    0.5,
+                ));
                 self.total_edges += 2;
             }
         }
@@ -292,10 +297,8 @@ impl EntityGraph {
 
         let mut visited: HashSet<Uuid> = HashSet::new();
         let mut results: Vec<(Uuid, f64)> = Vec::new();
-        let mut queue: VecDeque<(Uuid, f64, usize)> = seeds
-            .iter()
-            .map(|id| (*id, 1.0, 0))
-            .collect();
+        let mut queue: VecDeque<(Uuid, f64, usize)> =
+            seeds.iter().map(|id| (*id, 1.0, 0)).collect();
 
         while let Some((node_id, score, depth)) = queue.pop_front() {
             if visited.contains(&node_id) || depth > 3 {
@@ -357,9 +360,17 @@ mod tests {
         let entities = ner.extract("Alice Smith works at Anthropic in San Francisco");
 
         let names: Vec<&str> = entities.iter().map(|e| e.name.as_str()).collect();
-        assert!(names.contains(&"Alice Smith"), "Should find person: {:?}", names);
+        assert!(
+            names.contains(&"Alice Smith"),
+            "Should find person: {:?}",
+            names
+        );
         assert!(names.contains(&"Anthropic"), "Should find org: {:?}", names);
-        assert!(names.contains(&"San Francisco"), "Should find location: {:?}", names);
+        assert!(
+            names.contains(&"San Francisco"),
+            "Should find location: {:?}",
+            names
+        );
     }
 
     #[test]

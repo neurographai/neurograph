@@ -12,13 +12,12 @@
 //! Influenced by GraphRAG's hierarchical Leiden (hierarchical_leiden.py)
 //! and adapted for incremental updates (unlike GraphRAG's batch-only approach).
 
-pub mod louvain;
-pub mod leiden;
-pub mod summarizer;
 pub mod incremental;
+pub mod leiden;
+pub mod louvain;
+pub mod summarizer;
 
-pub use louvain::{LouvainDetector, LouvainConfig, CommunityDetectionResult, CommunityError};
-pub use leiden::{LeidenDetector, LeidenConfig};
+pub use incremental::{IncrementalCommunityUpdater, IncrementalError, IncrementalUpdateResult};
+pub use leiden::{LeidenConfig, LeidenDetector};
+pub use louvain::{CommunityDetectionResult, CommunityError, LouvainConfig, LouvainDetector};
 pub use summarizer::{CommunitySummarizer, CommunitySummaryResult, SummarizerError};
-pub use incremental::{IncrementalCommunityUpdater, IncrementalUpdateResult, IncrementalError};
-

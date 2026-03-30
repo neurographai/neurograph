@@ -90,10 +90,7 @@ impl QueryStrategy for GlobalStrategy {
         }
 
         // Cap the number of communities to process
-        let communities: Vec<_> = communities
-            .into_iter()
-            .take(self.max_communities)
-            .collect();
+        let communities: Vec<_> = communities.into_iter().take(self.max_communities).collect();
 
         // Step 2: Map phase — generate partial answers per community
         let mut partial_answers = Vec::new();

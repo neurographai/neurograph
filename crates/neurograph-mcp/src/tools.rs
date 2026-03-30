@@ -401,7 +401,10 @@ impl ToolHandler {
 
         let ng = self.get_ng().await?;
 
-        match ng.query(&format!("entities related to {}", entity_name)).await {
+        match ng
+            .query(&format!("entities related to {}", entity_name))
+            .await
+        {
             Ok(result) => {
                 let entities: Vec<String> = result
                     .entities

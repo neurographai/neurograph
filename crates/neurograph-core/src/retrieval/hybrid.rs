@@ -24,11 +24,11 @@ use crate::drivers::traits::GraphDriver;
 use crate::embedders::traits::Embedder;
 use crate::graph::{Entity, EntityId};
 
+use super::cross_encoder::{CrossEncoderReranker, RerankCandidate};
 use super::keyword::KeywordSearcher;
+use super::ppr::PersonalizedPageRank;
 use super::semantic::{ScoredEntity, SemanticSearcher};
 use super::traversal::TraversalSearcher;
-use super::ppr::PersonalizedPageRank;
-use super::cross_encoder::{CrossEncoderReranker, RerankCandidate};
 
 /// Weights for combining different search methods in the 5-stage pipeline.
 #[derive(Debug, Clone)]
@@ -155,7 +155,9 @@ impl HybridRetriever {
         embedder: &dyn Embedder,
         driver: &dyn GraphDriver,
     ) -> Result<Vec<HybridSearchResult>, HybridSearchError> {
-        let report = self.search_with_report(query, k, seed_ids, group_id, embedder, driver).await?;
+        let report = self
+            .search_with_report(query, k, seed_ids, group_id, embedder, driver)
+            .await?;
         Ok(report.results)
     }
 
@@ -175,9 +177,10 @@ impl HybridRetriever {
 
         // Stage 1: Semantic search
         let t0 = std::time::Instant::now();
-        let semantic_results = SemanticSearcher::search(query, search_k, group_id, embedder, driver)
-            .await
-            .unwrap_or_default();
+        let semantic_results =
+            SemanticSearcher::search(query, search_k, group_id, embedder, driver)
+                .await
+                .unwrap_or_default();
         strategies.push(StrategyBreakdown {
             strategy: "semantic".to_string(),
             result_count: semantic_results.len(),
@@ -237,7 +240,11 @@ impl HybridRetriever {
         );
 
         let mut results: Vec<HybridSearchResult> = fused.into_values().collect();
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Stage 5: Cross-encoder reranking
         let reranked = if let Some(reranker) = &self.reranker {
@@ -246,7 +253,10 @@ impl HybridRetriever {
                 .iter()
                 .map(|r| RerankCandidate {
                     id: uuid::Uuid::new_v4(), // Use entity summary as rerank context
-                    text: format!("{} ({}): {}", r.entity.name, r.entity.entity_type, r.entity.summary),
+                    text: format!(
+                        "{} ({}): {}",
+                        r.entity.name, r.entity.entity_type, r.entity.summary
+                    ),
                     original_score: r.score,
                     metadata: HashMap::new(),
                 })
@@ -254,11 +264,8 @@ impl HybridRetriever {
 
             if let Ok(reranked_results) = reranker.rerank(query, candidates, k).await {
                 // Map reranked scores back to entities
-                let entity_map: HashMap<usize, &HybridSearchResult> = results
-                    .iter()
-                    .enumerate()
-                    .map(|(i, r)| (i, r))
-                    .collect();
+                let entity_map: HashMap<usize, &HybridSearchResult> =
+                    results.iter().enumerate().map(|(i, r)| (i, r)).collect();
 
                 results = reranked_results
                     .iter()
@@ -327,10 +334,7 @@ impl HybridRetriever {
                     let src_uuid = rel.source_entity_id.0;
                     let tgt_uuid = rel.target_entity_id.0;
 
-                    adjacency
-                        .entry(src_uuid)
-                        .or_default()
-                        .push((tgt_uuid, 1.0));
+                    adjacency.entry(src_uuid).or_default().push((tgt_uuid, 1.0));
 
                     // Try to cache the connected entity
                     if !entity_cache.contains_key(&tgt_uuid) {
@@ -373,7 +377,11 @@ impl HybridRetriever {
             })
             .collect();
 
-        ppr_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        ppr_results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         ppr_results
     }
 
@@ -481,7 +489,10 @@ mod tests {
     fn test_default_weights() {
         let weights = RetrievalWeights::default();
         let total = weights.semantic + weights.keyword + weights.traversal + weights.ppr;
-        assert!((total - 1.0).abs() < f64::EPSILON, "Weights should sum to 1.0");
+        assert!(
+            (total - 1.0).abs() < f64::EPSILON,
+            "Weights should sum to 1.0"
+        );
     }
 
     #[test]

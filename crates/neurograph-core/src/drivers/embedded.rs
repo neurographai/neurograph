@@ -19,8 +19,8 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::graph::{
-    Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId,
-    Relationship, RelationshipId,
+    Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId, Relationship,
+    RelationshipId,
 };
 
 use super::traits::{
@@ -90,10 +90,26 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f64 {
     if a.len() != b.len() || a.is_empty() {
         return 0.0;
     }
-    let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| (*x as f64) * (*y as f64)).sum();
-    let norm_a: f64 = a.iter().map(|x| (*x as f64) * (*x as f64)).sum::<f64>().sqrt();
-    let norm_b: f64 = b.iter().map(|x| (*x as f64) * (*x as f64)).sum::<f64>().sqrt();
-    if norm_a == 0.0 || norm_b == 0.0 { 0.0 } else { dot / (norm_a * norm_b) }
+    let dot: f64 = a
+        .iter()
+        .zip(b.iter())
+        .map(|(x, y)| (*x as f64) * (*y as f64))
+        .sum();
+    let norm_a: f64 = a
+        .iter()
+        .map(|x| (*x as f64) * (*x as f64))
+        .sum::<f64>()
+        .sqrt();
+    let norm_b: f64 = b
+        .iter()
+        .map(|x| (*x as f64) * (*x as f64))
+        .sum::<f64>()
+        .sqrt();
+    if norm_a == 0.0 || norm_b == 0.0 {
+        0.0
+    } else {
+        dot / (norm_a * norm_b)
+    }
 }
 
 #[async_trait]
@@ -129,7 +145,11 @@ impl GraphDriver for EmbeddedDriver {
         Ok(())
     }
 
-    async fn list_entities(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Entity>> {
+    async fn list_entities(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Entity>> {
         let tree = self.entities_tree()?;
         let mut entities = Vec::new();
         for result in tree.iter() {
@@ -168,7 +188,10 @@ impl GraphDriver for EmbeddedDriver {
         Self::deserialize(&bytes)
     }
 
-    async fn get_entity_relationships(&self, entity_id: &EntityId) -> DriverResult<Vec<Relationship>> {
+    async fn get_entity_relationships(
+        &self,
+        entity_id: &EntityId,
+    ) -> DriverResult<Vec<Relationship>> {
         let tree = self.relationships_tree()?;
         let entity_id_str = entity_id.as_str();
         let mut rels = Vec::new();
@@ -211,7 +234,11 @@ impl GraphDriver for EmbeddedDriver {
         Self::deserialize(&bytes)
     }
 
-    async fn list_episodes(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Episode>> {
+    async fn list_episodes(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Episode>> {
         let tree = self.episodes_tree()?;
         let mut episodes = Vec::new();
         for result in tree.iter() {
@@ -246,7 +273,10 @@ impl GraphDriver for EmbeddedDriver {
         Self::deserialize(&bytes)
     }
 
-    async fn get_communities_at_level(&self, level: CommunityLevel) -> DriverResult<Vec<Community>> {
+    async fn get_communities_at_level(
+        &self,
+        level: CommunityLevel,
+    ) -> DriverResult<Vec<Community>> {
         let tree = self.communities_tree()?;
         let mut communities = Vec::new();
         for result in tree.iter() {
@@ -313,7 +343,11 @@ impl GraphDriver for EmbeddedDriver {
             }
         }
 
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         results.truncate(k);
         Ok(results)
     }
@@ -369,12 +403,23 @@ impl GraphDriver for EmbeddedDriver {
                 }
             }
 
-            let searchable = format!("{} {}", entity.name.to_lowercase(), entity.summary.to_lowercase());
-            let matching = query_terms.iter().filter(|t| searchable.contains(*t)).count();
+            let searchable = format!(
+                "{} {}",
+                entity.name.to_lowercase(),
+                entity.summary.to_lowercase()
+            );
+            let matching = query_terms
+                .iter()
+                .filter(|t| searchable.contains(*t))
+                .count();
 
             if matching > 0 {
                 let score = matching as f64 / query_terms.len() as f64;
-                let boost = if entity.name.to_lowercase().contains(&query_lower) { 2.0 } else { 1.0 };
+                let boost = if entity.name.to_lowercase().contains(&query_lower) {
+                    2.0
+                } else {
+                    1.0
+                };
                 results.push(TextSearchResult {
                     entity,
                     score: score * boost,
@@ -382,7 +427,11 @@ impl GraphDriver for EmbeddedDriver {
             }
         }
 
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         results.truncate(limit);
         Ok(results)
     }
@@ -408,7 +457,9 @@ impl GraphDriver for EmbeddedDriver {
 
             if let Ok(entity) = self.get_entity(&eid).await {
                 if let Some(gid) = group_id {
-                    if entity.group_id != gid { continue; }
+                    if entity.group_id != gid {
+                        continue;
+                    }
                 }
                 subgraph.entities.push(entity);
             }
@@ -438,7 +489,9 @@ impl GraphDriver for EmbeddedDriver {
         timestamp: &DateTime<Utc>,
         group_id: Option<&str>,
     ) -> DriverResult<Subgraph> {
-        let entities = self.list_entities(group_id, usize::MAX).await?
+        let entities = self
+            .list_entities(group_id, usize::MAX)
+            .await?
             .into_iter()
             .filter(|e| e.created_at <= *timestamp)
             .collect();
@@ -449,30 +502,46 @@ impl GraphDriver for EmbeddedDriver {
             let (_, bytes) = result.map_err(|e| DriverError::StorageError(e.to_string()))?;
             let rel: Relationship = Self::deserialize(&bytes)?;
             if let Some(gid) = group_id {
-                if rel.group_id != gid { continue; }
+                if rel.group_id != gid {
+                    continue;
+                }
             }
             if rel.is_valid_at(timestamp) {
                 relationships.push(rel);
             }
         }
 
-        Ok(Subgraph { entities, relationships })
+        Ok(Subgraph {
+            entities,
+            relationships,
+        })
     }
 
     async fn stats(&self) -> DriverResult<HashMap<String, usize>> {
         let mut stats = HashMap::new();
         stats.insert("entities".to_string(), self.entities_tree()?.len());
-        stats.insert("relationships".to_string(), self.relationships_tree()?.len());
+        stats.insert(
+            "relationships".to_string(),
+            self.relationships_tree()?.len(),
+        );
         stats.insert("episodes".to_string(), self.episodes_tree()?.len());
         stats.insert("communities".to_string(), self.communities_tree()?.len());
         Ok(stats)
     }
 
     async fn clear(&self) -> DriverResult<()> {
-        self.entities_tree()?.clear().map_err(|e| DriverError::StorageError(e.to_string()))?;
-        self.relationships_tree()?.clear().map_err(|e| DriverError::StorageError(e.to_string()))?;
-        self.episodes_tree()?.clear().map_err(|e| DriverError::StorageError(e.to_string()))?;
-        self.communities_tree()?.clear().map_err(|e| DriverError::StorageError(e.to_string()))?;
+        self.entities_tree()?
+            .clear()
+            .map_err(|e| DriverError::StorageError(e.to_string()))?;
+        self.relationships_tree()?
+            .clear()
+            .map_err(|e| DriverError::StorageError(e.to_string()))?;
+        self.episodes_tree()?
+            .clear()
+            .map_err(|e| DriverError::StorageError(e.to_string()))?;
+        self.communities_tree()?
+            .clear()
+            .map_err(|e| DriverError::StorageError(e.to_string()))?;
         Ok(())
     }
 }

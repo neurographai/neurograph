@@ -64,10 +64,8 @@ impl CommunitySummarizer {
         }
 
         // Get relationships between members
-        let member_ids: std::collections::HashSet<String> = member_entities
-            .iter()
-            .map(|e| e.id.as_str())
-            .collect();
+        let member_ids: std::collections::HashSet<String> =
+            member_entities.iter().map(|e| e.id.as_str()).collect();
 
         let mut internal_facts = Vec::new();
         for entity in &member_entities {
@@ -93,8 +91,13 @@ impl CommunitySummarizer {
 
         // Try LLM summarization, fall back to rule-based
         if let Some(ref llm) = self.llm {
-            match self.summarize_with_llm(llm.as_ref(), &member_entities, &internal_facts).await {
-                Ok(result) => return Ok(result.with_community_id(community.id.as_str().to_string())),
+            match self
+                .summarize_with_llm(llm.as_ref(), &member_entities, &internal_facts)
+                .await
+            {
+                Ok(result) => {
+                    return Ok(result.with_community_id(community.id.as_str().to_string()))
+                }
                 Err(e) => {
                     tracing::warn!(error = %e, "LLM summarization failed, using rule-based");
                 }
@@ -166,7 +169,8 @@ impl CommunitySummarizer {
         facts: &[String],
     ) -> CommunitySummaryResult {
         // Group entities by type
-        let mut by_type: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+        let mut by_type: std::collections::HashMap<String, Vec<String>> =
+            std::collections::HashMap::new();
         for entity in entities {
             by_type
                 .entry(entity.entity_type.as_str().to_string())
@@ -183,7 +187,12 @@ impl CommunitySummarizer {
                 if names.len() <= 3 {
                     format!("{} ({})", names.join(", "), t)
                 } else {
-                    format!("{} and {} more ({})", names[..2].join(", "), names.len() - 2, t)
+                    format!(
+                        "{} and {} more ({})",
+                        names[..2].join(", "),
+                        names.len() - 2,
+                        t
+                    )
                 }
             })
             .collect();
@@ -287,8 +296,10 @@ mod tests {
         driver.store_entity(&anthropic).await.unwrap();
 
         let rel = Relationship::new(
-            alice.id.clone(), anthropic.id.clone(),
-            "WORKS_AT", "Alice works at Anthropic",
+            alice.id.clone(),
+            anthropic.id.clone(),
+            "WORKS_AT",
+            "Alice works at Anthropic",
         );
         driver.store_relationship(&rel).await.unwrap();
 
@@ -301,7 +312,10 @@ mod tests {
         let result = summarizer.summarize_community(&community).await.unwrap();
 
         assert!(!result.summary.is_empty(), "Summary should not be empty");
-        assert!(result.summary.contains("3 entities"), "Summary should mention entity count");
+        assert!(
+            result.summary.contains("3 entities"),
+            "Summary should mention entity count"
+        );
         assert_eq!(result.cost_usd, 0.0, "Rule-based should be free");
     }
 

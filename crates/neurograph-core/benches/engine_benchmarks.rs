@@ -3,11 +3,9 @@
 
 //! Engine benchmarks: ingestion throughput, query latency, entity storage.
 
-use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput,
-};
-use neurograph_core::graph::{Entity, Relationship};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use neurograph_core::drivers::memory::MemoryDriver;
+use neurograph_core::graph::{Entity, Relationship};
 use neurograph_core::NeuroGraph;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -19,23 +17,16 @@ fn bench_entity_storage(c: &mut Criterion) {
     for count in [10, 100, 1_000, 5_000] {
         group.throughput(Throughput::Elements(count as u64));
 
-        group.bench_with_input(
-            BenchmarkId::new("store_entity", count),
-            &count,
-            |b, &n| {
-                b.to_async(&rt).iter(|| async move {
-                    let driver = MemoryDriver::new();
-                    for i in 0..n {
-                        let entity = Entity::new(
-                            &format!("Entity_{}", i),
-                            "Concept",
-                        );
-                        driver.store_entity(&entity).await.unwrap();
-                    }
-                    black_box(driver.stats().await.unwrap());
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("store_entity", count), &count, |b, &n| {
+            b.to_async(&rt).iter(|| async move {
+                let driver = MemoryDriver::new();
+                for i in 0..n {
+                    let entity = Entity::new(&format!("Entity_{}", i), "Concept");
+                    driver.store_entity(&entity).await.unwrap();
+                }
+                black_box(driver.stats().await.unwrap());
+            });
+        });
     }
     group.finish();
 }
@@ -86,28 +77,18 @@ fn bench_neurograph_add_text(c: &mut Criterion) {
     for count in [1, 5, 10, 50] {
         group.throughput(Throughput::Elements(count as u64));
 
-        group.bench_with_input(
-            BenchmarkId::new("add_text", count),
-            &count,
-            |b, &n| {
-                b.to_async(&rt).iter(|| async move {
-                    let ng = NeuroGraph::builder()
-                        .memory()
-                        .build()
-                        .await
-                        .unwrap();
+        group.bench_with_input(BenchmarkId::new("add_text", count), &count, |b, &n| {
+            b.to_async(&rt).iter(|| async move {
+                let ng = NeuroGraph::builder().memory().build().await.unwrap();
 
-                    for i in 0..n {
-                        ng.add_text(&format!(
-                            "Person_{i} works at Company_{i} in City_{i}"
-                        ))
+                for i in 0..n {
+                    ng.add_text(&format!("Person_{i} works at Company_{i} in City_{i}"))
                         .await
                         .unwrap();
-                    }
-                    black_box(ng.stats().await.unwrap());
-                });
-            },
-        );
+                }
+                black_box(ng.stats().await.unwrap());
+            });
+        });
     }
     group.finish();
 }
@@ -136,9 +117,7 @@ fn bench_query_latency(c: &mut Criterion) {
                 b.to_async(&rt).iter(|| {
                     let ng_ref = &ng;
                     async move {
-                        black_box(
-                            ng_ref.query("Where does Person_5 work?").await.unwrap()
-                        );
+                        black_box(ng_ref.query("Where does Person_5 work?").await.unwrap());
                     }
                 });
             },
@@ -153,13 +132,7 @@ fn bench_builder(c: &mut Criterion) {
 
     group.bench_function("builder_memory", |b| {
         b.to_async(&rt).iter(|| async {
-            black_box(
-                NeuroGraph::builder()
-                    .memory()
-                    .build()
-                    .await
-                    .unwrap()
-            );
+            black_box(NeuroGraph::builder().memory().build().await.unwrap());
         });
     });
 

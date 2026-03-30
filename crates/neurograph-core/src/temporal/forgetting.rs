@@ -82,11 +82,7 @@ impl ForgettingEngine {
     /// 1. Time since last access (exponential decay)
     /// 2. Total access count (log-scaled boost)
     /// 3. Number of relationships (connectivity boost)
-    pub fn calculate_importance(
-        &self,
-        entity: &Entity,
-        relationship_count: usize,
-    ) -> f64 {
+    pub fn calculate_importance(&self, entity: &Entity, relationship_count: usize) -> f64 {
         if !self.config.enabled {
             return entity.importance_score;
         }
@@ -104,8 +100,7 @@ impl ForgettingEngine {
         let connectivity_boost = (relationship_count as f64 + 1.0).ln() / 10.0;
 
         // Combine: base importance × time_decay + bonuses
-        let raw_score =
-            entity.importance_score * time_decay + access_boost + connectivity_boost;
+        let raw_score = entity.importance_score * time_decay + access_boost + connectivity_boost;
 
         // Clamp to [0.0, 1.0]
         raw_score.clamp(0.0, 1.0)
@@ -170,9 +165,7 @@ impl ForgettingEngine {
 
         let mut pruned = 0;
         if auto_prune {
-            let to_prune = prune_candidates
-                .iter()
-                .take(self.config.max_prune_batch);
+            let to_prune = prune_candidates.iter().take(self.config.max_prune_batch);
 
             for entity_id in to_prune {
                 if self.driver.delete_entity(entity_id).await.is_ok() {

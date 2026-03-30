@@ -126,41 +126,32 @@ impl TemporalManager {
 
         // Try ISO date (YYYY-MM-DD)
         if let Ok(date) = NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
-            return Ok(date
-                .and_hms_opt(0, 0, 0)
-                .unwrap()
-                .and_utc());
+            return Ok(date.and_hms_opt(0, 0, 0).unwrap().and_utc());
         }
 
         // Try year only
         if trimmed.len() == 4 {
             if let Ok(year) = trimmed.parse::<i32>() {
                 if let Some(date) = NaiveDate::from_ymd_opt(year, 1, 1) {
-                    return Ok(date
-                        .and_hms_opt(0, 0, 0)
-                        .unwrap()
-                        .and_utc());
+                    return Ok(date.and_hms_opt(0, 0, 0).unwrap().and_utc());
                 }
             }
         }
 
         // Try "Month DD, YYYY" format
         let month_formats = [
-            "%B %d, %Y",   // January 15, 2025
-            "%b %d, %Y",   // Jan 15, 2025
-            "%B %Y",       // January 2025
-            "%b %Y",       // Jan 2025
-            "%Y/%m/%d",    // 2025/01/15
-            "%m/%d/%Y",    // 01/15/2025
-            "%d-%m-%Y",    // 15-01-2025
+            "%B %d, %Y", // January 15, 2025
+            "%b %d, %Y", // Jan 15, 2025
+            "%B %Y",     // January 2025
+            "%b %Y",     // Jan 2025
+            "%Y/%m/%d",  // 2025/01/15
+            "%m/%d/%Y",  // 01/15/2025
+            "%d-%m-%Y",  // 15-01-2025
         ];
 
         for fmt in &month_formats {
             if let Ok(date) = NaiveDate::parse_from_str(trimmed, fmt) {
-                return Ok(date
-                    .and_hms_opt(0, 0, 0)
-                    .unwrap()
-                    .and_utc());
+                return Ok(date.and_hms_opt(0, 0, 0).unwrap().and_utc());
             }
         }
 
@@ -197,10 +188,7 @@ impl TemporalManager {
         for (date_str, date_entities) in &creation_dates {
             if let Ok(date) = NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
                 events.push(TimelineEvent {
-                    timestamp: date
-                        .and_hms_opt(0, 0, 0)
-                        .unwrap()
-                        .and_utc(),
+                    timestamp: date.and_hms_opt(0, 0, 0).unwrap().and_utc(),
                     event_type: TimelineEventType::Ingestion,
                     description: format!(
                         "Added {} entities: {}",
@@ -286,10 +274,7 @@ pub enum TemporalError {
     DriverError(String),
 
     #[error("Temporal range error: from ({from}) must be before to ({to})")]
-    InvalidRange {
-        from: String,
-        to: String,
-    },
+    InvalidRange { from: String, to: String },
 }
 
 #[cfg(test)]
@@ -369,8 +354,14 @@ mod tests {
         let driver = Arc::new(MemoryDriver::new());
         let manager = TemporalManager::new(driver.clone());
 
-        driver.store_entity(&Entity::new("Alice", "Person")).await.unwrap();
-        driver.store_entity(&Entity::new("Bob", "Person")).await.unwrap();
+        driver
+            .store_entity(&Entity::new("Alice", "Person"))
+            .await
+            .unwrap();
+        driver
+            .store_entity(&Entity::new("Bob", "Person"))
+            .await
+            .unwrap();
 
         let timeline = manager.build_timeline(None).await.unwrap();
         assert!(!timeline.is_empty());

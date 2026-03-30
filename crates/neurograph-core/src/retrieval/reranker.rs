@@ -9,7 +9,6 @@
 //!
 //! Influenced by Graphiti's cross-encoder reranking (cross_encoder/).
 
-
 use crate::llm::traits::{CompletionRequest, LlmClient, LlmUsage};
 
 use super::hybrid::HybridSearchResult;
@@ -114,7 +113,11 @@ impl Reranker {
             })
             .collect();
 
-        reranked.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        reranked.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok((reranked, response.usage))
     }

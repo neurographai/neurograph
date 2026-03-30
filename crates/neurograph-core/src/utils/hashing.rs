@@ -34,16 +34,16 @@ fn normalize_for_hash(text: &str) -> String {
 
 /// Generate a deterministic entity dedup key from name + type.
 pub fn entity_dedup_key(name: &str, entity_type: &str) -> String {
-    let input = format!("{}::{}", name.to_lowercase().trim(), entity_type.to_lowercase().trim());
+    let input = format!(
+        "{}::{}",
+        name.to_lowercase().trim(),
+        entity_type.to_lowercase().trim()
+    );
     content_hash(&input)
 }
 
 /// Generate a deterministic relationship dedup key.
-pub fn relationship_dedup_key(
-    source_name: &str,
-    target_name: &str,
-    rel_type: &str,
-) -> String {
+pub fn relationship_dedup_key(source_name: &str, target_name: &str, rel_type: &str) -> String {
     let input = format!(
         "{}::{}::{}",
         source_name.to_lowercase().trim(),

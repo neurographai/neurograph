@@ -27,7 +27,10 @@ async fn test_louvain_empty_graph() {
 #[tokio::test]
 async fn test_louvain_single_entity_no_edges() {
     let driver = MemoryDriver::new();
-    driver.store_entity(&Entity::new("Solo", "Node")).await.unwrap();
+    driver
+        .store_entity(&Entity::new("Solo", "Node"))
+        .await
+        .unwrap();
 
     let detector = LouvainDetector::new();
     let result = detector.detect(&driver, None).await.unwrap();
@@ -63,9 +66,18 @@ async fn test_louvain_two_cliques_detected() {
     driver.store_entity(&b).await.unwrap();
     driver.store_entity(&c).await.unwrap();
 
-    driver.store_relationship(&Relationship::new(a.id.clone(), b.id.clone(), "L", "AB")).await.unwrap();
-    driver.store_relationship(&Relationship::new(b.id.clone(), c.id.clone(), "L", "BC")).await.unwrap();
-    driver.store_relationship(&Relationship::new(a.id.clone(), c.id.clone(), "L", "AC")).await.unwrap();
+    driver
+        .store_relationship(&Relationship::new(a.id.clone(), b.id.clone(), "L", "AB"))
+        .await
+        .unwrap();
+    driver
+        .store_relationship(&Relationship::new(b.id.clone(), c.id.clone(), "L", "BC"))
+        .await
+        .unwrap();
+    driver
+        .store_relationship(&Relationship::new(a.id.clone(), c.id.clone(), "L", "AC"))
+        .await
+        .unwrap();
 
     // Clique 2: D, E, F (fully connected)
     let d = Entity::new("D", "Node");
@@ -75,14 +87,26 @@ async fn test_louvain_two_cliques_detected() {
     driver.store_entity(&e).await.unwrap();
     driver.store_entity(&f).await.unwrap();
 
-    driver.store_relationship(&Relationship::new(d.id.clone(), e.id.clone(), "L", "DE")).await.unwrap();
-    driver.store_relationship(&Relationship::new(e.id.clone(), f.id.clone(), "L", "EF")).await.unwrap();
-    driver.store_relationship(&Relationship::new(d.id.clone(), f.id.clone(), "L", "DF")).await.unwrap();
+    driver
+        .store_relationship(&Relationship::new(d.id.clone(), e.id.clone(), "L", "DE"))
+        .await
+        .unwrap();
+    driver
+        .store_relationship(&Relationship::new(e.id.clone(), f.id.clone(), "L", "EF"))
+        .await
+        .unwrap();
+    driver
+        .store_relationship(&Relationship::new(d.id.clone(), f.id.clone(), "L", "DF"))
+        .await
+        .unwrap();
 
     // Weak bridge between cliques
-    driver.store_relationship(
-        &Relationship::new(c.id.clone(), d.id.clone(), "BRIDGE", "bridge").with_weight(0.1)
-    ).await.unwrap();
+    driver
+        .store_relationship(
+            &Relationship::new(c.id.clone(), d.id.clone(), "BRIDGE", "bridge").with_weight(0.1),
+        )
+        .await
+        .unwrap();
 
     let detector = LouvainDetector::new();
     let result = detector.detect(&driver, None).await.unwrap();
@@ -118,8 +142,10 @@ async fn test_louvain_resolution_affects_community_count() {
         for i in 0..4 {
             for j in (i + 1)..4 {
                 let rel = Relationship::new(
-                    entities[i].id.clone(), entities[j].id.clone(),
-                    "INTRA", &format!("intra_{}_{}", i, j),
+                    entities[i].id.clone(),
+                    entities[j].id.clone(),
+                    "INTRA",
+                    &format!("intra_{}_{}", i, j),
                 );
                 driver.store_relationship(&rel).await.unwrap();
             }
@@ -127,12 +153,18 @@ async fn test_louvain_resolution_affects_community_count() {
     }
 
     // Low resolution → fewer, larger communities
-    let low_res = LouvainConfig { resolution: 0.5, ..Default::default() };
+    let low_res = LouvainConfig {
+        resolution: 0.5,
+        ..Default::default()
+    };
     let detector_low = LouvainDetector::with_config(low_res);
     let result_low = detector_low.detect(&driver, None).await.unwrap();
 
     // High resolution → more, smaller communities
-    let high_res = LouvainConfig { resolution: 2.0, ..Default::default() };
+    let high_res = LouvainConfig {
+        resolution: 2.0,
+        ..Default::default()
+    };
     let detector_high = LouvainDetector::with_config(high_res);
     let result_high = detector_high.detect(&driver, None).await.unwrap();
 
@@ -152,14 +184,18 @@ async fn test_louvain_modularity_bounded() {
     let b = Entity::new("Y", "Node");
     driver.store_entity(&a).await.unwrap();
     driver.store_entity(&b).await.unwrap();
-    driver.store_relationship(&Relationship::new(
-        a.id.clone(), b.id.clone(), "L", "XY",
-    )).await.unwrap();
+    driver
+        .store_relationship(&Relationship::new(a.id.clone(), b.id.clone(), "L", "XY"))
+        .await
+        .unwrap();
 
     let detector = LouvainDetector::new();
     let result = detector.detect(&driver, None).await.unwrap();
-    assert!(result.modularity >= -0.5 && result.modularity <= 1.0,
-        "Modularity {} out of expected range [-0.5, 1.0]", result.modularity);
+    assert!(
+        result.modularity >= -0.5 && result.modularity <= 1.0,
+        "Modularity {} out of expected range [-0.5, 1.0]",
+        result.modularity
+    );
 }
 
 #[tokio::test]
@@ -175,8 +211,10 @@ async fn test_louvain_assignments_cover_all_entities() {
     let entities = driver.list_entities(None, 100).await.unwrap();
     for i in 0..5 {
         let rel = Relationship::new(
-            entities[i * 2].id.clone(), entities[i * 2 + 1].id.clone(),
-            "PAIR", &format!("pair_{}", i),
+            entities[i * 2].id.clone(),
+            entities[i * 2 + 1].id.clone(),
+            "PAIR",
+            &format!("pair_{}", i),
         );
         driver.store_relationship(&rel).await.unwrap();
     }
@@ -187,7 +225,8 @@ async fn test_louvain_assignments_cover_all_entities() {
     // Every entity should be assigned to exactly one community
     let assigned: HashSet<String> = result.assignments.keys().cloned().collect();
     assert_eq!(
-        assigned.len(), 10,
+        assigned.len(),
+        10,
         "All 10 entities should have community assignments"
     );
 }
@@ -209,11 +248,21 @@ async fn test_ng_detect_communities() {
     ng.store_entity(&company).await.unwrap();
 
     ng.store_relationship(&Relationship::new(
-        alice.id.clone(), company.id.clone(), "WORKS_AT", "Alice works at Acme",
-    )).await.unwrap();
+        alice.id.clone(),
+        company.id.clone(),
+        "WORKS_AT",
+        "Alice works at Acme",
+    ))
+    .await
+    .unwrap();
     ng.store_relationship(&Relationship::new(
-        bob.id.clone(), company.id.clone(), "WORKS_AT", "Bob works at Acme",
-    )).await.unwrap();
+        bob.id.clone(),
+        company.id.clone(),
+        "WORKS_AT",
+        "Bob works at Acme",
+    ))
+    .await
+    .unwrap();
 
     let result = ng.detect_communities().await.unwrap();
     assert!(!result.communities.is_empty());
@@ -225,7 +274,9 @@ async fn test_ng_detect_communities_with_config() {
     let ng = NeuroGraph::builder().memory().build().await.unwrap();
 
     for i in 0..6 {
-        ng.store_entity(&Entity::new(&format!("Node_{}", i), "Node")).await.unwrap();
+        ng.store_entity(&Entity::new(&format!("Node_{}", i), "Node"))
+            .await
+            .unwrap();
     }
 
     let config = LouvainConfig {

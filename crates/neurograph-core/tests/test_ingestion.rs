@@ -3,14 +3,14 @@
 
 //! Integration tests for the ingestion pipeline.
 
+use neurograph_core::graph::ontology::Ontology;
 use neurograph_core::graph::{Entity, Relationship};
+use neurograph_core::ingestion::conflict::ConflictResolver;
+use neurograph_core::ingestion::deduplication::{DeduplicationConfig, Deduplicator};
 use neurograph_core::ingestion::extractors::json::JsonExtractor;
 use neurograph_core::ingestion::extractors::text::TextExtractor;
 use neurograph_core::ingestion::extractors::traits::Extractor;
-use neurograph_core::ingestion::deduplication::{DeduplicationConfig, Deduplicator};
-use neurograph_core::ingestion::conflict::ConflictResolver;
 use neurograph_core::ingestion::validators::SchemaValidator;
-use neurograph_core::graph::ontology::Ontology;
 
 // ─── Text Extractor Tests ─────────────────────────────────────
 
@@ -23,9 +23,21 @@ async fn test_text_extractor_basic_entities() {
         .unwrap();
 
     let names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
-    assert!(names.contains(&"Alice"), "Should find Alice, got: {:?}", names);
-    assert!(names.contains(&"Anthropic"), "Should find Anthropic, got: {:?}", names);
-    assert!(names.contains(&"San Francisco"), "Should find San Francisco, got: {:?}", names);
+    assert!(
+        names.contains(&"Alice"),
+        "Should find Alice, got: {:?}",
+        names
+    );
+    assert!(
+        names.contains(&"Anthropic"),
+        "Should find Anthropic, got: {:?}",
+        names
+    );
+    assert!(
+        names.contains(&"San Francisco"),
+        "Should find San Francisco, got: {:?}",
+        names
+    );
 }
 
 #[tokio::test]
@@ -36,7 +48,10 @@ async fn test_text_extractor_relationships() {
         .await
         .unwrap();
 
-    assert!(!result.relationships.is_empty(), "Should extract relationships");
+    assert!(
+        !result.relationships.is_empty(),
+        "Should extract relationships"
+    );
 
     let rel_types: Vec<&str> = result
         .relationships
@@ -79,7 +94,10 @@ async fn test_text_extractor_multiple_relationships() {
 
     // Should find multiple entities
     let names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
-    assert!(names.contains(&"Alice") || names.contains(&"Google"), "Should find entities");
+    assert!(
+        names.contains(&"Alice") || names.contains(&"Google"),
+        "Should find entities"
+    );
 
     // At least some relationships
     assert!(
@@ -131,7 +149,11 @@ async fn test_json_extractor_nested_relationships() {
     let result = extractor.extract(input).await.unwrap();
 
     // Should find Anthropic + Alice + Bob
-    assert!(result.entities.len() >= 3, "Should find at least 3 entities, got {}", result.entities.len());
+    assert!(
+        result.entities.len() >= 3,
+        "Should find at least 3 entities, got {}",
+        result.entities.len()
+    );
 
     // Should have relationships from Anthropic to employees
     assert!(
@@ -155,7 +177,10 @@ async fn test_json_extractor_with_entity_references() {
 
     let names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
     assert!(names.contains(&"Alice"), "Should find Alice");
-    assert!(names.contains(&"Anthropic"), "Should find Anthropic as entity reference");
+    assert!(
+        names.contains(&"Anthropic"),
+        "Should find Anthropic as entity reference"
+    );
 }
 
 // ─── Deduplication Tests ──────────────────────────────────────
@@ -173,11 +198,14 @@ fn test_entity_merge() {
     let mut existing = Entity::new("Alice", "Person");
     existing.summary = "A person".to_string();
 
-    Deduplicator::merge_entities(&mut existing, "Alice Johnson", "Alice is a senior researcher at Anthropic working on AI safety");
+    Deduplicator::merge_entities(
+        &mut existing,
+        "Alice Johnson",
+        "Alice is a senior researcher at Anthropic working on AI safety",
+    );
 
     assert_eq!(
-        existing.summary,
-        "Alice is a senior researcher at Anthropic working on AI safety",
+        existing.summary, "Alice is a senior researcher at Anthropic working on AI safety",
         "Summary should be updated to the longer/more detailed one"
     );
 }
@@ -211,7 +239,10 @@ fn test_conflict_resolution_invalidates_old() {
     let now = Utc::now();
     ConflictResolver::resolve_contradiction(&mut rel, now);
 
-    assert!(!rel.is_valid(), "Relationship should be invalid after contradiction");
+    assert!(
+        !rel.is_valid(),
+        "Relationship should be invalid after contradiction"
+    );
     assert_eq!(rel.valid_until, Some(now));
     assert!(rel.expired_at.is_some());
 }
@@ -260,9 +291,15 @@ fn test_validator_rejects_empty_relationship_fields() {
 
 #[tokio::test]
 async fn test_pipeline_text_ingestion() {
-    let ng = neurograph_core::NeuroGraph::builder().build().await.unwrap();
+    let ng = neurograph_core::NeuroGraph::builder()
+        .build()
+        .await
+        .unwrap();
 
-    let episode = ng.add_text("Alice works at Anthropic in San Francisco").await.unwrap();
+    let episode = ng
+        .add_text("Alice works at Anthropic in San Francisco")
+        .await
+        .unwrap();
     assert!(!episode.id.0.is_nil(), "Episode should have an ID");
 
     let stats = ng.stats().await.unwrap();
@@ -275,7 +312,10 @@ async fn test_pipeline_text_ingestion() {
 
 #[tokio::test]
 async fn test_pipeline_json_ingestion() {
-    let ng = neurograph_core::NeuroGraph::builder().build().await.unwrap();
+    let ng = neurograph_core::NeuroGraph::builder()
+        .build()
+        .await
+        .unwrap();
 
     let data = serde_json::json!({
         "name": "Bob",
@@ -296,7 +336,10 @@ async fn test_pipeline_json_ingestion() {
 
 #[tokio::test]
 async fn test_pipeline_deduplication() {
-    let ng = neurograph_core::NeuroGraph::builder().build().await.unwrap();
+    let ng = neurograph_core::NeuroGraph::builder()
+        .build()
+        .await
+        .unwrap();
 
     // Ingest same entity twice
     ng.add_text("Alice works at Anthropic").await.unwrap();
@@ -312,9 +355,16 @@ async fn test_pipeline_deduplication() {
 
 #[tokio::test]
 async fn test_pipeline_cost_tracking() {
-    let ng = neurograph_core::NeuroGraph::builder().build().await.unwrap();
+    let ng = neurograph_core::NeuroGraph::builder()
+        .build()
+        .await
+        .unwrap();
 
     // Without LLM, cost should be 0
     ng.add_text("Alice works at Anthropic").await.unwrap();
-    assert_eq!(ng.total_cost_usd(), 0.0, "Regex-only pipeline should have zero cost");
+    assert_eq!(
+        ng.total_cost_usd(),
+        0.0,
+        "Regex-only pipeline should have zero cost"
+    );
 }

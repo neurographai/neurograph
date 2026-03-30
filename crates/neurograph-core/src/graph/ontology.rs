@@ -231,7 +231,9 @@ impl Ontology {
         }
 
         if self.strict_mode {
-            prompt.push_str("\nIMPORTANT: Only use the entity and relationship types listed above.\n");
+            prompt.push_str(
+                "\nIMPORTANT: Only use the entity and relationship types listed above.\n",
+            );
         }
 
         prompt
@@ -256,8 +258,7 @@ mod tests {
             EntityTypeDefinition::new("Person", "A human being")
                 .with_example("Alice")
                 .with_attribute(
-                    AttributeDefinition::new("age", "number")
-                        .with_description("Age in years"),
+                    AttributeDefinition::new("age", "number").with_description("Age in years"),
                 ),
         );
 

@@ -6,9 +6,7 @@
 use neurograph_core::drivers::embedded::EmbeddedDriver;
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
-use neurograph_core::graph::{
-    Community, Entity, EntityId, Episode, Relationship,
-};
+use neurograph_core::graph::{Community, Entity, EntityId, Episode, Relationship};
 
 /// Run a test function against both drivers.
 async fn run_against_both<F, Fut>(test_fn: F)
@@ -143,14 +141,8 @@ async fn test_driver_vector_search() {
 #[tokio::test]
 async fn test_driver_stats() {
     run_against_both(|driver| async move {
-        driver
-            .store_entity(&Entity::new("A", "T"))
-            .await
-            .unwrap();
-        driver
-            .store_entity(&Entity::new("B", "T"))
-            .await
-            .unwrap();
+        driver.store_entity(&Entity::new("A", "T")).await.unwrap();
+        driver.store_entity(&Entity::new("B", "T")).await.unwrap();
 
         let stats = driver.stats().await.unwrap();
         assert_eq!(stats["entities"], 2);
@@ -161,10 +153,7 @@ async fn test_driver_stats() {
 #[tokio::test]
 async fn test_driver_clear() {
     run_against_both(|driver| async move {
-        driver
-            .store_entity(&Entity::new("A", "T"))
-            .await
-            .unwrap();
+        driver.store_entity(&Entity::new("A", "T")).await.unwrap();
         driver.clear().await.unwrap();
 
         let stats = driver.stats().await.unwrap();

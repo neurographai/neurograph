@@ -44,8 +44,7 @@ impl CausalExtractor {
                 0.8,
             ),
             (
-                regex::Regex::new(r"(?i)(?:because|since|due to)\s+(.+?),\s*(.+)")
-                    .unwrap(),
+                regex::Regex::new(r"(?i)(?:because|since|due to)\s+(.+?),\s*(.+)").unwrap(),
                 "because_of".to_string(),
                 0.7,
             ),
@@ -56,14 +55,12 @@ impl CausalExtractor {
                 0.75,
             ),
             (
-                regex::Regex::new(r"(?i)if\s+(.+?)\s+then\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(r"(?i)if\s+(.+?)\s+then\s+(.+)").unwrap(),
                 "conditional".to_string(),
                 0.6,
             ),
             (
-                regex::Regex::new(r"(?i)(.+?)\s+(?:enabled|allowed|made possible)\s+(.+)")
-                    .unwrap(),
+                regex::Regex::new(r"(?i)(.+?)\s+(?:enabled|allowed|made possible)\s+(.+)").unwrap(),
                 "enabled".to_string(),
                 0.7,
             ),

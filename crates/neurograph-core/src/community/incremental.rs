@@ -166,7 +166,9 @@ impl IncrementalCommunityUpdater {
 
             for community in communities {
                 if community.members().any(|m| m == neighbor_id) {
-                    *community_votes.entry(community.id.as_str().to_string()).or_insert(0) += 1;
+                    *community_votes
+                        .entry(community.id.as_str().to_string())
+                        .or_insert(0) += 1;
                 }
             }
         }
@@ -242,10 +244,7 @@ mod tests {
         let bob = Entity::new("Bob", "Person");
         driver.store_entity(&bob).await.unwrap();
 
-        let rel = Relationship::new(
-            bob.id.clone(), alice.id.clone(),
-            "KNOWS", "Bob knows Alice",
-        );
+        let rel = Relationship::new(bob.id.clone(), alice.id.clone(), "KNOWS", "Bob knows Alice");
         driver.store_relationship(&rel).await.unwrap();
 
         let result = updater

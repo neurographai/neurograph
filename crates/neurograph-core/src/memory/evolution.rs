@@ -16,11 +16,10 @@
 //! Reference: "Self-Evolving Memory with RL-guided forgetting and
 //! memory reconsolidation" (EverMemOS, 2026).
 
-use std::collections::HashMap;
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use rand::Rng;
-
+use std::collections::HashMap;
+use uuid::Uuid;
 
 /// Configuration for memory decay.
 #[derive(Debug, Clone)]
@@ -108,7 +107,13 @@ impl RetentionPolicy {
 
     /// Decide whether to keep or forget an item.
     /// Returns true = keep, false = forget.
-    pub fn decide(&self, importance: f64, access_freq: f64, recency: f64, connectivity: f64) -> bool {
+    pub fn decide(
+        &self,
+        importance: f64,
+        access_freq: f64,
+        recency: f64,
+        connectivity: f64,
+    ) -> bool {
         let key = Self::state_key(importance, access_freq, recency, connectivity);
         let q_values = self.q_table.get(&key).copied().unwrap_or([0.5, 0.5]);
 
@@ -426,7 +431,7 @@ mod tests {
     #[test]
     fn test_rl_retention_decision() {
         let policy = RetentionPolicy::new(0.1, 0.95, 0.0, 42); // No exploration
-        // High importance, high access → keep
+                                                               // High importance, high access → keep
         assert!(policy.decide(0.8, 10.0, 0.9, 0.7));
     }
 

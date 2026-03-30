@@ -171,10 +171,7 @@ impl LlmClient for GenericLlmClient {
                     retry_after_ms: 1000,
                 });
             }
-            return Err(LlmError::ApiError(format!(
-                "HTTP {}: {}",
-                status, body
-            )));
+            return Err(LlmError::ApiError(format!("HTTP {}: {}", status, body)));
         }
 
         let chat_response: ChatResponse = resp

@@ -35,11 +35,7 @@ impl FusionEngine {
     }
 
     /// Fuse subgraph results from multiple views into a single ranked list.
-    pub fn fuse(
-        &self,
-        subgraph_results: Vec<SubgraphResult>,
-        intent: &QueryIntent,
-    ) -> QueryResult {
+    pub fn fuse(&self, subgraph_results: Vec<SubgraphResult>, intent: &QueryIntent) -> QueryResult {
         let mut fused_scores: HashMap<Uuid, f64> = HashMap::new();
         let mut view_counts: HashMap<Uuid, usize> = HashMap::new();
         let mut views_used = Vec::new();
@@ -67,11 +63,8 @@ impl FusionEngine {
             });
 
             // Apply RRF: score(d) = Σ view_weight / (rrf_k + rank(d))
-            for (rank, (node_id, _original_score)) in result
-                .node_ids
-                .iter()
-                .zip(result.scores.iter())
-                .enumerate()
+            for (rank, (node_id, _original_score)) in
+                result.node_ids.iter().zip(result.scores.iter()).enumerate()
             {
                 let rrf_score = view_weight / (self.rrf_k + rank as f64 + 1.0);
                 *fused_scores.entry(*node_id).or_default() += rrf_score;

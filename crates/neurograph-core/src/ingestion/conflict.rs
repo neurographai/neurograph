@@ -104,10 +104,7 @@ impl ConflictResolver {
     /// Sets `valid_until = now` and `expired_at = now` on the old relationship,
     /// then returns it for storage update. The new relationship should be stored
     /// separately with `valid_from = now`.
-    pub fn resolve_contradiction(
-        existing: &mut Relationship,
-        resolution_time: DateTime<Utc>,
-    ) {
+    pub fn resolve_contradiction(existing: &mut Relationship, resolution_time: DateTime<Utc>) {
         existing.invalidate(resolution_time);
 
         tracing::info!(

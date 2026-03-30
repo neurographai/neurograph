@@ -23,16 +23,16 @@ pub mod intent;
 pub mod semantic;
 pub mod temporal;
 
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 // Re-export key types
-pub use intent::{IntentRouter, IntentType, QueryIntent, TraversalPlan, FusionStrategy};
 pub use fusion::FusionEngine;
+pub use intent::{FusionStrategy, IntentRouter, IntentType, QueryIntent, TraversalPlan};
 
 /// A single memory item that exists across all four graph views.
 #[derive(Debug, Clone, Serialize, Deserialize)]

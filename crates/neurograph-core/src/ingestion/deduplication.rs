@@ -10,7 +10,6 @@
 //! This prevents duplicate entities like "Alice" and "alice" or
 //! "Anthropic" and "Anthropic Inc." from cluttering the graph.
 
-
 use crate::drivers::traits::{GraphDriver, VectorSearchResult};
 use crate::embedders::traits::Embedder;
 use crate::graph::{Entity, EntityId};
@@ -126,11 +125,7 @@ impl Deduplicator {
         };
 
         let vector_results: Vec<VectorSearchResult> = driver
-            .search_entities_by_vector(
-                &query_embedding,
-                self.config.max_candidates,
-                None,
-            )
+            .search_entities_by_vector(&query_embedding, self.config.max_candidates, None)
             .await
             .map_err(|e| DeduplicationError::DriverError(e.to_string()))?;
 
@@ -227,9 +222,16 @@ mod tests {
         let mut existing = Entity::new("Alice", "Person");
         existing.summary = "A person".to_string();
 
-        Deduplicator::merge_entities(&mut existing, "Alice Johnson", "Alice Johnson is a researcher at Anthropic");
+        Deduplicator::merge_entities(
+            &mut existing,
+            "Alice Johnson",
+            "Alice Johnson is a researcher at Anthropic",
+        );
 
-        assert_eq!(existing.summary, "Alice Johnson is a researcher at Anthropic");
+        assert_eq!(
+            existing.summary,
+            "Alice Johnson is a researcher at Anthropic"
+        );
     }
 
     #[test]

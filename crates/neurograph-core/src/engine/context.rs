@@ -128,10 +128,7 @@ impl ContextBuilder {
                     continue;
                 }
 
-                let line = format!(
-                    "- **{}**: {}",
-                    community.name, community.summary
-                );
+                let line = format!("- **{}**: {}", community.name, community.summary);
 
                 let tokens = Self::estimate_tokens(&line);
                 if total_tokens + tokens > self.max_context_tokens {
@@ -233,6 +230,9 @@ mod tests {
             .collect();
 
         let ctx = builder.build(&entities, &[], &[], "test");
-        assert!(ctx.entity_count < 100, "Should have been truncated by budget");
+        assert!(
+            ctx.entity_count < 100,
+            "Should have been truncated by budget"
+        );
     }
 }

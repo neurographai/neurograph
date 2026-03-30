@@ -56,9 +56,21 @@ impl QueryRouter {
 
         // Temporal indicators
         let temporal_words = [
-            "when", "before", "after", "during", "history", "changed",
-            "used to", "previously", "was", "were", "in 2", "in 1",
-            "timeline", "evolution", "over time",
+            "when",
+            "before",
+            "after",
+            "during",
+            "history",
+            "changed",
+            "used to",
+            "previously",
+            "was",
+            "were",
+            "in 2",
+            "in 1",
+            "timeline",
+            "evolution",
+            "over time",
         ];
         if temporal_words.iter().any(|w| lower.contains(w)) {
             return QueryType::Temporal;
@@ -66,8 +78,15 @@ impl QueryRouter {
 
         // Global indicators
         let global_words = [
-            "summarize", "overview", "main topics", "all ", "everything",
-            "what are the", "list all", "theme", "how many",
+            "summarize",
+            "overview",
+            "main topics",
+            "all ",
+            "everything",
+            "what are the",
+            "list all",
+            "theme",
+            "how many",
         ];
         if global_words.iter().any(|w| lower.contains(w)) {
             return QueryType::Global;
@@ -75,8 +94,14 @@ impl QueryRouter {
 
         // Multi-hop indicators
         let multihop_words = [
-            "connected", "related", "relationship between", "path",
-            "how does", "influence", "impact", "through",
+            "connected",
+            "related",
+            "relationship between",
+            "path",
+            "how does",
+            "influence",
+            "impact",
+            "through",
         ];
         if multihop_words.iter().any(|w| lower.contains(w)) {
             return QueryType::MultiHop;
@@ -138,10 +163,7 @@ mod tests {
     fn test_query_classification() {
         let router = QueryRouter::new();
 
-        assert_eq!(
-            router.classify("Where does Alice work?"),
-            QueryType::Local
-        );
+        assert_eq!(router.classify("Where does Alice work?"), QueryType::Local);
         assert_eq!(
             router.classify("When did Alice move to SF?"),
             QueryType::Temporal

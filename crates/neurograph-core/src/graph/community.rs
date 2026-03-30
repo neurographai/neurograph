@@ -211,8 +211,7 @@ mod tests {
     #[test]
     fn test_community_hierarchy() {
         let parent = Community::new("parent", 1);
-        let child = Community::new("child", 0)
-            .with_parent(parent.id.clone());
+        let child = Community::new("child", 0).with_parent(parent.id.clone());
         assert_eq!(child.parent_id.as_ref().unwrap().as_str(), "parent");
     }
 }

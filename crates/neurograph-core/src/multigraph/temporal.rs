@@ -7,8 +7,8 @@
 //! memory items (Before, After, During, Overlaps, Meets, etc.)
 
 use super::*;
-use std::collections::{BTreeMap, HashMap};
 use chrono::Duration;
+use std::collections::{BTreeMap, HashMap};
 
 /// Temporal graph: edges represent temporal relationships between facts.
 pub struct TemporalGraph {
@@ -60,9 +60,7 @@ impl TemporalGraph {
         // Find temporally adjacent nodes within window
         let window = Duration::days(self.config.temporal_window_days);
         let window_start = item.valid_from - window;
-        let window_end = item
-            .valid_until
-            .unwrap_or(item.valid_from + window);
+        let window_end = item.valid_until.unwrap_or(item.valid_from + window);
 
         let nearby: Vec<(DateTime<Utc>, Vec<Uuid>)> = self
             .time_index
@@ -77,12 +75,8 @@ impl TemporalGraph {
                 }
 
                 let other_end = self.validity.get(&other_id).and_then(|v| v.1);
-                let relation = self.compute_relation(
-                    item.valid_from,
-                    item.valid_until,
-                    other_time,
-                    other_end,
-                );
+                let relation =
+                    self.compute_relation(item.valid_from, item.valid_until, other_time, other_end);
 
                 let gap = if item.valid_from > other_time {
                     (item.valid_from - other_time).num_hours()
@@ -107,10 +101,7 @@ impl TemporalGraph {
                     valid_until: item.valid_until,
                     metadata: {
                         let mut m = HashMap::new();
-                        m.insert(
-                            "gap_hours".to_string(),
-                            serde_json::json!(gap),
-                        );
+                        m.insert("gap_hours".to_string(), serde_json::json!(gap));
                         m
                     },
                 });

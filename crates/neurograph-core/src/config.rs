@@ -37,9 +37,7 @@ pub enum EmbeddingProvider {
     /// Good for testing and deduplication, not for semantic search.
     Local,
     /// OpenAI text-embedding-3-small.
-    OpenAi {
-        model: String,
-    },
+    OpenAi { model: String },
     // Future:
     // FastEmbed { model: String },
     // Custom { base_url: String, model: String },
@@ -67,9 +65,7 @@ pub enum CommunityAlgorithm {
         resolution: f64,
     },
     /// Louvain algorithm (simpler, faster).
-    Louvain {
-        resolution: f64,
-    },
+    Louvain { resolution: f64 },
     /// Disabled — no community detection.
     Disabled,
 }
@@ -204,9 +200,7 @@ impl NeuroGraphConfigBuilder {
     }
 
     pub fn embedded(mut self, path: impl Into<String>) -> Self {
-        self.storage = Some(StorageBackend::Embedded {
-            path: path.into(),
-        });
+        self.storage = Some(StorageBackend::Embedded { path: path.into() });
         self
     }
 
@@ -270,7 +264,9 @@ impl NeuroGraphConfigBuilder {
             default_group_id: self.default_group_id.unwrap_or(defaults.default_group_id),
             budget_usd: self.budget_usd.or(defaults.budget_usd),
             store_raw_content: self.store_raw_content.unwrap_or(defaults.store_raw_content),
-            max_concurrent_llm: self.max_concurrent_llm.unwrap_or(defaults.max_concurrent_llm),
+            max_concurrent_llm: self
+                .max_concurrent_llm
+                .unwrap_or(defaults.max_concurrent_llm),
             enable_tracing: self.enable_tracing.unwrap_or(defaults.enable_tracing),
         }
     }

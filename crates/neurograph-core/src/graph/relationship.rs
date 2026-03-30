@@ -153,15 +153,9 @@ impl Relationship {
 
     /// Check if this relationship was valid at a specific point in time.
     pub fn is_valid_at(&self, timestamp: &DateTime<Utc>) -> bool {
-        let after_start = self
-            .valid_from
-            .map(|vf| timestamp >= &vf)
-            .unwrap_or(true);
+        let after_start = self.valid_from.map(|vf| timestamp >= &vf).unwrap_or(true);
 
-        let before_end = self
-            .valid_until
-            .map(|vu| timestamp < &vu)
-            .unwrap_or(true);
+        let before_end = self.valid_until.map(|vu| timestamp < &vu).unwrap_or(true);
 
         after_start && before_end && self.expired_at.is_none()
     }

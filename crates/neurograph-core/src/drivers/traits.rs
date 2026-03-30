@@ -17,7 +17,10 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
-use crate::graph::{Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId, Relationship, RelationshipId};
+use crate::graph::{
+    Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId, Relationship,
+    RelationshipId,
+};
 
 /// Errors that can occur during driver operations.
 #[derive(Debug, thiserror::Error)]
@@ -158,7 +161,11 @@ pub trait GraphDriver: Send + Sync {
     async fn delete_entity(&self, id: &EntityId) -> DriverResult<()>;
 
     /// List all entities, optionally filtered by group ID.
-    async fn list_entities(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Entity>>;
+    async fn list_entities(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Entity>>;
 
     // --- Relationship Operations ---
 
@@ -177,7 +184,10 @@ pub trait GraphDriver: Send + Sync {
     async fn get_relationship(&self, id: &RelationshipId) -> DriverResult<Relationship>;
 
     /// Get all relationships for an entity (both directions).
-    async fn get_entity_relationships(&self, entity_id: &EntityId) -> DriverResult<Vec<Relationship>>;
+    async fn get_entity_relationships(
+        &self,
+        entity_id: &EntityId,
+    ) -> DriverResult<Vec<Relationship>>;
 
     /// Delete a relationship by its ID.
     async fn delete_relationship(&self, id: &RelationshipId) -> DriverResult<()>;
@@ -191,7 +201,11 @@ pub trait GraphDriver: Send + Sync {
     async fn get_episode(&self, id: &EpisodeId) -> DriverResult<Episode>;
 
     /// List recent episodes.
-    async fn list_episodes(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Episode>>;
+    async fn list_episodes(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Episode>>;
 
     // --- Community Operations ---
 
@@ -202,7 +216,8 @@ pub trait GraphDriver: Send + Sync {
     async fn get_community(&self, id: &CommunityId) -> DriverResult<Community>;
 
     /// Get all communities at a specific hierarchy level.
-    async fn get_communities_at_level(&self, level: CommunityLevel) -> DriverResult<Vec<Community>>;
+    async fn get_communities_at_level(&self, level: CommunityLevel)
+        -> DriverResult<Vec<Community>>;
 
     /// Get all dirty (need re-summarization) communities.
     async fn get_dirty_communities(&self) -> DriverResult<Vec<Community>>;

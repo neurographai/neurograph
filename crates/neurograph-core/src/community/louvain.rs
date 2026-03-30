@@ -15,10 +15,10 @@
 //! Influenced by GraphRAG's community detection (hierarchical_leiden.py)
 //! but implemented in pure Rust for 10-50x speedup.
 
-use std::collections::HashMap;
 use crate::drivers::traits::GraphDriver;
 use crate::graph::entity::EntityId;
 use crate::graph::Community;
+use std::collections::HashMap;
 
 /// Configuration for the Louvain algorithm.
 #[derive(Debug, Clone)]
@@ -166,8 +166,7 @@ impl LouvainDetector {
         }
 
         // Step 2: Run Louvain algorithm
-        let (community_assignments, modularity, iterations) =
-            self.run_louvain(n, &edges);
+        let (community_assignments, modularity, iterations) = self.run_louvain(n, &edges);
 
         // Step 3: Build Community objects
         let mut community_members: HashMap<usize, Vec<EntityId>> = HashMap::new();
@@ -175,9 +174,7 @@ impl LouvainDetector {
             community_members
                 .entry(comm_id)
                 .or_default()
-                .push(EntityId::from_uuid(
-                    entities[node_idx].id.0,
-                ));
+                .push(EntityId::from_uuid(entities[node_idx].id.0));
         }
 
         let mut communities = Vec::new();
@@ -220,11 +217,7 @@ impl LouvainDetector {
     /// Run the core Louvain algorithm on a graph with n nodes and given edges.
     ///
     /// Returns: (community assignments per node, modularity, iterations used)
-    fn run_louvain(
-        &self,
-        n: usize,
-        edges: &[LouvainEdge],
-    ) -> (Vec<usize>, f64, usize) {
+    fn run_louvain(&self, n: usize, edges: &[LouvainEdge]) -> (Vec<usize>, f64, usize) {
         // Initialize: each node in its own community
         let mut community: Vec<usize> = (0..n).collect();
 
@@ -286,7 +279,8 @@ impl LouvainDetector {
                 }
 
                 // Remove node i from its current community for calculation
-                let sigma_tot_current = community_total.get(&current_comm).copied().unwrap_or(0.0) - ki;
+                let sigma_tot_current =
+                    community_total.get(&current_comm).copied().unwrap_or(0.0) - ki;
 
                 for (&comm, &sigma_in_new) in &neighbor_comms {
                     if comm == current_comm {
@@ -299,7 +293,8 @@ impl LouvainDetector {
                     // ΔQ = [sigma_in_new/m - resolution * sigma_tot_new * ki / m²]
                     //    - [sigma_in_current/m - resolution * sigma_tot_current * ki / m²]
                     let gain = (sigma_in_new - sigma_in_current) / m2
-                        - self.config.resolution * ki * (sigma_tot_new - sigma_tot_current) / (m2 * m2 / 2.0);
+                        - self.config.resolution * ki * (sigma_tot_new - sigma_tot_current)
+                            / (m2 * m2 / 2.0);
 
                     if gain > best_gain {
                         best_gain = gain;
@@ -360,7 +355,8 @@ impl LouvainDetector {
         let mut q = 0.0;
         for edge in edges {
             if community[edge.source] == community[edge.target] {
-                q += edge.weight - self.config.resolution * strength[edge.source] * strength[edge.target] / m2;
+                q += edge.weight
+                    - self.config.resolution * strength[edge.source] * strength[edge.target] / m2;
             }
         }
 
@@ -420,9 +416,9 @@ pub enum CommunityError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use crate::drivers::memory::MemoryDriver;
     use crate::graph::{Entity, Relationship};
+    use std::sync::Arc;
 
     #[test]
     fn test_louvain_config_default() {
@@ -456,15 +452,43 @@ mod tests {
         // Two cliques of 3 nodes each, connected by one weak edge
         let edges = vec![
             // Clique 1: nodes 0,1,2
-            LouvainEdge { source: 0, target: 1, weight: 1.0 },
-            LouvainEdge { source: 1, target: 2, weight: 1.0 },
-            LouvainEdge { source: 0, target: 2, weight: 1.0 },
+            LouvainEdge {
+                source: 0,
+                target: 1,
+                weight: 1.0,
+            },
+            LouvainEdge {
+                source: 1,
+                target: 2,
+                weight: 1.0,
+            },
+            LouvainEdge {
+                source: 0,
+                target: 2,
+                weight: 1.0,
+            },
             // Clique 2: nodes 3,4,5
-            LouvainEdge { source: 3, target: 4, weight: 1.0 },
-            LouvainEdge { source: 4, target: 5, weight: 1.0 },
-            LouvainEdge { source: 3, target: 5, weight: 1.0 },
+            LouvainEdge {
+                source: 3,
+                target: 4,
+                weight: 1.0,
+            },
+            LouvainEdge {
+                source: 4,
+                target: 5,
+                weight: 1.0,
+            },
+            LouvainEdge {
+                source: 3,
+                target: 5,
+                weight: 1.0,
+            },
             // Weak bridge
-            LouvainEdge { source: 2, target: 3, weight: 0.1 },
+            LouvainEdge {
+                source: 2,
+                target: 3,
+                weight: 0.1,
+            },
         ];
 
         let (comm, modularity, _) = detector.run_louvain(6, &edges);
@@ -487,7 +511,11 @@ mod tests {
         assert_ne!(comm[0], comm[3], "Cliques should be different communities");
 
         // Modularity should be positive
-        assert!(modularity > 0.0, "Modularity should be positive: {}", modularity);
+        assert!(
+            modularity > 0.0,
+            "Modularity should be positive: {}",
+            modularity
+        );
     }
 
     #[tokio::test]
@@ -504,12 +532,16 @@ mod tests {
         let _: () = driver.store_entity(&anthropic).await.unwrap();
 
         let rel1 = Relationship::new(
-            alice.id.clone(), anthropic.id.clone(),
-            "WORKS_AT", "Alice works at Anthropic",
+            alice.id.clone(),
+            anthropic.id.clone(),
+            "WORKS_AT",
+            "Alice works at Anthropic",
         );
         let rel2 = Relationship::new(
-            bob.id.clone(), anthropic.id.clone(),
-            "WORKS_AT", "Bob works at Anthropic",
+            bob.id.clone(),
+            anthropic.id.clone(),
+            "WORKS_AT",
+            "Bob works at Anthropic",
         );
         let _: () = driver.store_relationship(&rel1).await.unwrap();
         let _: () = driver.store_relationship(&rel2).await.unwrap();
@@ -518,9 +550,6 @@ mod tests {
         let result = detector.detect(driver.as_ref(), None).await.unwrap();
 
         // Should have at least one community
-        assert!(
-            !result.communities.is_empty(),
-            "Should detect communities"
-        );
+        assert!(!result.communities.is_empty(), "Should detect communities");
     }
 }

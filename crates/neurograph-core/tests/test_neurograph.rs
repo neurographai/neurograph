@@ -23,11 +23,7 @@ async fn test_neurograph_builder_named() {
 
 #[tokio::test]
 async fn test_neurograph_builder_with_budget() {
-    let ng = NeuroGraph::builder()
-        .budget(5.0)
-        .build()
-        .await
-        .unwrap();
+    let ng = NeuroGraph::builder().budget(5.0).build().await.unwrap();
     assert_eq!(ng.config().budget_usd, Some(5.0));
 }
 
@@ -37,7 +33,10 @@ async fn test_neurograph_add_text() {
 
     let episode = ng.add_text("Alice works at Anthropic").await.unwrap();
     assert_eq!(episode.content, "Alice works at Anthropic");
-    assert_eq!(episode.source_type, neurograph_core::graph::episode::EpisodeType::Text);
+    assert_eq!(
+        episode.source_type,
+        neurograph_core::graph::episode::EpisodeType::Text
+    );
 }
 
 #[tokio::test]
@@ -51,7 +50,10 @@ async fn test_neurograph_add_json() {
 
     let episode = ng.add_json(data).await.unwrap();
     assert!(episode.content.contains("Alice"));
-    assert_eq!(episode.source_type, neurograph_core::graph::episode::EpisodeType::Json);
+    assert_eq!(
+        episode.source_type,
+        neurograph_core::graph::episode::EpisodeType::Json
+    );
 }
 
 #[tokio::test]
@@ -59,8 +61,7 @@ async fn test_neurograph_entity_crud() {
     let ng = NeuroGraph::builder().build().await.unwrap();
 
     // Create and store entity
-    let entity = Entity::new("Alice", "Person")
-        .with_summary("A researcher at Anthropic");
+    let entity = Entity::new("Alice", "Person").with_summary("A researcher at Anthropic");
 
     ng.store_entity(&entity).await.unwrap();
 
@@ -94,7 +95,10 @@ async fn test_neurograph_relationship_crud() {
 
     let rels = ng.get_relationships(&alice.id).await.unwrap();
     assert_eq!(rels.len(), 1);
-    assert_eq!(rels[0].fact, "Alice works at Anthropic as a research scientist");
+    assert_eq!(
+        rels[0].fact,
+        "Alice works at Anthropic as a research scientist"
+    );
 }
 
 #[tokio::test]
@@ -200,9 +204,15 @@ async fn test_neurograph_embedded_storage() {
 async fn test_neurograph_schema_tracking() {
     let ng = NeuroGraph::builder().build().await.unwrap();
 
-    ng.store_entity(&Entity::new("Alice", "Person")).await.unwrap();
-    ng.store_entity(&Entity::new("Bob", "Person")).await.unwrap();
-    ng.store_entity(&Entity::new("Anthropic", "Organization")).await.unwrap();
+    ng.store_entity(&Entity::new("Alice", "Person"))
+        .await
+        .unwrap();
+    ng.store_entity(&Entity::new("Bob", "Person"))
+        .await
+        .unwrap();
+    ng.store_entity(&Entity::new("Anthropic", "Organization"))
+        .await
+        .unwrap();
 
     let schema = ng.schema();
     assert_eq!(schema.total_entities, 3);

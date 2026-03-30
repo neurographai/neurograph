@@ -18,8 +18,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::graph::{
-    Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId,
-    Relationship, RelationshipId,
+    Community, CommunityId, CommunityLevel, Entity, EntityId, Episode, EpisodeId, Relationship,
+    RelationshipId,
 };
 
 use super::traits::{
@@ -62,9 +62,21 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f64 {
         return 0.0;
     }
 
-    let dot: f64 = a.iter().zip(b.iter()).map(|(x, y)| (*x as f64) * (*y as f64)).sum();
-    let norm_a: f64 = a.iter().map(|x| (*x as f64) * (*x as f64)).sum::<f64>().sqrt();
-    let norm_b: f64 = b.iter().map(|x| (*x as f64) * (*x as f64)).sum::<f64>().sqrt();
+    let dot: f64 = a
+        .iter()
+        .zip(b.iter())
+        .map(|(x, y)| (*x as f64) * (*y as f64))
+        .sum();
+    let norm_a: f64 = a
+        .iter()
+        .map(|x| (*x as f64) * (*x as f64))
+        .sum::<f64>()
+        .sqrt();
+    let norm_b: f64 = b
+        .iter()
+        .map(|x| (*x as f64) * (*x as f64))
+        .sum::<f64>()
+        .sqrt();
 
     if norm_a == 0.0 || norm_b == 0.0 {
         return 0.0;
@@ -108,7 +120,11 @@ impl GraphDriver for MemoryDriver {
         Ok(())
     }
 
-    async fn list_entities(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Entity>> {
+    async fn list_entities(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Entity>> {
         let entities: Vec<Entity> = self
             .entities
             .iter()
@@ -137,7 +153,10 @@ impl GraphDriver for MemoryDriver {
             .ok_or_else(|| DriverError::RelationshipNotFound(id.as_str()))
     }
 
-    async fn get_entity_relationships(&self, entity_id: &EntityId) -> DriverResult<Vec<Relationship>> {
+    async fn get_entity_relationships(
+        &self,
+        entity_id: &EntityId,
+    ) -> DriverResult<Vec<Relationship>> {
         let rels: Vec<Relationship> = self
             .relationships
             .iter()
@@ -166,7 +185,11 @@ impl GraphDriver for MemoryDriver {
             .ok_or_else(|| DriverError::EpisodeNotFound(id.as_str()))
     }
 
-    async fn list_episodes(&self, group_id: Option<&str>, limit: usize) -> DriverResult<Vec<Episode>> {
+    async fn list_episodes(
+        &self,
+        group_id: Option<&str>,
+        limit: usize,
+    ) -> DriverResult<Vec<Episode>> {
         let mut episodes: Vec<Episode> = self
             .episodes
             .iter()
@@ -198,7 +221,10 @@ impl GraphDriver for MemoryDriver {
             .ok_or_else(|| DriverError::CommunityNotFound(id.as_str().to_string()))
     }
 
-    async fn get_communities_at_level(&self, level: CommunityLevel) -> DriverResult<Vec<Community>> {
+    async fn get_communities_at_level(
+        &self,
+        level: CommunityLevel,
+    ) -> DriverResult<Vec<Community>> {
         let communities: Vec<Community> = self
             .communities
             .iter()
@@ -258,7 +284,11 @@ impl GraphDriver for MemoryDriver {
             .collect();
 
         // Sort by score descending
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         results.truncate(k);
         Ok(results)
     }
@@ -334,7 +364,11 @@ impl GraphDriver for MemoryDriver {
             })
             .collect();
 
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         results.truncate(limit);
         Ok(results)
     }
@@ -349,7 +383,8 @@ impl GraphDriver for MemoryDriver {
     ) -> DriverResult<Subgraph> {
         let mut visited_entities = std::collections::HashSet::new();
         let mut visited_rels = std::collections::HashSet::new();
-        let mut queue: std::collections::VecDeque<(EntityId, usize)> = std::collections::VecDeque::new();
+        let mut queue: std::collections::VecDeque<(EntityId, usize)> =
+            std::collections::VecDeque::new();
 
         queue.push_back((start.clone(), 0));
 
@@ -502,12 +537,10 @@ mod tests {
     async fn test_memory_driver_vector_search() {
         let driver = MemoryDriver::new();
 
-        let entity1 = Entity::new("Machine Learning", "Concept")
-            .with_embedding(vec![1.0, 0.0, 0.0]);
-        let entity2 = Entity::new("Deep Learning", "Concept")
-            .with_embedding(vec![0.9, 0.1, 0.0]);
-        let entity3 = Entity::new("Cooking", "Concept")
-            .with_embedding(vec![0.0, 0.0, 1.0]);
+        let entity1 =
+            Entity::new("Machine Learning", "Concept").with_embedding(vec![1.0, 0.0, 0.0]);
+        let entity2 = Entity::new("Deep Learning", "Concept").with_embedding(vec![0.9, 0.1, 0.0]);
+        let entity3 = Entity::new("Cooking", "Concept").with_embedding(vec![0.0, 0.0, 1.0]);
 
         driver.store_entity(&entity1).await.unwrap();
         driver.store_entity(&entity2).await.unwrap();
@@ -527,10 +560,9 @@ mod tests {
     async fn test_memory_driver_text_search() {
         let driver = MemoryDriver::new();
 
-        let entity1 = Entity::new("Alice Smith", "Person")
-            .with_summary("A researcher at Anthropic");
-        let entity2 = Entity::new("Bob Jones", "Person")
-            .with_summary("A chef in NYC");
+        let entity1 =
+            Entity::new("Alice Smith", "Person").with_summary("A researcher at Anthropic");
+        let entity2 = Entity::new("Bob Jones", "Person").with_summary("A chef in NYC");
 
         driver.store_entity(&entity1).await.unwrap();
         driver.store_entity(&entity2).await.unwrap();
@@ -557,10 +589,16 @@ mod tests {
         driver.store_entity(&anthropic).await.unwrap();
 
         let rel1 = Relationship::new(
-            alice.id.clone(), anthropic.id.clone(), "WORKS_AT", "Alice works at Anthropic",
+            alice.id.clone(),
+            anthropic.id.clone(),
+            "WORKS_AT",
+            "Alice works at Anthropic",
         );
         let rel2 = Relationship::new(
-            bob.id.clone(), anthropic.id.clone(), "WORKS_AT", "Bob works at Anthropic",
+            bob.id.clone(),
+            anthropic.id.clone(),
+            "WORKS_AT",
+            "Bob works at Anthropic",
         );
         driver.store_relationship(&rel1).await.unwrap();
         driver.store_relationship(&rel2).await.unwrap();

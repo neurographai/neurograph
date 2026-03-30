@@ -13,7 +13,9 @@
 use async_trait::async_trait;
 use std::time::Instant;
 
-use super::traits::{ExtractionError, ExtractionResult, ExtractedEntity, ExtractedRelationship, Extractor};
+use super::traits::{
+    ExtractedEntity, ExtractedRelationship, ExtractionError, ExtractionResult, Extractor,
+};
 
 /// Extracts entities from structured JSON data.
 ///
@@ -82,9 +84,13 @@ impl JsonExtractor {
 
                     // Process nested fields for relationships
                     for (key, val) in map {
-                        if key == "name" || key == "type" || key == "entity_type"
-                            || key == "category" || key == "summary"
-                            || key == "description" || key == "bio"
+                        if key == "name"
+                            || key == "type"
+                            || key == "entity_type"
+                            || key == "category"
+                            || key == "summary"
+                            || key == "description"
+                            || key == "bio"
                         {
                             continue;
                         }
@@ -110,7 +116,12 @@ impl JsonExtractor {
                                 }
                             }
                             serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
-                                self.extract_from_value(val, Some(entity_name), entities, relationships);
+                                self.extract_from_value(
+                                    val,
+                                    Some(entity_name),
+                                    entities,
+                                    relationships,
+                                );
                             }
                             _ => {}
                         }
@@ -142,14 +153,21 @@ impl JsonExtractor {
     /// Infer entity type from the JSON key name.
     fn infer_type_from_key(key: &str) -> String {
         let key_lower = key.to_lowercase();
-        if key_lower.contains("company") || key_lower.contains("org") || key_lower.contains("employer") {
+        if key_lower.contains("company")
+            || key_lower.contains("org")
+            || key_lower.contains("employer")
+        {
             "Organization".to_string()
-        } else if key_lower.contains("city") || key_lower.contains("location")
-            || key_lower.contains("country") || key_lower.contains("place")
+        } else if key_lower.contains("city")
+            || key_lower.contains("location")
+            || key_lower.contains("country")
+            || key_lower.contains("place")
         {
             "Location".to_string()
-        } else if key_lower.contains("person") || key_lower.contains("author")
-            || key_lower.contains("user") || key_lower.contains("manager")
+        } else if key_lower.contains("person")
+            || key_lower.contains("author")
+            || key_lower.contains("user")
+            || key_lower.contains("manager")
         {
             "Person".to_string()
         } else {
@@ -207,7 +225,11 @@ mod tests {
 
         let names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
         assert!(names.contains(&"Bob"), "Should find Bob, got: {:?}", names);
-        assert!(names.contains(&"Anthropic"), "Should find Anthropic, got: {:?}", names);
+        assert!(
+            names.contains(&"Anthropic"),
+            "Should find Anthropic, got: {:?}",
+            names
+        );
     }
 
     #[tokio::test]
@@ -227,7 +249,8 @@ mod tests {
     async fn test_json_nested_relationships() {
         let extractor = JsonExtractor::new();
 
-        let input = r#"{"name": "Anthropic", "type": "Organization", "summary": "AI safety company"}"#;
+        let input =
+            r#"{"name": "Anthropic", "type": "Organization", "summary": "AI safety company"}"#;
         let result = extractor.extract(input).await.unwrap();
 
         assert_eq!(result.entities.len(), 1);

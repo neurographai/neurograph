@@ -3,7 +3,6 @@
 
 //! Pre-built search recipes — common query patterns.
 
-
 use crate::drivers::traits::{GraphDriver, Subgraph};
 use crate::embedders::traits::Embedder;
 use crate::graph::{Entity, EntityId};

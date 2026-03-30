@@ -171,14 +171,12 @@ impl Default for BM25Index {
 /// Tokenizer: lowercase, split on non-alphanumeric, filter stopwords and short tokens.
 fn tokenize(text: &str) -> Vec<String> {
     let stopwords: HashSet<&str> = [
-        "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
-        "have", "has", "had", "do", "does", "did", "will", "would", "could",
-        "should", "may", "might", "shall", "can", "to", "of", "in", "for",
-        "on", "with", "at", "by", "from", "as", "into", "about", "like",
-        "through", "after", "over", "between", "out", "up", "and", "but",
-        "or", "not", "no", "so", "if", "than", "too", "very", "just",
-        "it", "its", "this", "that", "these", "those", "he", "she", "they",
-        "we", "you", "i", "me", "my", "your", "his", "her", "their", "our",
+        "a", "an", "the", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had",
+        "do", "does", "did", "will", "would", "could", "should", "may", "might", "shall", "can",
+        "to", "of", "in", "for", "on", "with", "at", "by", "from", "as", "into", "about", "like",
+        "through", "after", "over", "between", "out", "up", "and", "but", "or", "not", "no", "so",
+        "if", "than", "too", "very", "just", "it", "its", "this", "that", "these", "those", "he",
+        "she", "they", "we", "you", "i", "me", "my", "your", "his", "her", "their", "our",
     ]
     .into_iter()
     .collect();
@@ -247,7 +245,10 @@ mod tests {
         // Re-index same doc with different content
         index.add_document(doc1, "Alice works at Anthropic");
         let results2 = index.query("Google", 10);
-        assert!(results2.is_empty(), "Google should not match after re-index");
+        assert!(
+            results2.is_empty(),
+            "Google should not match after re-index"
+        );
 
         let results3 = index.query("Anthropic", 10);
         assert!(!results3.is_empty());

@@ -13,11 +13,13 @@
 //! and enhanced with playback scrubbing for the G6 frontend.
 
 pub mod clock;
+pub mod forgetting;
 pub mod manager;
 pub mod versioning;
-pub mod forgetting;
 
 pub use clock::LogicalClock;
-pub use manager::{TemporalManager, TemporalSnapshot, TemporalDiff, TemporalError};
-pub use versioning::{FactVersion, FactVersionChain, EntityHistory, EntityHistoryEntry, EntityChangeType};
 pub use forgetting::{ForgettingConfig, ForgettingEngine, ForgettingError};
+pub use manager::{TemporalDiff, TemporalError, TemporalManager, TemporalSnapshot};
+pub use versioning::{
+    EntityChangeType, EntityHistory, EntityHistoryEntry, FactVersion, FactVersionChain,
+};

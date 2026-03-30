@@ -7,4 +7,4 @@ pub mod json;
 pub mod text;
 pub mod traits;
 
-pub use traits::{ExtractionResult, ExtractedEntity, ExtractedRelationship, Extractor};
+pub use traits::{ExtractedEntity, ExtractedRelationship, ExtractionResult, Extractor};

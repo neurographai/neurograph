@@ -129,8 +129,7 @@ impl IngestionPipeline {
         };
 
         // Step 1: Create episode (provenance)
-        let episode = Episode::text(source_name, text)
-            .with_group_id(&self.group_id);
+        let episode = Episode::text(source_name, text).with_group_id(&self.group_id);
 
         self.driver
             .store_episode(&episode)
@@ -388,8 +387,7 @@ impl IngestionPipeline {
         source_name: &str,
     ) -> Result<(Episode, PipelineResult), PipelineError> {
         // Store episode with JSON content
-        let episode = Episode::json(source_name, json.clone())
-            .with_group_id(&self.group_id);
+        let episode = Episode::json(source_name, json.clone()).with_group_id(&self.group_id);
 
         self.driver
             .store_episode(&episode)

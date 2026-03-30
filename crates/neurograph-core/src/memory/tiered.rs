@@ -13,10 +13,10 @@
 //!
 //! Reference: "EverMemOS Tiered Memory" — L1/L2/L3/L4 hierarchy (2026).
 
+use chrono::{DateTime, Duration, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use uuid::Uuid;
-use chrono::{DateTime, Utc, Duration};
-use serde::{Deserialize, Serialize};
 
 use crate::multigraph::MemoryTier;
 
@@ -386,7 +386,9 @@ impl TieredMemory {
     /// Get statistics.
     pub fn stats(&self) -> TieredStats {
         let total_accesses: u64 = self
-            .l1_working.iter().map(|i| i.access_count)
+            .l1_working
+            .iter()
+            .map(|i| i.access_count)
             .chain(self.l2_episodic.iter().map(|i| i.access_count))
             .chain(self.l3_semantic.iter().map(|i| i.access_count))
             .chain(self.l4_procedural.iter().map(|i| i.access_count))
@@ -522,12 +524,7 @@ impl TieredMemory {
     }
 
     /// Add a learned rule to L4 procedural memory.
-    pub fn add_rule(
-        &mut self,
-        pattern: String,
-        confidence: f64,
-        source_ids: Vec<Uuid>,
-    ) -> Uuid {
+    pub fn add_rule(&mut self, pattern: String, confidence: f64, source_ids: Vec<Uuid>) -> Uuid {
         let id = Uuid::new_v4();
         self.rules.push(LearnedRule {
             id,
@@ -547,7 +544,9 @@ impl TieredMemory {
             .iter()
             .filter(|r| {
                 let pattern_lower = r.pattern.to_lowercase();
-                query_lower.split_whitespace().any(|w| pattern_lower.contains(w))
+                query_lower
+                    .split_whitespace()
+                    .any(|w| pattern_lower.contains(w))
             })
             .cloned()
             .collect()
@@ -558,7 +557,8 @@ impl TieredMemory {
     /// Returns L1 working memory (full), recent L2 episodes, and applicable L4 rules.
     pub fn get_context_for_query(&self, query: &str) -> QueryContext {
         let working_items: Vec<Uuid> = self.l1_working.iter().map(|i| i.id).collect();
-        let recent_episodes: Vec<Uuid> = self.episodes.iter().rev().take(10).map(|e| e.id).collect();
+        let recent_episodes: Vec<Uuid> =
+            self.episodes.iter().rev().take(10).map(|e| e.id).collect();
         let applicable_rules = self.find_applicable_rules(query);
 
         QueryContext {

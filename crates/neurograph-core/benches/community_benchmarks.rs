@@ -3,9 +3,7 @@
 
 //! Community detection benchmarks: Louvain on synthetic graphs at various scales.
 
-use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion,
-};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use neurograph_core::community::louvain::{LouvainConfig, LouvainDetector};
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
@@ -74,11 +72,11 @@ fn bench_louvain_detection(c: &mut Criterion) {
 
     // (num_cliques, clique_size) → total nodes
     let configs = [
-        (5, 10),    // 50 nodes
-        (10, 10),   // 100 nodes
-        (20, 10),   // 200 nodes
-        (10, 50),   // 500 nodes
-        (20, 50),   // 1000 nodes
+        (5, 10),  // 50 nodes
+        (10, 10), // 100 nodes
+        (20, 10), // 200 nodes
+        (10, 50), // 500 nodes
+        (20, 50), // 1000 nodes
     ];
 
     for (num_cliques, clique_size) in configs {
@@ -91,21 +89,15 @@ fn bench_louvain_detection(c: &mut Criterion) {
             d
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("detect", &label),
-            &label,
-            |b, _| {
-                b.to_async(&rt).iter(|| {
-                    let d = &driver;
-                    async move {
-                        let detector = LouvainDetector::new();
-                        black_box(
-                            detector.detect(d, None).await.unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("detect", &label), &label, |b, _| {
+            b.to_async(&rt).iter(|| {
+                let d = &driver;
+                async move {
+                    let detector = LouvainDetector::new();
+                    black_box(detector.detect(d, None).await.unwrap());
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -135,9 +127,7 @@ fn bench_louvain_resolution(c: &mut Criterion) {
                             ..Default::default()
                         };
                         let detector = LouvainDetector::with_config(config);
-                        black_box(
-                            detector.detect(d, None).await.unwrap()
-                        );
+                        black_box(detector.detect(d, None).await.unwrap());
                     }
                 });
             },
@@ -146,9 +136,5 @@ fn bench_louvain_resolution(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_louvain_detection,
-    bench_louvain_resolution,
-);
+criterion_group!(benches, bench_louvain_detection, bench_louvain_resolution,);
 criterion_main!(benches);

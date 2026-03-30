@@ -32,11 +32,26 @@ async fn setup_two_clusters(driver: &MemoryDriver) {
     let rels = vec![
         Relationship::new(alice.id.clone(), bob.id.clone(), "KNOWS", "Alice knows Bob"),
         Relationship::new(bob.id.clone(), carol.id.clone(), "KNOWS", "Bob knows Carol"),
-        Relationship::new(alice.id.clone(), carol.id.clone(), "KNOWS", "Alice knows Carol"),
+        Relationship::new(
+            alice.id.clone(),
+            carol.id.clone(),
+            "KNOWS",
+            "Alice knows Carol",
+        ),
         Relationship::new(dave.id.clone(), eve.id.clone(), "KNOWS", "Dave knows Eve"),
         Relationship::new(eve.id.clone(), frank.id.clone(), "KNOWS", "Eve knows Frank"),
-        Relationship::new(dave.id.clone(), frank.id.clone(), "KNOWS", "Dave knows Frank"),
-        Relationship::new(carol.id.clone(), dave.id.clone(), "KNOWS", "Carol knows Dave"),
+        Relationship::new(
+            dave.id.clone(),
+            frank.id.clone(),
+            "KNOWS",
+            "Dave knows Frank",
+        ),
+        Relationship::new(
+            carol.id.clone(),
+            dave.id.clone(),
+            "KNOWS",
+            "Carol knows Dave",
+        ),
     ];
 
     for rel in &rels {
@@ -136,12 +151,7 @@ async fn test_incremental_with_existing_community() {
     let bob = Entity::new("Bob", "Person");
     driver.store_entity(&bob).await.unwrap();
 
-    let rel = Relationship::new(
-        bob.id.clone(),
-        alice.id.clone(),
-        "KNOWS",
-        "Bob knows Alice",
-    );
+    let rel = Relationship::new(bob.id.clone(), alice.id.clone(), "KNOWS", "Bob knows Alice");
     driver.store_relationship(&rel).await.unwrap();
 
     let updater = IncrementalCommunityUpdater::new(driver.clone());

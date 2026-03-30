@@ -161,8 +161,7 @@ impl LeidenDetector {
 
         while current_level < self.config.max_levels {
             // Step 2: Run Leiden algorithm on the current graph
-            let (community_map, modularity, iters) =
-                self.run_leiden(current_n, &current_edges);
+            let (community_map, modularity, iters) = self.run_leiden(current_n, &current_edges);
             total_iterations += iters;
             global_modularity = modularity; // Update to the highest level's modularity
 
@@ -171,10 +170,16 @@ impl LeidenDetector {
 
             for (node_idx, &comm_id) in community_map.iter().enumerate() {
                 if let Some(entities) = node_to_entity.get(&node_idx) {
-                    comm_to_members.entry(comm_id).or_default().extend(entities.iter().cloned());
+                    comm_to_members
+                        .entry(comm_id)
+                        .or_default()
+                        .extend(entities.iter().cloned());
                 }
                 if let Some(child_comm_id) = level_community_ids.get(&node_idx) {
-                    comm_to_child_comms.entry(comm_id).or_default().push(child_comm_id.clone());
+                    comm_to_child_comms
+                        .entry(comm_id)
+                        .or_default()
+                        .push(child_comm_id.clone());
                 }
             }
 
@@ -207,7 +212,7 @@ impl LeidenDetector {
                 comm_id_to_new_node.insert(comm_idx, new_node_id);
                 next_level_node_to_entity.insert(new_node_id, members);
                 next_level_community_ids.insert(new_node_id, community.id.clone());
-                
+
                 final_communities.push(community);
                 next_n += 1;
             }
@@ -222,16 +227,28 @@ impl LeidenDetector {
             for edge in current_edges {
                 let src_comm = community_map[edge.source];
                 let tgt_comm = community_map[edge.target];
-                if src_comm != tgt_comm { // We can ignore self-loops or sum them, generally modularity algorithms ignore self-loops for aggregation if not needed, but graphrag aggregates them. Let's merge.
+                if src_comm != tgt_comm {
+                    // We can ignore self-loops or sum them, generally modularity algorithms ignore self-loops for aggregation if not needed, but graphrag aggregates them. Let's merge.
                     let new_src = comm_id_to_new_node[&src_comm];
                     let new_tgt = comm_id_to_new_node[&tgt_comm];
                     // ensure ordering
-                    let (u, v) = if new_src < new_tgt { (new_src, new_tgt) } else { (new_tgt, new_src) };
+                    let (u, v) = if new_src < new_tgt {
+                        (new_src, new_tgt)
+                    } else {
+                        (new_tgt, new_src)
+                    };
                     *next_edges_map.entry((u, v)).or_insert(0.0) += edge.weight;
                 }
             }
 
-            current_edges = next_edges_map.into_iter().map(|((s, t), w)| LeidenEdge { source: s, target: t, weight: w }).collect();
+            current_edges = next_edges_map
+                .into_iter()
+                .map(|((s, t), w)| LeidenEdge {
+                    source: s,
+                    target: t,
+                    weight: w,
+                })
+                .collect();
             node_to_entity = next_level_node_to_entity;
             level_community_ids = next_level_community_ids;
             current_n = next_n;
@@ -239,7 +256,11 @@ impl LeidenDetector {
         }
 
         // Step 4: Map parent relationships for the hierarchy
-        let final_comms_lookup: HashMap<String, usize> = final_communities.iter().enumerate().map(|(i, c)| (c.id.as_str().to_string(), i)).collect();
+        let final_comms_lookup: HashMap<String, usize> = final_communities
+            .iter()
+            .enumerate()
+            .map(|(i, c)| (c.id.as_str().to_string(), i))
+            .collect();
         for i in 0..final_communities.len() {
             let parent_id = final_communities[i].id.clone();
             for child_id in final_communities[i].children_ids.clone() {
@@ -266,11 +287,7 @@ impl LeidenDetector {
     /// Core Leiden implementation.
     ///
     /// Returns (community_assignment_per_node, modularity, iterations).
-    fn run_leiden(
-        &self,
-        n: usize,
-        edges: &[LeidenEdge],
-    ) -> (Vec<usize>, f64, usize) {
+    fn run_leiden(&self, n: usize, edges: &[LeidenEdge]) -> (Vec<usize>, f64, usize) {
         if n == 0 {
             return (Vec::new(), 0.0, 0);
         }
@@ -304,25 +321,13 @@ impl LeidenDetector {
         for _outer in 0..self.config.max_iterations {
             total_iterations += 1;
 
-            let moved = self.local_moving_phase(
-                n,
-                &adj,
-                &mut community,
-                &weighted_degree,
-                m2,
-            );
+            let moved = self.local_moving_phase(n, &adj, &mut community, &weighted_degree, m2);
 
             if !moved {
                 break;
             }
 
-            self.refinement_phase(
-                n,
-                &adj,
-                &mut community,
-                &weighted_degree,
-                m2,
-            );
+            self.refinement_phase(n, &adj, &mut community, &weighted_degree, m2);
         }
 
         let mut renumber: HashMap<usize, usize> = HashMap::new();
@@ -338,8 +343,14 @@ impl LeidenDetector {
             .map(|c| *renumber.get(c).unwrap())
             .collect();
 
-        let modularity =
-            Self::compute_modularity(n, &adj, &community, &weighted_degree, m2, self.config.resolution);
+        let modularity = Self::compute_modularity(
+            n,
+            &adj,
+            &community,
+            &weighted_degree,
+            m2,
+            self.config.resolution,
+        );
 
         (community, modularity, total_iterations)
     }
@@ -367,9 +378,7 @@ impl LeidenDetector {
 
             let mut edges_to_comm: HashMap<usize, f64> = HashMap::new();
             for &(neighbor, weight) in &adj[node] {
-                *edges_to_comm
-                    .entry(community[neighbor])
-                    .or_insert(0.0) += weight;
+                *edges_to_comm.entry(community[neighbor]).or_insert(0.0) += weight;
             }
 
             let ki_in_current = edges_to_comm.get(&current_comm).copied().unwrap_or(0.0);
@@ -446,14 +455,13 @@ impl LeidenDetector {
                     let mut edges_to_comm: HashMap<usize, f64> = HashMap::new();
                     for &(neighbor, weight) in &adj[node] {
                         if community[neighbor] != current_comm {
-                            *edges_to_comm
-                                .entry(community[neighbor])
-                                .or_insert(0.0) += weight;
+                            *edges_to_comm.entry(community[neighbor]).or_insert(0.0) += weight;
                         }
                     }
 
-                    if let Some((&best_neighbor_comm, &best_weight)) =
-                        edges_to_comm.iter().max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                    if let Some((&best_neighbor_comm, &best_weight)) = edges_to_comm
+                        .iter()
+                        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
                     {
                         let delta = (best_weight - internal_weight) / m2;
 
@@ -516,18 +524,37 @@ mod tests {
         let rels1 = vec![
             Relationship::new(alice.id.clone(), bob.id.clone(), "KNOWS", "Alice knows Bob"),
             Relationship::new(bob.id.clone(), carol.id.clone(), "KNOWS", "Bob knows Carol"),
-            Relationship::new(alice.id.clone(), carol.id.clone(), "KNOWS", "Alice knows Carol"),
+            Relationship::new(
+                alice.id.clone(),
+                carol.id.clone(),
+                "KNOWS",
+                "Alice knows Carol",
+            ),
         ];
 
         let rels2 = vec![
             Relationship::new(dave.id.clone(), eve.id.clone(), "KNOWS", "Dave knows Eve"),
             Relationship::new(eve.id.clone(), frank.id.clone(), "KNOWS", "Eve knows Frank"),
-            Relationship::new(dave.id.clone(), frank.id.clone(), "KNOWS", "Dave knows Frank"),
+            Relationship::new(
+                dave.id.clone(),
+                frank.id.clone(),
+                "KNOWS",
+                "Dave knows Frank",
+            ),
         ];
 
-        let bridge = Relationship::new(carol.id.clone(), dave.id.clone(), "KNOWS", "Carol knows Dave");
+        let bridge = Relationship::new(
+            carol.id.clone(),
+            dave.id.clone(),
+            "KNOWS",
+            "Carol knows Dave",
+        );
 
-        for rel in rels1.iter().chain(rels2.iter()).chain(std::iter::once(&bridge)) {
+        for rel in rels1
+            .iter()
+            .chain(rels2.iter())
+            .chain(std::iter::once(&bridge))
+        {
             let _: () = driver.store_relationship(rel).await.unwrap();
         }
     }
@@ -546,9 +573,15 @@ mod tests {
             result.communities.len()
         );
         // The hierarchical Leiden might run recursively and have multiple levels
-        // so we check that the assignments exist and levels are reasonable 
-        assert!(result.modularity >= 0.0, "Modularity should be non-negative");
-        assert!(result.iterations > 0, "Should have run at least 1 iteration");
+        // so we check that the assignments exist and levels are reasonable
+        assert!(
+            result.modularity >= 0.0,
+            "Modularity should be non-negative"
+        );
+        assert!(
+            result.iterations > 0,
+            "Should have run at least 1 iteration"
+        );
     }
 
     #[tokio::test]

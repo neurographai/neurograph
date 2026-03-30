@@ -80,11 +80,7 @@ impl Embedder for OpenAiEmbedder {
             .await
             .map_err(|e| EmbedderError::ApiError(e.to_string()))?;
 
-        let embeddings: Vec<Vec<f32>> = response
-            .data
-            .into_iter()
-            .map(|d| d.embedding)
-            .collect();
+        let embeddings: Vec<Vec<f32>> = response.data.into_iter().map(|d| d.embedding).collect();
 
         Ok(embeddings)
     }

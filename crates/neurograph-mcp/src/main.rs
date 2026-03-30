@@ -36,9 +36,9 @@
 
 mod tools;
 
-use std::io::{self, BufRead, Write};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::io::{self, BufRead, Write};
 
 /// JSON-RPC 2.0 request.
 #[derive(Debug, Deserialize)]
@@ -68,8 +68,6 @@ struct JsonRpcError {
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<Value>,
 }
-
-
 
 /// MCP Server implementation.
 struct McpServer {

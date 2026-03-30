@@ -1,7 +1,45 @@
 // ============================================================
 // NeuroGraph — G6 Theme Configuration
-// Premium dark theme matching the design system
+// Color palettes, type mappings, and state styles
 // ============================================================
+
+/**
+ * Node type → fill color mapping.
+ * Must match the sidebar legend exactly.
+ */
+export const NODE_TYPE_COLORS: Record<string, string> = {
+  person: '#6366f1',       // Indigo
+  organization: '#3b82f6', // Blue
+  location: '#10b981',     // Emerald
+  event: '#f59e0b',        // Amber
+  fact: '#10b981',         // Emerald (same family as location — facts are green)
+  concept: '#ec4899',      // Pink
+  technology: '#8b5cf6',   // Violet
+  product: '#f97316',      // Orange
+  document: '#6366f1',     // Indigo
+  entity: '#6366f1',       // Default fallback
+};
+
+/**
+ * Memory tier → ring/stroke color mapping.
+ * L1 (working) = brightest, L4 (procedural) = subtlest
+ */
+export const TIER_RING_COLORS: Record<string, string> = {
+  working: '#f59e0b',     // Amber — hot, active
+  episodic: '#3b82f6',    // Blue — recent memories
+  semantic: '#10b981',    // Emerald — stable knowledge
+  procedural: '#6b7280',  // Gray — deep, implicit
+};
+
+/**
+ * Edge relation type → stroke color mapping.
+ */
+export const EDGE_TYPE_COLORS: Record<string, string> = {
+  entity: '#6366f1',      // Indigo — structural relationships
+  semantic: '#8b5cf6',    // Violet — meaning similarity
+  temporal: '#f59e0b',    // Amber — time-ordered
+  causal: '#ef4444',      // Red — cause-effect
+};
 
 /**
  * Custom dark theme for G6 graph canvas.
@@ -12,26 +50,12 @@ export const NEUROGRAPH_THEME = {
 
   /** Default node colors */
   node: {
-    palette: [
-      'hsl(258, 75%, 58%)',  // Person
-      'hsl(215, 80%, 55%)',  // Organization
-      'hsl(155, 65%, 48%)',  // Location
-      'hsl(38, 85%, 55%)',   // Event
-      'hsl(185, 75%, 50%)',  // Concept
-      'hsl(330, 70%, 55%)',  // Technology
-      'hsl(25, 82%, 52%)',   // Product
-      'hsl(240, 60%, 58%)',  // Document
-    ],
+    palette: Object.values(NODE_TYPE_COLORS),
   },
 
   /** Default edge colors */
   edge: {
-    palette: [
-      'hsl(225, 25%, 45%)',
-      'hsl(215, 70%, 55%)',
-      'hsl(258, 65%, 58%)',
-      'hsl(155, 60%, 48%)',
-    ],
+    palette: Object.values(EDGE_TYPE_COLORS),
   },
 };
 
@@ -39,51 +63,54 @@ export const NEUROGRAPH_THEME = {
 export const STATE_STYLES = {
   node: {
     selected: {
-      lineWidth: 3,
-      shadowBlur: 24,
+      lineWidth: 4,
+      shadowBlur: 28,
       halo: true,
-      haloStrokeOpacity: 0.35,
-      haloLineWidth: 16,
-    },
-    active: {
-      lineWidth: 2.5,
-      shadowBlur: 18,
-      halo: true,
-      haloStrokeOpacity: 0.2,
-      haloLineWidth: 12,
-    },
-    inactive: {
-      opacity: 0.25,
-    },
-    highlight: {
-      lineWidth: 3,
-      shadowBlur: 30,
-      halo: true,
-      haloStroke: 'hsl(258, 90%, 66%)',
       haloStrokeOpacity: 0.4,
       haloLineWidth: 20,
+    },
+    active: {
+      lineWidth: 3,
+      shadowBlur: 20,
+      halo: true,
+      haloStrokeOpacity: 0.25,
+      haloLineWidth: 14,
+    },
+    inactive: {
+      opacity: 0.2,
+      labelOpacity: 0.3,
+    },
+    highlight: {
+      lineWidth: 4,
+      shadowBlur: 32,
+      halo: true,
+      haloStroke: 'hsl(258, 90%, 66%)',
+      haloStrokeOpacity: 0.45,
+      haloLineWidth: 22,
     },
   },
   edge: {
     selected: {
+      lineWidth: 3.5,
+      opacity: 1,
+      halo: true,
+      haloStrokeOpacity: 0.35,
+      haloLineWidth: 12,
+    },
+    active: {
       lineWidth: 3,
       opacity: 1,
       halo: true,
-      haloStrokeOpacity: 0.3,
-      haloLineWidth: 10,
-    },
-    active: {
-      lineWidth: 2.5,
-      opacity: 0.9,
-      halo: true,
-      haloStrokeOpacity: 0.15,
+      haloStrokeOpacity: 0.2,
       haloLineWidth: 8,
+      labelOpacity: 1,
     },
     inactive: {
-      opacity: 0.1,
+      opacity: 0.08,
+      labelOpacity: 0,
     },
     highlight: {
-      lineWidth: 3,
+      lineWidth: 3.5,
       opacity: 1,
       lineDash: [8, 4],
       halo: true,

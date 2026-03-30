@@ -3,9 +3,7 @@
 
 //! Search benchmarks: vector search, text search, hybrid, and graph traversal.
 
-use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput,
-};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
 use neurograph_core::graph::{Entity, Relationship};
@@ -17,7 +15,10 @@ async fn create_searchable_graph(driver: &MemoryDriver, n: usize) {
     for i in 0..n {
         let angle = (i as f32) * std::f32::consts::TAU / (n as f32);
         let entity = Entity::new(&format!("Entity_{}", i), "Concept")
-            .with_summary(&format!("Entity number {} in the graph for testing search performance", i))
+            .with_summary(&format!(
+                "Entity number {} in the graph for testing search performance",
+                i
+            ))
             .with_embedding(vec![angle.cos(), angle.sin(), (i as f32) / (n as f32)]);
         driver.store_entity(&entity).await.unwrap();
     }
@@ -68,22 +69,16 @@ fn bench_vector_search(c: &mut Criterion) {
             d
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("cosine_top10", n),
-            &n,
-            |b, _| {
-                let query_vec = vec![1.0_f32, 0.0, 0.5];
-                b.to_async(&rt).iter(|| {
-                    let d = &driver;
-                    let q = &query_vec;
-                    async move {
-                        black_box(
-                            d.search_entities_by_vector(q, 10, None).await.unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("cosine_top10", n), &n, |b, _| {
+            let query_vec = vec![1.0_f32, 0.0, 0.5];
+            b.to_async(&rt).iter(|| {
+                let d = &driver;
+                let q = &query_vec;
+                async move {
+                    black_box(d.search_entities_by_vector(q, 10, None).await.unwrap());
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -99,22 +94,18 @@ fn bench_text_search(c: &mut Criterion) {
             d
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("keyword_top10", n),
-            &n,
-            |b, _| {
-                b.to_async(&rt).iter(|| {
-                    let d = &driver;
-                    async move {
-                        black_box(
-                            d.search_entities_by_text("Entity number 42", 10, None)
-                                .await
-                                .unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("keyword_top10", n), &n, |b, _| {
+            b.to_async(&rt).iter(|| {
+                let d = &driver;
+                async move {
+                    black_box(
+                        d.search_entities_by_text("Entity number 42", 10, None)
+                            .await
+                            .unwrap(),
+                    );
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -132,19 +123,14 @@ fn bench_graph_traversal(c: &mut Criterion) {
 
         for max_depth in [1, 2, 3] {
             group.bench_with_input(
-                BenchmarkId::new(
-                    format!("bfs_depth{}", max_depth),
-                    n,
-                ),
+                BenchmarkId::new(format!("bfs_depth{}", max_depth), n),
                 &n,
                 |b, _| {
                     let start_id = &entities[0].id;
                     b.to_async(&rt).iter(|| {
                         let d = &driver;
                         async move {
-                            black_box(
-                                d.traverse(start_id, max_depth, None).await.unwrap()
-                            );
+                            black_box(d.traverse(start_id, max_depth, None).await.unwrap());
                         }
                     });
                 },

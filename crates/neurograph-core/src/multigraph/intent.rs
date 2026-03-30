@@ -163,10 +163,27 @@ impl IntentRouter {
 
         // Temporal signals
         let temporal_keywords = [
-            "when", "what year", "what month", "timeline", "history",
-            "before", "after", "during", "since", "until", "between",
-            "date", "time", "recent", "latest", "earliest", "first", "last",
-            "in 2", "in 1", "happened",
+            "when",
+            "what year",
+            "what month",
+            "timeline",
+            "history",
+            "before",
+            "after",
+            "during",
+            "since",
+            "until",
+            "between",
+            "date",
+            "time",
+            "recent",
+            "latest",
+            "earliest",
+            "first",
+            "last",
+            "in 2",
+            "in 1",
+            "happened",
         ];
         for kw in &temporal_keywords {
             if query_lower.contains(kw) {
@@ -176,9 +193,19 @@ impl IntentRouter {
 
         // Causal signals
         let causal_keywords = [
-            "why", "cause", "because", "reason", "led to",
-            "result", "effect", "consequence", "impact", "due to",
-            "how did", "what caused", "root cause",
+            "why",
+            "cause",
+            "because",
+            "reason",
+            "led to",
+            "result",
+            "effect",
+            "consequence",
+            "impact",
+            "due to",
+            "how did",
+            "what caused",
+            "root cause",
         ];
         for kw in &causal_keywords {
             if query_lower.contains(kw) {
@@ -188,8 +215,15 @@ impl IntentRouter {
 
         // Hypothetical signals
         let hypo_keywords = [
-            "what if", "what would", "hypothetically", "had not",
-            "hadn't", "without", "suppose", "imagine", "could have",
+            "what if",
+            "what would",
+            "hypothetically",
+            "had not",
+            "hadn't",
+            "without",
+            "suppose",
+            "imagine",
+            "could have",
             "counterfactual",
         ];
         for kw in &hypo_keywords {
@@ -200,9 +234,18 @@ impl IntentRouter {
 
         // Comparative signals
         let compare_keywords = [
-            "compare", "versus", "vs", "difference", "differ",
-            "similar", "contrast", "better", "worse", "advantage",
-            "between", "compared to",
+            "compare",
+            "versus",
+            "vs",
+            "difference",
+            "differ",
+            "similar",
+            "contrast",
+            "better",
+            "worse",
+            "advantage",
+            "between",
+            "compared to",
         ];
         for kw in &compare_keywords {
             if query_lower.contains(kw) {
@@ -212,9 +255,18 @@ impl IntentRouter {
 
         // Aggregative signals
         let agg_keywords = [
-            "how many", "how much", "count", "total", "number of",
-            "average", "most", "least", "percentage", "all",
-            "list all", "every",
+            "how many",
+            "how much",
+            "count",
+            "total",
+            "number of",
+            "average",
+            "most",
+            "least",
+            "percentage",
+            "all",
+            "list all",
+            "every",
         ];
         for kw in &agg_keywords {
             if query_lower.contains(kw) {
@@ -224,8 +276,14 @@ impl IntentRouter {
 
         // Exploratory signals
         let explore_keywords = [
-            "tell me about", "explain", "describe", "overview",
-            "what is", "who is", "summarize", "introduction",
+            "tell me about",
+            "explain",
+            "describe",
+            "overview",
+            "what is",
+            "who is",
+            "summarize",
+            "introduction",
         ];
         for kw in &explore_keywords {
             if query_lower.contains(kw) {
@@ -235,9 +293,17 @@ impl IntentRouter {
 
         // Multi-hop signals
         let multihop_keywords = [
-            "who does", "through", "chain", "connected to",
-            "relationship between", "path from", "report to",
-            "boss of", "manager of", "leads to", "via",
+            "who does",
+            "through",
+            "chain",
+            "connected to",
+            "relationship between",
+            "path from",
+            "report to",
+            "boss of",
+            "manager of",
+            "leads to",
+            "via",
         ];
         for kw in &multihop_keywords {
             if query_lower.contains(kw) {
@@ -247,8 +313,7 @@ impl IntentRouter {
 
         // Factual signals (base, slightly boosted)
         let factual_keywords = [
-            "who", "what", "where", "which", "name",
-            "is", "are", "does", "do",
+            "who", "what", "where", "which", "name", "is", "are", "does", "do",
         ];
         for kw in &factual_keywords {
             if query_lower.starts_with(kw) || query_lower.contains(&format!(" {} ", kw)) {

@@ -112,7 +112,13 @@ impl CrossEncoderReranker {
             RerankerBackend::RuleBased {
                 keyword_boost,
                 recency_boost,
-            } => Ok(self.rerank_rule_based(query, candidates, top_k, *keyword_boost, *recency_boost)),
+            } => Ok(self.rerank_rule_based(
+                query,
+                candidates,
+                top_k,
+                *keyword_boost,
+                *recency_boost,
+            )),
             RerankerBackend::Api {
                 endpoint,
                 api_key,
@@ -173,9 +179,15 @@ impl CrossEncoderReranker {
 
                 // 3. Entity density bonus — capitalized words per total words
                 let total_words = c.text.split_whitespace().count().max(1) as f64;
-                let cap_words = c.text
+                let cap_words = c
+                    .text
                     .split_whitespace()
-                    .filter(|w| w.chars().next().map(|ch| ch.is_uppercase()).unwrap_or(false))
+                    .filter(|w| {
+                        w.chars()
+                            .next()
+                            .map(|ch| ch.is_uppercase())
+                            .unwrap_or(false)
+                    })
                     .count() as f64;
                 let entity_density = (cap_words / total_words).min(0.5) * 0.2;
 
@@ -248,10 +260,7 @@ impl CrossEncoderReranker {
         let mut results = Vec::new();
         if let Some(rankings) = resp_json.get("results").and_then(|r| r.as_array()) {
             for ranking in rankings {
-                let index = ranking
-                    .get("index")
-                    .and_then(|i| i.as_u64())
-                    .unwrap_or(0) as usize;
+                let index = ranking.get("index").and_then(|i| i.as_u64()).unwrap_or(0) as usize;
                 let relevance_score = ranking
                     .get("relevance_score")
                     .and_then(|s| s.as_f64())

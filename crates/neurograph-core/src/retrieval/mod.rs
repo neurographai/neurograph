@@ -28,8 +28,8 @@ pub mod reranker;
 pub mod semantic;
 pub mod traversal;
 
-pub use hybrid::{HybridRetriever, HybridSearchResult, RetrievalWeights};
 pub use bm25::BM25Index;
-pub use ppr::PersonalizedPageRank;
 pub use cross_encoder::{CrossEncoderReranker, RerankCandidate, RerankResult};
-pub use drift::{DriftSearch, DriftResult, DriftStrategy, CommunitySummary};
+pub use drift::{CommunitySummary, DriftResult, DriftSearch, DriftStrategy};
+pub use hybrid::{HybridRetriever, HybridSearchResult, RetrievalWeights};
+pub use ppr::PersonalizedPageRank;

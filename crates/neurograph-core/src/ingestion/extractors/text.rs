@@ -21,7 +21,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::llm::traits::{complete_structured, CompletionRequest, LlmClient};
 
-use super::traits::{ExtractionError, ExtractionResult, ExtractedEntity, ExtractedRelationship, Extractor};
+use super::traits::{
+    ExtractedEntity, ExtractedRelationship, ExtractionError, ExtractionResult, Extractor,
+};
 
 /// System prompt for LLM-based entity/relationship extraction.
 ///
@@ -150,14 +152,13 @@ impl TextExtractor {
 
                 // Skip common English words that happen to be capitalized
                 let skip_words = [
-                    "The", "A", "An", "In", "On", "At", "To", "For", "And", "Or",
-                    "But", "Is", "Was", "Are", "Were", "Has", "Had", "Have", "Be",
-                    "It", "He", "She", "They", "We", "This", "That", "These",
-                    "Those", "My", "His", "Her", "Our", "Their", "Its",
-                    "I", "If", "So", "As", "Of", "By", "From", "With", "Not",
-                    "No", "Yes", "Do", "Did", "Does", "Will", "Would", "Could",
-                    "Should", "May", "Can", "Then", "When", "Where", "How",
-                    "What", "Who", "Which", "After", "Before", "Since", "While",
+                    "The", "A", "An", "In", "On", "At", "To", "For", "And", "Or", "But", "Is",
+                    "Was", "Are", "Were", "Has", "Had", "Have", "Be", "It", "He", "She", "They",
+                    "We", "This", "That", "These", "Those", "My", "His", "Her", "Our", "Their",
+                    "Its", "I", "If", "So", "As", "Of", "By", "From", "With", "Not", "No", "Yes",
+                    "Do", "Did", "Does", "Will", "Would", "Could", "Should", "May", "Can", "Then",
+                    "When", "Where", "How", "What", "Who", "Which", "After", "Before", "Since",
+                    "While",
                 ];
 
                 let should_skip = is_sentence_start && name_parts.len() == 1
@@ -267,14 +268,36 @@ impl TextExtractor {
 
         // Location indicators
         let location_words = [
-            "city", "country", "state", "town", "village", "island",
-            "mountain", "river", "lake", "ocean", "street", "avenue",
+            "city", "country", "state", "town", "village", "island", "mountain", "river", "lake",
+            "ocean", "street", "avenue",
         ];
         let known_locations = [
-            "new york", "san francisco", "sf", "nyc", "london", "paris", "tokyo",
-            "los angeles", "la", "chicago", "boston", "seattle", "berlin",
-            "beijing", "shanghai", "mumbai", "delhi", "bangalore",
-            "usa", "us", "uk", "india", "china", "japan", "france", "germany",
+            "new york",
+            "san francisco",
+            "sf",
+            "nyc",
+            "london",
+            "paris",
+            "tokyo",
+            "los angeles",
+            "la",
+            "chicago",
+            "boston",
+            "seattle",
+            "berlin",
+            "beijing",
+            "shanghai",
+            "mumbai",
+            "delhi",
+            "bangalore",
+            "usa",
+            "us",
+            "uk",
+            "india",
+            "china",
+            "japan",
+            "france",
+            "germany",
         ];
         if known_locations.iter().any(|loc| name_lower == *loc)
             || location_words.iter().any(|w| {
@@ -290,8 +313,18 @@ impl TextExtractor {
 
         // Organization indicators
         let org_suffixes = [
-            "Inc", "Corp", "LLC", "Ltd", "Co", "Company", "Foundation",
-            "University", "Institute", "Association", "Group", "Labs",
+            "Inc",
+            "Corp",
+            "LLC",
+            "Ltd",
+            "Co",
+            "Company",
+            "Foundation",
+            "University",
+            "Institute",
+            "Association",
+            "Group",
+            "Labs",
         ];
         if org_suffixes.iter().any(|s| name.ends_with(s))
             || ctx_lower.contains(&format!("works at {}", name_lower))
@@ -305,19 +338,31 @@ impl TextExtractor {
 
         // Date patterns
         let months = [
-            "january", "february", "march", "april", "may", "june",
-            "july", "august", "september", "october", "november", "december",
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december",
         ];
         if months.iter().any(|m| name_lower.contains(m))
-            || name.chars().all(|c| c.is_ascii_digit() || c == '-' || c == '/')
+            || name
+                .chars()
+                .all(|c| c.is_ascii_digit() || c == '-' || c == '/')
         {
             return "Date".to_string();
         }
 
         // Default: check if context suggests person
         let person_indicators = [
-            "works", "lives", "born", "married", "moved", "said", "joined",
-            "founded", "ceo", "mr.", "mrs.", "dr.", "prof.",
+            "works", "lives", "born", "married", "moved", "said", "joined", "founded", "ceo",
+            "mr.", "mrs.", "dr.", "prof.",
         ];
         if person_indicators.iter().any(|w| {
             ctx_lower.contains(&format!("{} {}", name_lower, w))
@@ -338,13 +383,60 @@ impl TextExtractor {
 
         // Common words / titles that are capitalized but not proper nouns
         let stop_words = [
-            "The", "A", "An", "In", "On", "At", "To", "For", "And", "Or",
-            "But", "Is", "Was", "Are", "Were", "Has", "Had", "Have", "Be",
-            "It", "He", "She", "They", "We", "This", "That", "These",
-            "Those", "My", "His", "Her", "Our", "Their", "Its",
-            "I", "If", "So", "As", "Of", "By", "From", "With", "Not",
-            "CEO", "CTO", "CFO", "COO", "VP", "SVP", "EVP",
-            "President", "Director", "Manager", "Chairman",
+            "The",
+            "A",
+            "An",
+            "In",
+            "On",
+            "At",
+            "To",
+            "For",
+            "And",
+            "Or",
+            "But",
+            "Is",
+            "Was",
+            "Are",
+            "Were",
+            "Has",
+            "Had",
+            "Have",
+            "Be",
+            "It",
+            "He",
+            "She",
+            "They",
+            "We",
+            "This",
+            "That",
+            "These",
+            "Those",
+            "My",
+            "His",
+            "Her",
+            "Our",
+            "Their",
+            "Its",
+            "I",
+            "If",
+            "So",
+            "As",
+            "Of",
+            "By",
+            "From",
+            "With",
+            "Not",
+            "CEO",
+            "CTO",
+            "CFO",
+            "COO",
+            "VP",
+            "SVP",
+            "EVP",
+            "President",
+            "Director",
+            "Manager",
+            "Chairman",
         ];
 
         // Walk backwards to find capitalized sequence, stopping at common words
@@ -465,8 +557,16 @@ mod tests {
 
         // Should find entities
         let names: Vec<&str> = result.entities.iter().map(|e| e.name.as_str()).collect();
-        assert!(names.contains(&"Alice"), "Should find Alice, got: {:?}", names);
-        assert!(names.contains(&"Anthropic"), "Should find Anthropic, got: {:?}", names);
+        assert!(
+            names.contains(&"Alice"),
+            "Should find Alice, got: {:?}",
+            names
+        );
+        assert!(
+            names.contains(&"Anthropic"),
+            "Should find Anthropic, got: {:?}",
+            names
+        );
         assert!(
             names.contains(&"San Francisco"),
             "Should find San Francisco, got: {:?}",

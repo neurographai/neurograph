@@ -127,8 +127,7 @@ impl PersonalizedPageRank {
                         for (neighbor, weight) in neighbors {
                             if let Some(&dst_idx) = node_idx.get(neighbor) {
                                 new_scores[dst_idx] +=
-                                    self.alpha * scores[src_idx] * weight
-                                        / out_weights[src_idx];
+                                    self.alpha * scores[src_idx] * weight / out_weights[src_idx];
                             }
                         }
                     }
@@ -209,8 +208,14 @@ mod tests {
         let ppr = PersonalizedPageRank::default_params();
         let scores = ppr.compute(&adjacency, &seeds);
 
-        assert!(scores[&a] > scores[&b], "Seed node should have highest score");
-        assert!(scores[&a] > scores[&c], "Seed node should score above non-seeds");
+        assert!(
+            scores[&a] > scores[&b],
+            "Seed node should have highest score"
+        );
+        assert!(
+            scores[&a] > scores[&c],
+            "Seed node should score above non-seeds"
+        );
     }
 
     #[test]

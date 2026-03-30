@@ -59,8 +59,7 @@ impl GraphSchema {
         self.total_entities += 1;
 
         // Also record as learned type in ontology
-        self.ontology
-            .record_learned_entity_type(entity_type);
+        self.ontology.record_learned_entity_type(entity_type);
     }
 
     /// Record a relationship type occurrence.
@@ -72,8 +71,7 @@ impl GraphSchema {
         self.known_relationship_types.insert(rel_type.to_string());
         self.total_relationships += 1;
 
-        self.ontology
-            .record_learned_relationship_type(rel_type);
+        self.ontology.record_learned_relationship_type(rel_type);
     }
 
     /// Get a summary string of the schema.

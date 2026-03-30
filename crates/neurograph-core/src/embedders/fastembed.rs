@@ -36,7 +36,7 @@ impl HashEmbedder {
 
 impl Default for HashEmbedder {
     fn default() -> Self {
-        Self::new(384)  // Match fastembed's default BAAI/bge-small-en-v1.5 dimensions
+        Self::new(384) // Match fastembed's default BAAI/bge-small-en-v1.5 dimensions
     }
 }
 

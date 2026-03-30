@@ -119,8 +119,14 @@ fn test_entity_history_tracking() {
 
     assert_eq!(history.entries.len(), 2);
     let latest = history.latest().unwrap();
-    assert!(matches!(latest.change_type, EntityChangeType::SummaryUpdated));
-    assert_eq!(latest.new_summary.as_deref(), Some("A researcher at Anthropic"));
+    assert!(matches!(
+        latest.change_type,
+        EntityChangeType::SummaryUpdated
+    ));
+    assert_eq!(
+        latest.new_summary.as_deref(),
+        Some("A researcher at Anthropic")
+    );
 }
 
 #[tokio::test]
@@ -155,8 +161,14 @@ async fn test_timeline_generation() {
     let driver = Arc::new(MemoryDriver::new());
     let manager = TemporalManager::new(driver.clone());
 
-    driver.store_entity(&Entity::new("Alice", "Person")).await.unwrap();
-    driver.store_entity(&Entity::new("Bob", "Person")).await.unwrap();
+    driver
+        .store_entity(&Entity::new("Alice", "Person"))
+        .await
+        .unwrap();
+    driver
+        .store_entity(&Entity::new("Bob", "Person"))
+        .await
+        .unwrap();
 
     let timeline = manager.build_timeline(None).await.unwrap();
     assert!(!timeline.is_empty());

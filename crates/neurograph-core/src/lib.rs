@@ -50,6 +50,7 @@
 //! └─────────────────────────────────────────┘
 //! ```
 
+pub mod community;
 pub mod config;
 pub mod drivers;
 pub mod embedders;
@@ -57,38 +58,35 @@ pub mod engine;
 pub mod graph;
 pub mod ingestion;
 pub mod llm;
-pub mod retrieval;
-pub mod utils;
-pub mod temporal;
-pub mod community;
-pub mod multigraph;
 pub mod memory;
+pub mod multigraph;
+pub mod retrieval;
+pub mod temporal;
+pub mod utils;
 
 // Re-export key types at crate root
-pub use config::{
-    EmbeddingProvider, NeuroGraphConfig, NeuroGraphConfigBuilder, StorageBackend,
+pub use community::{
+    CommunityDetectionResult, LeidenConfig, LeidenDetector, LouvainConfig, LouvainDetector,
 };
+pub use config::{EmbeddingProvider, NeuroGraphConfig, NeuroGraphConfigBuilder, StorageBackend};
 pub use drivers::traits::{DriverError, GraphDriver};
 pub use embedders::traits::Embedder;
 pub use graph::{Community, Entity, EntityId, Episode, Relationship};
 pub use llm::traits::LlmClient;
-pub use temporal::{TemporalSnapshot, TemporalDiff, LogicalClock};
-pub use community::{CommunityDetectionResult, LouvainDetector, LouvainConfig, LeidenDetector, LeidenConfig};
+pub use temporal::{LogicalClock, TemporalDiff, TemporalSnapshot};
 
 // Multi-graph memory re-exports
-pub use multigraph::{
-    MultiGraphMemory, MultiGraphConfig, MemoryItem, MemoryTier,
-    GraphView, GraphEdge, QueryOptions as MultiGraphQueryOptions,
-    IntentRouter, IntentType, FusionEngine,
-};
 pub use memory::{
-    TieredMemory, ConsolidationConfig, PromotionPolicy,
-    MemoryEvolution, DecayPolicy, RetentionPolicy,
+    ConsolidationConfig, DecayPolicy, MemoryEvolution, PromotionPolicy, RetentionPolicy,
+    TieredMemory,
+};
+pub use multigraph::{
+    FusionEngine, GraphEdge, GraphView, IntentRouter, IntentType, MemoryItem, MemoryTier,
+    MultiGraphConfig, MultiGraphMemory, QueryOptions as MultiGraphQueryOptions,
 };
 pub use retrieval::{
-    BM25Index, PersonalizedPageRank,
-    CrossEncoderReranker, RerankCandidate, RerankResult,
-    DriftSearch, DriftResult, DriftStrategy,
+    BM25Index, CrossEncoderReranker, DriftResult, DriftSearch, DriftStrategy, PersonalizedPageRank,
+    RerankCandidate, RerankResult,
 };
 
 use std::sync::Arc;
@@ -318,7 +316,9 @@ impl NeuroGraph {
         self.driver.store_entity(&entity).await?;
 
         // Update schema
-        self.schema.write().record_entity_type(entity.entity_type.as_str());
+        self.schema
+            .write()
+            .record_entity_type(entity.entity_type.as_str());
 
         Ok(())
     }
@@ -360,7 +360,9 @@ impl NeuroGraph {
         }
 
         self.driver.store_relationship(&rel).await?;
-        self.schema.write().record_relationship_type(&rel.relationship_type);
+        self.schema
+            .write()
+            .record_relationship_type(&rel.relationship_type);
         Ok(())
     }
 
@@ -412,7 +414,9 @@ impl NeuroGraph {
         let temporal_mgr = temporal::TemporalManager::new(self.driver.clone());
         let timestamp = temporal::TemporalManager::parse_date(date)
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))?;
-        let snapshot = temporal_mgr.snapshot_at(timestamp, None).await
+        let snapshot = temporal_mgr
+            .snapshot_at(timestamp, None)
+            .await
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))?;
         Ok(TemporalView {
             snapshot,
@@ -495,7 +499,10 @@ impl NeuroGraph {
             .ok_or_else(|| NeuroGraphError::Query(format!("Entity '{}' not found", entity_name)))?;
 
         // Get ALL relationships (including invalidated ones)
-        let mut rels = self.driver.get_entity_relationships(&entity.entity.id).await?;
+        let mut rels = self
+            .driver
+            .get_entity_relationships(&entity.entity.id)
+            .await?;
 
         // Sort by valid_from ascending (chronological order)
         rels.sort_by_key(|r| r.valid_from);
@@ -513,14 +520,18 @@ impl NeuroGraph {
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))?;
         let to_ts = temporal::TemporalManager::parse_date(to)
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))?;
-        temporal_mgr.what_changed(from_ts, to_ts, None).await
+        temporal_mgr
+            .what_changed(from_ts, to_ts, None)
+            .await
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))
     }
 
     /// Build a timeline of all events for visualization (G6 Timebar).
     pub async fn build_timeline(&self) -> Result<Vec<temporal::manager::TimelineEvent>> {
         let temporal_mgr = temporal::TemporalManager::new(self.driver.clone());
-        temporal_mgr.build_timeline(None).await
+        temporal_mgr
+            .build_timeline(None)
+            .await
             .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))
     }
 
@@ -532,7 +543,9 @@ impl NeuroGraph {
     /// them as `Community` objects in the driver.
     pub async fn detect_communities(&self) -> Result<CommunityDetectionResult> {
         let detector = LouvainDetector::new();
-        detector.detect(self.driver.as_ref(), None).await
+        detector
+            .detect(self.driver.as_ref(), None)
+            .await
             .map_err(|e: community::CommunityError| NeuroGraphError::Community(e.to_string()))
     }
 
@@ -542,21 +555,20 @@ impl NeuroGraph {
         config: LouvainConfig,
     ) -> Result<CommunityDetectionResult> {
         let detector = LouvainDetector::with_config(config);
-        detector.detect(self.driver.as_ref(), None).await
+        detector
+            .detect(self.driver.as_ref(), None)
+            .await
             .map_err(|e: community::CommunityError| NeuroGraphError::Community(e.to_string()))
     }
 
     /// Summarize all communities that need summarization.
     ///
     /// Uses LLM if available, otherwise falls back to rule-based summaries.
-    pub async fn summarize_communities(
-        &self,
-    ) -> Result<Vec<community::CommunitySummaryResult>> {
-        let summarizer = community::CommunitySummarizer::new(
-            self.driver.clone(),
-            self.llm.clone(),
-        );
-        summarizer.summarize_all(None).await
+    pub async fn summarize_communities(&self) -> Result<Vec<community::CommunitySummaryResult>> {
+        let summarizer = community::CommunitySummarizer::new(self.driver.clone(), self.llm.clone());
+        summarizer
+            .summarize_all(None)
+            .await
             .map_err(|e: community::SummarizerError| NeuroGraphError::Community(e.to_string()))
     }
 
@@ -566,7 +578,9 @@ impl NeuroGraph {
         entity_ids: &[EntityId],
     ) -> Result<community::IncrementalUpdateResult> {
         let updater = community::IncrementalCommunityUpdater::new(self.driver.clone());
-        updater.update_after_ingestion(entity_ids, None).await
+        updater
+            .update_after_ingestion(entity_ids, None)
+            .await
             .map_err(|e: community::IncrementalError| NeuroGraphError::Community(e.to_string()))
     }
 
@@ -612,9 +626,9 @@ impl NeuroGraph {
     /// # }
     /// ```
     pub fn remember(&self, content: &str) -> Option<uuid::Uuid> {
-        self.tiered_memory.as_ref().map(|tm| {
-            tm.write().remember(content.to_string())
-        })
+        self.tiered_memory
+            .as_ref()
+            .map(|tm| tm.write().remember(content.to_string()))
     }
 
     /// Search tiered memory for matching content.

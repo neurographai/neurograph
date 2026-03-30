@@ -3,10 +3,8 @@
 
 //! Temporal benchmarks: snapshot reconstruction, diff computation, timeline building.
 
-use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion,
-};
 use chrono::{Duration, Utc};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
 use neurograph_core::graph::{Entity, EntityId, Relationship};
@@ -59,30 +57,22 @@ fn bench_snapshot_at(c: &mut Criterion) {
                     let d = driver.clone();
                     let ts = midpoint;
                     async move {
-                        black_box(
-                            d.snapshot_at(&ts, None).await.unwrap()
-                        );
+                        black_box(d.snapshot_at(&ts, None).await.unwrap());
                     }
                 });
             },
         );
 
-        group.bench_with_input(
-            BenchmarkId::new("snapshot_at_recent", n),
-            &n,
-            |b, _| {
-                let recent = Utc::now() - Duration::hours(1);
-                b.to_async(&rt).iter(|| {
-                    let d = driver.clone();
-                    let ts = recent;
-                    async move {
-                        black_box(
-                            d.snapshot_at(&ts, None).await.unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("snapshot_at_recent", n), &n, |b, _| {
+            let recent = Utc::now() - Duration::hours(1);
+            b.to_async(&rt).iter(|| {
+                let d = driver.clone();
+                let ts = recent;
+                async move {
+                    black_box(d.snapshot_at(&ts, None).await.unwrap());
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -98,23 +88,17 @@ fn bench_what_changed(c: &mut Criterion) {
             d
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("what_changed", n),
-            &n,
-            |b, &size| {
-                let from = Utc::now() - Duration::days(size as i64);
-                let to = Utc::now() - Duration::days((size / 2) as i64);
-                b.to_async(&rt).iter(|| {
-                    let d = driver.clone();
-                    async move {
-                        let mgr = TemporalManager::new(d);
-                        black_box(
-                            mgr.what_changed(from, to, None).await.unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("what_changed", n), &n, |b, &size| {
+            let from = Utc::now() - Duration::days(size as i64);
+            let to = Utc::now() - Duration::days((size / 2) as i64);
+            b.to_async(&rt).iter(|| {
+                let d = driver.clone();
+                async move {
+                    let mgr = TemporalManager::new(d);
+                    black_box(mgr.what_changed(from, to, None).await.unwrap());
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -130,21 +114,15 @@ fn bench_build_timeline(c: &mut Criterion) {
             d
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("build_timeline", n),
-            &n,
-            |b, _| {
-                b.to_async(&rt).iter(|| {
-                    let d = driver.clone();
-                    async move {
-                        let mgr = TemporalManager::new(d);
-                        black_box(
-                            mgr.build_timeline(None).await.unwrap()
-                        );
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("build_timeline", n), &n, |b, _| {
+            b.to_async(&rt).iter(|| {
+                let d = driver.clone();
+                async move {
+                    let mgr = TemporalManager::new(d);
+                    black_box(mgr.build_timeline(None).await.unwrap());
+                }
+            });
+        });
     }
     group.finish();
 }
@@ -160,17 +138,11 @@ fn bench_date_parsing(c: &mut Criterion) {
     ];
 
     for (name, date_str) in formats {
-        group.bench_with_input(
-            BenchmarkId::new("parse", name),
-            &date_str,
-            |b, &s| {
-                b.iter(|| {
-                    black_box(
-                        TemporalManager::parse_date(s).unwrap()
-                    );
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("parse", name), &date_str, |b, &s| {
+            b.iter(|| {
+                black_box(TemporalManager::parse_date(s).unwrap());
+            });
+        });
     }
     group.finish();
 }

@@ -256,7 +256,13 @@ mod tests {
         assert_eq!(history.entries.len(), 2);
 
         let latest = history.latest().unwrap();
-        assert!(matches!(latest.change_type, EntityChangeType::SummaryUpdated));
-        assert_eq!(latest.new_summary.as_deref(), Some("A researcher at Anthropic"));
+        assert!(matches!(
+            latest.change_type,
+            EntityChangeType::SummaryUpdated
+        ));
+        assert_eq!(
+            latest.new_summary.as_deref(),
+            Some("A researcher at Anthropic")
+        );
     }
 }

@@ -52,15 +52,9 @@ impl TemporalValidity {
 
     /// Check if the fact was valid at a specific point in time.
     pub fn is_valid_at(&self, timestamp: &DateTime<Utc>) -> bool {
-        let after_start = self
-            .valid_from
-            .map(|vf| timestamp >= &vf)
-            .unwrap_or(true);
+        let after_start = self.valid_from.map(|vf| timestamp >= &vf).unwrap_or(true);
 
-        let before_end = self
-            .valid_until
-            .map(|vu| timestamp < &vu)
-            .unwrap_or(true);
+        let before_end = self.valid_until.map(|vu| timestamp < &vu).unwrap_or(true);
 
         after_start && before_end
     }
@@ -118,11 +112,7 @@ impl TemporalFact {
     }
 
     /// Invalidate this fact and link to its replacement.
-    pub fn invalidate(
-        &mut self,
-        reason: impl Into<String>,
-        replaced_by: Option<RelationshipId>,
-    ) {
+    pub fn invalidate(&mut self, reason: impl Into<String>, replaced_by: Option<RelationshipId>) {
         let now = Utc::now();
         self.validity.valid_until = Some(now);
         self.validity.invalidated_at = Some(now);

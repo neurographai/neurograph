@@ -4,8 +4,8 @@
 //! Semantic graph view: nodes connected by embedding similarity.
 
 use super::*;
-use std::collections::{BinaryHeap, HashMap, HashSet};
 use ordered_float::OrderedFloat;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 /// Semantic graph: edges represent embedding similarity between memory items.
 pub struct SemanticGraph {

@@ -164,13 +164,34 @@ impl DriftSearch {
         let query_lower = query.to_lowercase();
 
         let broad_indicators = [
-            "overview", "summary", "summarize", "all", "general", "broad",
-            "landscape", "trend", "theme", "pattern", "main", "key",
-            "compare", "overall", "what are the", "tell me about",
+            "overview",
+            "summary",
+            "summarize",
+            "all",
+            "general",
+            "broad",
+            "landscape",
+            "trend",
+            "theme",
+            "pattern",
+            "main",
+            "key",
+            "compare",
+            "overall",
+            "what are the",
+            "tell me about",
         ];
         let specific_indicators = [
-            "who is", "where is", "where does", "when did", "how much",
-            "what is the", "which", "specific", "exactly", "name",
+            "who is",
+            "where is",
+            "where does",
+            "when did",
+            "how much",
+            "what is the",
+            "which",
+            "specific",
+            "exactly",
+            "name",
         ];
 
         let broad_count = broad_indicators
@@ -465,14 +486,8 @@ mod tests {
         let openai = Uuid::new_v4();
 
         let mut graph = HashMap::new();
-        graph.insert(
-            alice,
-            vec![(anthropic, "works_at".to_string(), 1.0)],
-        );
-        graph.insert(
-            bob,
-            vec![(openai, "works_at".to_string(), 1.0)],
-        );
+        graph.insert(alice, vec![(anthropic, "works_at".to_string(), 1.0)]);
+        graph.insert(bob, vec![(openai, "works_at".to_string(), 1.0)]);
         graph.insert(anthropic, vec![(alice, "employs".to_string(), 1.0)]);
         graph.insert(openai, vec![(bob, "employs".to_string(), 1.0)]);
 
@@ -532,7 +547,10 @@ mod tests {
         let (graph, texts) = make_test_graph();
 
         let results = drift.local_bfs("Alice", &graph, &texts);
-        assert!(!results.is_empty(), "Should find Alice and connected entities");
+        assert!(
+            !results.is_empty(),
+            "Should find Alice and connected entities"
+        );
     }
 
     #[test]

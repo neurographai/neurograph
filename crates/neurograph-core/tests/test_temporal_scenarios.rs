@@ -7,11 +7,11 @@ use chrono::{Duration, Utc};
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
 use neurograph_core::graph::{Entity, EntityId, Relationship};
+use neurograph_core::temporal::forgetting::{ForgettingConfig, ForgettingEngine};
 use neurograph_core::temporal::manager::TemporalManager;
 use neurograph_core::temporal::versioning::{
     EntityChangeType, EntityHistory, FactVersion, FactVersionChain,
 };
-use neurograph_core::temporal::forgetting::{ForgettingConfig, ForgettingEngine};
 use neurograph_core::NeuroGraph;
 use std::sync::Arc;
 
@@ -65,17 +65,18 @@ async fn test_snapshot_filters_by_valid_time() {
     let tomorrow = Utc::now() + Duration::days(1);
 
     // Relationship valid from yesterday (should appear in current snapshot)
-    let rel1 = Relationship::new(
-        alice.id.clone(), bob.id.clone(),
-        "KNOWS", "Alice knows Bob",
-    ).with_valid_from(yesterday);
+    let rel1 = Relationship::new(alice.id.clone(), bob.id.clone(), "KNOWS", "Alice knows Bob")
+        .with_valid_from(yesterday);
     driver.store_relationship(&rel1).await.unwrap();
 
     // Relationship valid from tomorrow (should NOT appear in current snapshot)
     let rel2 = Relationship::new(
-        bob.id.clone(), alice.id.clone(),
-        "MENTORS", "Bob mentors Alice",
-    ).with_valid_from(tomorrow);
+        bob.id.clone(),
+        alice.id.clone(),
+        "MENTORS",
+        "Bob mentors Alice",
+    )
+    .with_valid_from(tomorrow);
     driver.store_relationship(&rel2).await.unwrap();
 
     let mgr = TemporalManager::new(driver);
@@ -105,12 +106,18 @@ async fn test_snapshot_multiple_timestamps() {
     let mgr = TemporalManager::new(driver);
 
     // 7 days ago: should see Early only
-    let snap1 = mgr.snapshot_at(now - Duration::days(7), None).await.unwrap();
+    let snap1 = mgr
+        .snapshot_at(now - Duration::days(7), None)
+        .await
+        .unwrap();
     assert_eq!(snap1.entity_count, 1);
     assert_eq!(snap1.entities[0].name, "Early");
 
     // 3 days ago: should see Early + Middle
-    let snap2 = mgr.snapshot_at(now - Duration::days(3), None).await.unwrap();
+    let snap2 = mgr
+        .snapshot_at(now - Duration::days(3), None)
+        .await
+        .unwrap();
     assert_eq!(snap2.entity_count, 2);
 
     // Now: should see all 3
@@ -176,9 +183,18 @@ async fn test_build_timeline_empty() {
 #[tokio::test]
 async fn test_build_timeline_groups_by_date() {
     let driver = Arc::new(MemoryDriver::new());
-    driver.store_entity(&Entity::new("A", "Test")).await.unwrap();
-    driver.store_entity(&Entity::new("B", "Test")).await.unwrap();
-    driver.store_entity(&Entity::new("C", "Test")).await.unwrap();
+    driver
+        .store_entity(&Entity::new("A", "Test"))
+        .await
+        .unwrap();
+    driver
+        .store_entity(&Entity::new("B", "Test"))
+        .await
+        .unwrap();
+    driver
+        .store_entity(&Entity::new("C", "Test"))
+        .await
+        .unwrap();
 
     let mgr = TemporalManager::new(driver);
     let timeline = mgr.build_timeline(None).await.unwrap();
@@ -242,12 +258,7 @@ fn test_parse_all_supported_formats() {
 
 #[test]
 fn test_parse_invalid_dates() {
-    let invalid = vec![
-        "not a date",
-        "",
-        "abc-de-fg",
-        "99999",
-    ];
+    let invalid = vec!["not a date", "", "abc-de-fg", "99999"];
 
     for input in invalid {
         assert!(
@@ -264,9 +275,7 @@ fn test_parse_invalid_dates() {
 
 #[test]
 fn test_version_chain_empty() {
-    let chain = FactVersionChain::new(
-        EntityId::new(), EntityId::new(), "WORKS_AT",
-    );
+    let chain = FactVersionChain::new(EntityId::new(), EntityId::new(), "WORKS_AT");
     assert_eq!(chain.version_count(), 0);
     assert!(chain.current().is_none());
 }
@@ -369,20 +378,24 @@ fn test_entity_history_changes_between() {
     let t1 = Utc::now() - Duration::hours(3);
     let t2 = Utc::now() - Duration::hours(1);
 
-    history.entries.push(neurograph_core::temporal::versioning::EntityHistoryEntry {
-        timestamp: Utc::now() - Duration::hours(4),
-        change_type: EntityChangeType::Created,
-        description: "Created".to_string(),
-        old_summary: None,
-        new_summary: None,
-    });
-    history.entries.push(neurograph_core::temporal::versioning::EntityHistoryEntry {
-        timestamp: Utc::now() - Duration::hours(2),
-        change_type: EntityChangeType::SummaryUpdated,
-        description: "Updated".to_string(),
-        old_summary: None,
-        new_summary: Some("New summary".to_string()),
-    });
+    history
+        .entries
+        .push(neurograph_core::temporal::versioning::EntityHistoryEntry {
+            timestamp: Utc::now() - Duration::hours(4),
+            change_type: EntityChangeType::Created,
+            description: "Created".to_string(),
+            old_summary: None,
+            new_summary: None,
+        });
+    history
+        .entries
+        .push(neurograph_core::temporal::versioning::EntityHistoryEntry {
+            timestamp: Utc::now() - Duration::hours(2),
+            change_type: EntityChangeType::SummaryUpdated,
+            description: "Updated".to_string(),
+            old_summary: None,
+            new_summary: Some("New summary".to_string()),
+        });
 
     let changes = history.changes_between(&t1, &t2);
     assert_eq!(changes.len(), 1);
@@ -493,7 +506,9 @@ fn test_ttl_expired() {
 #[tokio::test]
 async fn test_ng_at_returns_view() {
     let ng = NeuroGraph::builder().memory().build().await.unwrap();
-    ng.store_entity(&Entity::new("Alice", "Person")).await.unwrap();
+    ng.store_entity(&Entity::new("Alice", "Person"))
+        .await
+        .unwrap();
 
     let view = ng.at("2030-01-01").await.unwrap();
     assert_eq!(view.entity_count(), 1);
@@ -514,25 +529,24 @@ async fn test_ng_at_past_excludes_future_entities() {
 #[tokio::test]
 async fn test_ng_add_text_at() {
     let ng = NeuroGraph::builder().memory().build().await.unwrap();
-    let episode = ng.add_text_at("Alice works at Google", "2023-01-15").await.unwrap();
-    assert_eq!(
-        episode.created_at.date_naive().to_string(),
-        "2023-01-15"
-    );
+    let episode = ng
+        .add_text_at("Alice works at Google", "2023-01-15")
+        .await
+        .unwrap();
+    assert_eq!(episode.created_at.date_naive().to_string(), "2023-01-15");
 }
 
 #[tokio::test]
 async fn test_ng_what_changed() {
     let ng = NeuroGraph::builder().memory().build().await.unwrap();
     let before = Utc::now();
-    ng.store_entity(&Entity::new("NewEntity", "Test")).await.unwrap();
+    ng.store_entity(&Entity::new("NewEntity", "Test"))
+        .await
+        .unwrap();
     let after = Utc::now();
 
     let diff = ng
-        .what_changed(
-            &before.to_rfc3339(),
-            &after.to_rfc3339(),
-        )
+        .what_changed(&before.to_rfc3339(), &after.to_rfc3339())
         .await
         .unwrap();
     assert_eq!(diff.added_entities.len(), 1);
