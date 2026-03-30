@@ -359,22 +359,22 @@ cd dashboard && npm install && npm run dev
 ## Comparison
 
 > Trade-offs are real. This table is our honest assessment.
-> Zep/Graphiti numbers are from [arXiv:2501.13956](https://arxiv.org/abs/2501.13956).
 > NeuroGraph has not yet been evaluated on standard benchmarks — contributions welcome.
 
 | | NeuroGraph | Graphiti / Zep | GraphRAG (Microsoft) | Mem0 |
 |---|---|---|---|---|
-| **Best for** | Embedded temporal reasoning, offline-first | Production agent memory (SaaS) | Batch document analysis | Simple key-value memory |
-| **Language** | Rust core, Py/TS wrappers | Python + Neo4j | Python | Python |
+| **Best for** | Embedded temporal reasoning, offline-first | Production agent memory (SaaS) | Global document analysis at scale | Simple key-value memory |
+| **Language** | Rust core, Py/TS wrappers | Python + Neo4j | Python (v3, uv-managed) | Python |
+| **Stars / Maturity** | Pre-release (v0.1) | Production | 31.9k stars, v3.0.8 | Production |
 | **Temporal model** | Bi-temporal (`valid_from`/`valid_until`) | Bi-temporal (4 timestamps per edge) | Static | Recency only |
-| **Architecture** | Episode / Entity / Community tiers | Episode / Entity / Community tiers | Entity / Community | Flat memory |
-| **Community detection** | Louvain / Leiden (Rust native) | Label propagation | Leiden (NetworkX) | None |
-| **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce over communities | Vector similarity |
-| **Graph backend** | Embedded (sled, default) or Neo4j | Neo4j (required) | External | N/A |
-| **Offline mode** | Yes (regex NER + local embed) | No (requires LLM + Neo4j) | No | No |
-| **Benchmarks** | Not yet evaluated | DMR 94.8%, LongMemEval 71.2% | Published | N/A |
-| **Visualization** | Built-in dashboard (Beta) | None | External (Gephi) | Standard UI |
-| **Maturity** | Pre-release (v0.1) | Production | Production | Production |
+| **Architecture** | Episode / Entity / Community tiers | Episode / Entity / Community tiers | Entity / Community (hierarchical) | Flat memory |
+| **Community detection** | Louvain / Leiden (Rust native) | Label propagation | Leiden (native, removed NetworkX) | None |
+| **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce, DRIFT, LazyGraphRAG | Vector similarity |
+| **Graph backend** | Embedded (sled, default) or Neo4j | Neo4j (required) | In-memory / any LLM-extracted | N/A |
+| **Offline mode** | Yes (regex NER + local embed) | No (requires LLM + Neo4j) | No (requires LLM for indexing) | No |
+| **Benchmarks** | Not yet evaluated | DMR 94.8%, LongMemEval 71.2% | BenchmarkQED (own framework) | N/A |
+| **Visualization** | Built-in dashboard (Beta) | None | External | Standard UI |
+| **License** | Apache-2.0 | MIT | MIT | Proprietary |
 
 ---
 
