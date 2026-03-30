@@ -2,9 +2,14 @@
 name = "neurograph-core"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Core temporal knowledge graph engine for NeuroGraph"
+repository.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+categories.workspace = true
+description = "Core temporal knowledge graph engine for NeuroGraph — bi-temporal facts, community detection, hybrid retrieval"
 readme = "../../README.md"
 
 [dependencies]

@@ -358,18 +358,23 @@ cd dashboard && npm install && npm run dev
 
 ## Comparison
 
-> Trade-offs are real. NeuroGraph optimizes for temporal reasoning and Rust-native performance. Other tools may be better fits depending on your use case.
+> Trade-offs are real. This table is our honest assessment.
+> Zep/Graphiti numbers are from [arXiv:2501.13956](https://arxiv.org/abs/2501.13956).
+> NeuroGraph has not yet been evaluated on standard benchmarks — contributions welcome.
 
-| | NeuroGraph | GraphRAG (Microsoft) | Graphiti (Zep) | Mem0 |
+| | NeuroGraph | Graphiti / Zep | GraphRAG (Microsoft) | Mem0 |
 |---|---|---|---|---|
-| **Best for** | Temporal reasoning, agent memory | Batch document analysis | Episodic memory | Simple key-value memory |
-| **Language** | Rust core, Py/TS wrappers | Python | Python | Python |
-| **Temporal model** | Bi-temporal | Static | Edge-based time | Recency only |
-| **Query approach** | Hybrid (semantic + BM25 + graph) | Map-reduce over communities | Direct retrieval | Vector similarity |
-| **Visualization** | Built-in dashboard (Beta) | External (Gephi) | Neo4j Browser | Standard UI |
-| **Offline mode** | Yes (regex NER + local embed) | No (requires LLM) | Requires LLM | Requires API |
-| **Community detection** | Rust native (Louvain/Leiden) | Python NetworkX | No | No |
-| **Maturity** | Early (pre-release) | Production | Production | Production |
+| **Best for** | Embedded temporal reasoning, offline-first | Production agent memory (SaaS) | Batch document analysis | Simple key-value memory |
+| **Language** | Rust core, Py/TS wrappers | Python + Neo4j | Python | Python |
+| **Temporal model** | Bi-temporal (`valid_from`/`valid_until`) | Bi-temporal (4 timestamps per edge) | Static | Recency only |
+| **Architecture** | Episode / Entity / Community tiers | Episode / Entity / Community tiers | Entity / Community | Flat memory |
+| **Community detection** | Louvain / Leiden (Rust native) | Label propagation | Leiden (NetworkX) | None |
+| **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce over communities | Vector similarity |
+| **Graph backend** | Embedded (sled, default) or Neo4j | Neo4j (required) | External | N/A |
+| **Offline mode** | Yes (regex NER + local embed) | No (requires LLM + Neo4j) | No | No |
+| **Benchmarks** | Not yet evaluated | DMR 94.8%, LongMemEval 71.2% | Published | N/A |
+| **Visualization** | Built-in dashboard (Beta) | None | External (Gephi) | Standard UI |
+| **Maturity** | Pre-release (v0.1) | Production | Production | Production |
 
 ---
 

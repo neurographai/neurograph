@@ -1,0 +1,54 @@
+{
+  "name": "@neurograph/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for NeuroGraph — temporal knowledge graph engine for AI agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "keywords": [
+    "neurograph",
+    "knowledge-graph",
+    "temporal",
+    "rag",
+    "ai",
+    "graph",
+    "llm",
+    "agent-memory"
+  ],
+  "author": "Ashutosh Kumar Singh <ashutosh@neurograph.dev>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neurographai/neurograph.git",
+    "directory": "sdk/typescript"
+  },
+  "homepage": "https://github.com/neurographai/neurograph",
+  "bugs": {
+    "url": "https://github.com/neurographai/neurograph/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "rimraf": "^6.0.0"
+  }
+}

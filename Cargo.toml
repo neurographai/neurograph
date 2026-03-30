@@ -18,7 +18,7 @@ homepage = "https://neurograph.dev"
 description = "The Operating System for AI Knowledge — ingest anything, remember everything, forget intelligently, reason visually."
 readme = "README.md"
 keywords = ["knowledge-graph", "rag", "temporal", "ai", "graph"]
-categories = ["science", "database", "wasm"]
+categories = ["science", "database"]
 
 [workspace.dependencies]
 # Async runtime
