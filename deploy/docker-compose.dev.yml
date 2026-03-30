@@ -1,0 +1,27 @@
+# ============================================================
+# NeuroGraph Development Override
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.dev.yml up
+# ============================================================
+
+name: neurograph-dev
+
+services:
+  neurograph:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    volumes:
+      - ..:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/workspace/target
+    environment:
+      - NEUROGRAPH_LOG_LEVEL=debug
+      - RUST_BACKTRACE=1
+      - RUST_LOG=neurograph=debug,tower_http=debug
+    command: ["cargo", "watch", "-x", "run --bin neurograph-server"]
+
+volumes:
+  cargo-cache:
+  target-cache:

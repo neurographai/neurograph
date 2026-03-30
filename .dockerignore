@@ -1,0 +1,42 @@
+# Version control
+.git
+.gitignore
+
+# Build artifacts
+target/
+node_modules/
+dashboard/dist/
+dashboard/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CI/CD
+.github/
+
+# Documentation (not needed in image)
+docs/
+*.md
+!README.md
+
+# Tests and benchmarks
+tests/
+benchmarks/
+
+# Environment files (secrets)
+.env
+.env.local
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error.log
+test_errors.txt
+test_errs.log

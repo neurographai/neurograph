@@ -1,83 +1,281 @@
 <p align="center">
-  <a href="https://github.com/neurographai/neurograph/stargazers"><img src="https://img.shields.io/github/stars/neurographai/neurograph?style=for-the-badge&color=yellow" alt="GitHub stars"/></a>
-  <a href="https://github.com/neurographai/neurograph/network/members"><img src="https://img.shields.io/github/forks/neurographai/neurograph?style=for-the-badge&color=blue" alt="GitHub forks"/></a>
-  <a href="https://github.com/neurographai/neurograph/issues"><img src="https://img.shields.io/github/issues/neurographai/neurograph?style=for-the-badge&color=red" alt="GitHub issues"/></a>
-  <a href="https://github.com/neurographai/neurograph/blob/main/LICENSE"><img src="https://img.shields.io/github/license/neurographai/neurograph?style=for-the-badge" alt="License"/></a>
-  <a href="https://github.com/neurographai/neurograph/discussions"><img src="https://img.shields.io/github/discussions/neurographai/neurograph?style=for-the-badge&color=purple&logo=github&label=Discussions" alt="GitHub Discussions"/></a>
+  <img src="https://img.shields.io/badge/🧠_NeuroGraph-The_OS_for_AI_Knowledge-blueviolet?style=for-the-badge" alt="NeuroGraph"/>
 </p>
 
-# NeuroGraph
+<p align="center">
+  <a href="https://crates.io/crates/neurograph"><img src="https://img.shields.io/crates/v/neurograph?style=flat-square&logo=rust&logoColor=white&label=crates.io&color=e6522c" alt="crates.io"/></a>
+  <a href="https://pypi.org/project/neurograph/"><img src="https://img.shields.io/pypi/v/neurograph?style=flat-square&logo=pypi&logoColor=white&label=PyPI&color=3775A9" alt="PyPI"/></a>
+  <a href="https://www.npmjs.com/package/@neurograph/sdk"><img src="https://img.shields.io/npm/v/@neurograph/sdk?style=flat-square&logo=npm&logoColor=white&label=npm&color=CB3837" alt="npm"/></a>
+  <a href="https://ghcr.io/neurographai/neurograph"><img src="https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/></a>
+  <a href="https://docs.rs/neurograph"><img src="https://img.shields.io/docsrs/neurograph?style=flat-square&logo=docs.rs&logoColor=white&label=docs.rs" alt="docs.rs"/></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/neurographai/neurograph/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/neurographai/neurograph/ci.yml?style=flat-square&logo=github&label=CI" alt="CI"/></a>
+  <a href="https://codecov.io/gh/neurographai/neurograph"><img src="https://img.shields.io/codecov/c/github/neurographai/neurograph?style=flat-square&logo=codecov&logoColor=white" alt="Codecov"/></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/neurographai/neurograph"><img src="https://img.shields.io/ossf-scorecard/github.com/neurographai/neurograph?style=flat-square&label=OpenSSF" alt="OpenSSF Scorecard"/></a>
+  <a href="https://github.com/neurographai/neurograph/blob/main/LICENSE"><img src="https://img.shields.io/github/license/neurographai/neurograph?style=flat-square&color=blue" alt="License"/></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/neurographai/neurograph/stargazers"><img src="https://img.shields.io/github/stars/neurographai/neurograph?style=flat-square&color=yellow" alt="Stars"/></a>
+  <a href="https://github.com/neurographai/neurograph/network/members"><img src="https://img.shields.io/github/forks/neurographai/neurograph?style=flat-square&color=blue" alt="Forks"/></a>
+  <a href="https://github.com/neurographai/neurograph/issues"><img src="https://img.shields.io/github/issues/neurographai/neurograph?style=flat-square&color=red" alt="Issues"/></a>
+  <a href="https://github.com/neurographai/neurograph/discussions"><img src="https://img.shields.io/github/discussions/neurographai/neurograph?style=flat-square&color=purple&label=Discussions" alt="Discussions"/></a>
+</p>
+
+---
+
+# 🧠 NeuroGraph
 
 > **The Operating System for AI Knowledge**
 > Ingest anything · Remember everything · Forget intelligently · Reason visually · Branch reality
 
 <br/>
-<p align="center">
-  <!-- TODO: Replace with actual architecture diagram -->
-  <img src="https://raw.githubusercontent.com/neurographai/neurograph/main/docs/assets/architecture-placeholder.png" alt="NeuroGraph Architecture" style="max-width: 100%; height: auto;" />
-</p>
+
+## Architecture
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6C5CE7', 'primaryTextColor': '#DFE6E9', 'primaryBorderColor': '#A29BFE', 'lineColor': '#74B9FF', 'secondaryColor': '#00CEC9', 'tertiaryColor': '#2D3436', 'background': '#0D1117', 'mainBkg': '#161B22', 'nodeBorder': '#A29BFE', 'clusterBkg': '#161B2288', 'clusterBorder': '#30363D', 'titleColor': '#F8F8F2', 'edgeLabelBackground': '#161B22'}}}%%
+
+graph TB
+    subgraph CLIENTS["🖥️ Client SDKs"]
+        direction LR
+        PY["🐍 Python SDK<br/><i>pip install neurograph</i>"]
+        TS["📘 TypeScript SDK<br/><i>npm install @neurograph/sdk</i>"]
+        RS["🦀 Rust Crate<br/><i>cargo install neurograph</i>"]
+        CLI["⌨️ CLI<br/><i>neurograph query ...</i>"]
+    end
+
+    subgraph GATEWAY["🌐 API Gateway"]
+        direction LR
+        REST["REST API<br/><i>Axum · async</i>"]
+        WS["WebSocket<br/><i>Real-time traces</i>"]
+        MCP["MCP Server<br/><i>Claude · Cursor</i>"]
+    end
+
+    subgraph ENGINE["⚡ Core Engine — Rust"]
+        direction TB
+
+        subgraph INGESTION["📥 Ingestion Pipeline"]
+            direction LR
+            PARSER["Text / JSON<br/>Parser"]
+            NER["Entity<br/>Extractor"]
+            REL["Relationship<br/>Extractor"]
+            DEDUP["2-Phase<br/>Deduplication"]
+        end
+
+        subgraph KNOWLEDGE["🧬 Knowledge Layer"]
+            direction LR
+            TEMPORAL["Bi-Temporal<br/>Engine"]
+            BRANCH["Branch &<br/>Merge"]
+            COMMUNITY["Community<br/>Detection"]
+            DECAY["Intelligent<br/>Forgetting"]
+        end
+
+        subgraph RETRIEVAL["🔍 Hybrid Retrieval"]
+            direction LR
+            SEMANTIC["Semantic<br/>Vector Search"]
+            BM25["BM25<br/>Keyword Search"]
+            GRAPH_WALK["Graph<br/>Traversal"]
+            RRF["Reciprocal Rank<br/>Fusion"]
+        end
+
+        subgraph AGENTS["🤖 Multi-Agent System"]
+            direction LR
+            BUILDER["Builder<br/>Agent"]
+            VALIDATOR["Validator<br/>Agent"]
+            RESOLVER["Conflict<br/>Resolver"]
+            SUMMARIZER["Summarizer<br/>Agent"]
+        end
+    end
+
+    subgraph STORAGE["💾 Storage Backends"]
+        direction LR
+        SLED["Sled<br/><i>Embedded · Default</i>"]
+        NEO4J["Neo4j<br/><i>Client-Server</i>"]
+        FALKOR["FalkorDB<br/><i>Redis-Speed</i>"]
+        KUZU["Kùzu<br/><i>Embedded OLAP</i>"]
+        MEMORY["In-Memory<br/><i>petgraph</i>"]
+    end
+
+    subgraph DASHBOARD["📊 Interactive Dashboard"]
+        direction LR
+        REACT["React 19<br/><i>UI Framework</i>"]
+        G6["AntV G6<br/><i>Graph Rendering</i>"]
+        WASM["Rust → WASM<br/><i>Layout Engine</i>"]
+        TIMELINE["Temporal<br/>Playback"]
+        THINK["Think-While-<br/>You-Watch"]
+    end
+
+    subgraph OBSERVE["📡 Observability"]
+        direction LR
+        OTEL["OpenTelemetry<br/><i>Traces</i>"]
+        PROM["Prometheus<br/><i>Metrics</i>"]
+        COST["Cost Tracker<br/><i>Per-query USD</i>"]
+    end
+
+    CLIENTS --> GATEWAY
+    GATEWAY --> ENGINE
+    ENGINE --> STORAGE
+    ENGINE --> OBSERVE
+    GATEWAY --> DASHBOARD
+    WASM -.->|"Rust compiled<br/>to WebAssembly"| ENGINE
+
+    PARSER --> NER --> REL --> DEDUP
+    SEMANTIC --> RRF
+    BM25 --> RRF
+    GRAPH_WALK --> RRF
+
+    classDef clientNode fill:#6C5CE7,stroke:#A29BFE,color:#fff,stroke-width:2px
+    classDef gatewayNode fill:#0984E3,stroke:#74B9FF,color:#fff,stroke-width:2px
+    classDef engineNode fill:#00B894,stroke:#55EFC4,color:#fff,stroke-width:2px
+    classDef storageNode fill:#E17055,stroke:#FAB1A0,color:#fff,stroke-width:2px
+    classDef dashNode fill:#FDCB6E,stroke:#FFEAA7,color:#2D3436,stroke-width:2px
+    classDef observeNode fill:#636E72,stroke:#B2BEC3,color:#fff,stroke-width:2px
+
+    class PY,TS,RS,CLI clientNode
+    class REST,WS,MCP gatewayNode
+    class PARSER,NER,REL,DEDUP,TEMPORAL,BRANCH,COMMUNITY,DECAY,SEMANTIC,BM25,GRAPH_WALK,RRF,BUILDER,VALIDATOR,RESOLVER,SUMMARIZER engineNode
+    class SLED,NEO4J,FALKOR,KUZU,MEMORY storageNode
+    class REACT,G6,WASM,TIMELINE,THINK dashNode
+    class OTEL,PROM,COST observeNode
+```
+
 <br/>
 
+<!-- Tech Stack Badges -->
 <p align="center">
+  <b>Core</b><br/>
   <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust"/>
   <img src="https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=webassembly&logoColor=white" alt="WebAssembly"/>
+  <img src="https://img.shields.io/badge/Tokio-232323?style=for-the-badge&logo=rust&logoColor=white" alt="Tokio"/>
+  <img src="https://img.shields.io/badge/PyO3-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="PyO3"/>
+</p>
+<p align="center">
+  <b>Storage</b><br/>
+  <img src="https://img.shields.io/badge/Sled-E6522C?style=for-the-badge&logo=rust&logoColor=white" alt="Sled"/>
+  <img src="https://img.shields.io/badge/Tantivy-FF6B35?style=for-the-badge&logo=apache-lucene&logoColor=white" alt="Tantivy"/>
+  <img src="https://img.shields.io/badge/Neo4j-4581C3?style=for-the-badge&logo=neo4j&logoColor=white" alt="Neo4j"/>
+  <img src="https://img.shields.io/badge/FalkorDB-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="FalkorDB"/>
+  <img src="https://img.shields.io/badge/Kùzu-00A98F?style=for-the-badge&logo=database&logoColor=white" alt="Kuzu"/>
+</p>
+<p align="center">
+  <b>Frontend</b><br/>
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/>
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite"/>
   <img src="https://img.shields.io/badge/G6-1890FF?style=for-the-badge&logo=antdesign&logoColor=white" alt="AntV G6"/>
 </p>
+<p align="center">
+  <b>AI / ML</b><br/>
+  <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"/>
+  <img src="https://img.shields.io/badge/Anthropic-191919?style=for-the-badge&logo=anthropic&logoColor=white" alt="Anthropic"/>
+  <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama"/>
+  <img src="https://img.shields.io/badge/FastEmbed-FF6F00?style=for-the-badge&logo=python&logoColor=white" alt="FastEmbed"/>
+</p>
+<p align="center">
+  <b>Infrastructure</b><br/>
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/>
+  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus"/>
+  <img src="https://img.shields.io/badge/OpenTelemetry-7B5EA7?style=for-the-badge&logo=opentelemetry&logoColor=white" alt="OpenTelemetry"/>
+</p>
 
-## Quick Start
+---
+
+## ⚡ Quick Start
 
 ```python
 from neurograph import NeuroGraph
+
 ng = NeuroGraph()
-await ng.add("NeuroGraph is a temporal knowledge graph.")
-result = await ng.query("What is NeuroGraph?")
+
+# Ingest knowledge
+await ng.add("Alice joined Anthropic as a research scientist in March 2026")
+await ng.add("Bob moved from Google to OpenAI in January 2026")
+
+# Query with graph-powered RAG
+result = await ng.query("Where does Alice work?")
+print(result.answer)  # "Anthropic"
+
+# Time travel
+past = await ng.at("2025-12-01")
+result = await past.query("Where does Bob work?")
+print(result.answer)  # "Google"
+
+# Branch reality
+await ng.branch("what-if")
+await ng.add("Alice leaves Anthropic for DeepMind")
+diff = ng.diff_branches("main", "what-if")
+
+# Open interactive dashboard
+await ng.dashboard()  # → http://localhost:7777
 ```
 
-## Features
+---
 
-| Capability | Status |
-|---|---|
-| **Temporal Knowledge Graph** - Bi-temporal facts with `valid_from` / `valid_until` | Completed |
-| **Community Detection** - Hierarchical Louvain/Leiden in native Rust | Completed |
-| **Interactive Dashboard** - Browser-based graph explorer powered by G6 + Rust WASM | Completed |
-| **Sub-200ms Queries** - Rust-native hybrid retrieval (semantic + keyword + graph walk) | Completed |
-| **Graph Version Control** - Branch, diff, and merge knowledge graphs like Git | Completed |
-| **Think-While-You-Watch** - Watch AI reasoning animate on the graph in real-time | Completed |
-| **Temporal Playback** - Scrub a timeline slider to see knowledge evolve | Completed |
-| **Intelligent Forgetting** - Importance-based decay, compression, and archival | Completed |
-| **Cost-Aware Routing** - Auto-selects cheapest query strategy within your budget | Completed |
-| **Multi-Agent Graph Building** - 5 collaborative agents with visual debugging | Completed |
-| **MCP Server** - Give Claude, Cursor, and other AI tools graph-based memory | Completed |
-| **Zero Config** - `pip install neurograph` -> 3 lines -> done. No Docker. No API key. | Completed |
+## 📦 One-Command Install
 
-## What Makes NeuroGraph Different
+```bash
+# Rust developers
+cargo install neurograph
+
+# Python developers
+pip install neurograph
+
+# Node / TypeScript developers
+npm install @neurograph/sdk
+
+# Docker (full stack: API + Dashboard)
+docker run -p 8000:8000 -p 3000:3000 ghcr.io/neurographai/neurograph
+
+# Docker Compose
+docker compose up
+```
+
+<details>
+<summary><b>Developer Setup (from source)</b></summary>
+
+Prerequisites: Rust (cargo 1.82+), Node.js (v18+)
+
+```bash
+# Clone
+git clone https://github.com/neurographai/neurograph.git
+cd neurograph
+
+# Build Rust engine
+cargo build --release
+
+# Build Dashboard
+cd dashboard && npm install && npm run dev
+
+# Run server
+cargo run --bin neurograph-server
+```
+
+</details>
+
+---
+
+## 🌟 What Makes NeuroGraph Different
 
 | Feature | What It Does | Why It Matters |
 |---------|-------------|----------------|
-| **Think-While-You-Watch** | Ask a question -> watch the AI traverse the graph in real-time, nodes glowing and edges animating as it reasons | You can SEE how the AI arrived at its answer - full transparency |
-| **Temporal Playback** | Drag a timeline slider -> the knowledge graph morphs to show what was true at any point in history | Track how knowledge evolves - like Git blame for facts |
-| **Graph Branching** | `ng.branch("what-if")` -> add hypothetical facts -> `ng.diff()` to compare -> `ng.merge()` when verified | Explore hypothetical scenarios without corrupting your real knowledge |
-| **Intelligent Forgetting** | Facts automatically decay based on importance (PageRank + access frequency + recency) | Graphs don't grow forever - NeuroGraph manages its own memory |
-| **Cost-Aware Router** | Set a budget -> NeuroGraph auto-picks the cheapest strategy that meets quality | Never get a surprise LLM bill again |
+| **Think-While-You-Watch** | Ask a question → watch the AI traverse the graph in real-time, nodes glowing and edges animating as it reasons | You can SEE how the AI arrived at its answer — full transparency |
+| **Temporal Playback** | Drag a timeline slider → the knowledge graph morphs to show what was true at any point in history | Track how knowledge evolves — like Git blame for facts |
+| **Graph Branching** | `ng.branch("what-if")` → add hypothetical facts → `ng.diff()` to compare → `ng.merge()` when verified | Explore hypothetical scenarios without corrupting your real knowledge |
+| **Intelligent Forgetting** | Facts automatically decay based on importance (PageRank + access frequency + recency) | Graphs don't grow forever — NeuroGraph manages its own memory |
+| **Cost-Aware Router** | Set a budget → NeuroGraph auto-picks the cheapest strategy that meets quality | Never get a surprise LLM bill again |
 | **Rust WASM Layouts** | Graph layout computed in Rust WebAssembly, not JavaScript | Render 100k-node graphs smoothly where JS would crash |
 | **Zero API Key Mode** | Works completely offline: regex NER + local embeddings + embedded DB | Air-gapped environments, privacy-first, $0 cost |
-| **Diff-Based Summaries** | When a community changes slightly, update the summary - don't regenerate it | ~70% token savings on community re-summarization |
+| **Diff-Based Summaries** | When a community changes slightly, update the summary — don't regenerate it | ~70% token savings on community re-summarization |
 | **Hybrid Search** | Semantic + BM25 + Graph Traversal fused with Reciprocal Rank Fusion | Better recall than any single search method alone |
-| **Built-In Benchmarks** | `neurograph bench` runs accuracy, latency, and cost tests against standard datasets | Know exactly how good your graph is - with numbers |
+| **Built-In Benchmarks** | `neurograph bench` runs accuracy, latency, and cost tests against standard datasets | Know exactly how good your graph is — with numbers |
 
-## Why NeuroGraph?
+---
 
-Most graph-based AI memory systems store static snapshots of facts. When reality changes ("Alice moved to London"), they either append a conflicting fact or overwrite the old one, losing the timeline. They also rely on heavy Python abstractions that crash when visualizing massive graphs.
-
-**NeuroGraph** solves this by:
-1. **Bi-Temporal Tracking:** Every fact has a birth, a lifecycle, and a validation window. You can query the knowledge graph "as it was last Tuesday".
-2. **Rust-Native Core:** Queries, community detection (Louvain/Leiden), and graph traversals are executed in native Rust, providing sub-200ms latency.
-3. **WASM-Powered Visualization:** Layout algorithms are compiled to WebAssembly and run directly in the browser, allowing smooth visualization of massive graphs via AntV G6 natively.
-
-## How NeuroGraph Compares
+## 📊 How NeuroGraph Compares
 
 | Feature | NeuroGraph | GraphRAG (Microsoft) | Graphiti (Zep) | Mem0 |
 |---------|-----------|----------------------|----------------|------|
@@ -90,7 +288,9 @@ Most graph-based AI memory systems store static snapshots of facts. When reality
 | **Communities** | **Rust Louvain/Leiden** | Python NetworkX | No | No |
 | **Decay**| **Importance-based Forgetting** | No | No | Optional API |
 
-## Performance
+---
+
+## ⚡ Performance
 
 Built on Rust. No GIL. No garbage collector. No excuses.
 
@@ -118,7 +318,9 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 
 </details>
 
-## API at a Glance
+---
+
+## 🧩 API at a Glance
 
 | Operation | Python | Rust |
 |-----------|--------|------|
@@ -135,9 +337,12 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 | **Dashboard** | `await ng.dashboard()` | `ng.serve(7777).await?;` |
 | **Search** | `entities = await ng.search("Alice")` | `let entities = ng.search("Alice").await?;` |
 
-## Integrations
+---
 
-### LLM Providers
+## 🔌 Integrations
+
+<details>
+<summary><b>LLM Providers</b></summary>
 
 | Provider | Models | Local/Cloud |
 |----------|--------|-------------|
@@ -148,17 +353,23 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 | Any OpenAI-compatible | LM Studio, vLLM, Together AI | Local/Cloud |
 | **None (offline mode)** | **Regex NER + rule-based extraction** | **Local** |
 
-### Graph Databases
+</details>
+
+<details>
+<summary><b>Graph Databases</b></summary>
 
 | Backend | Type | Setup Required |
-|---------|------|---------------|
-| **Embedded (sled)** | **Embedded** | **None - default** |
+|---------|------|----------------|
+| **Embedded (sled)** | **Embedded** | **None — default** |
 | In-Memory (petgraph) | In-process | None |
 | Kuzu | Embedded | None |
 | Neo4j | Client-server | Docker or Neo4j Desktop |
 | FalkorDB | Client-server | Docker |
 
-### Embedding Providers
+</details>
+
+<details>
+<summary><b>Embedding Providers</b></summary>
 
 | Provider | Models | Local/Cloud |
 |----------|--------|-------------|
@@ -166,7 +377,10 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 | OpenAI | text-embedding-3-small/large | Cloud |
 | Sentence Transformers | Any HuggingFace model | Local |
 
-### Agent Frameworks
+</details>
+
+<details>
+<summary><b>Agent Frameworks</b></summary>
 
 | Framework | Integration Type |
 |-----------|-----------------|
@@ -176,7 +390,10 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 | OpenAI Agents SDK | Compatible memory interface |
 | MCP (Claude/Cursor) | Full MCP server |
 
-### Observability
+</details>
+
+<details>
+<summary><b>Observability</b></summary>
 
 | Tool | What's Tracked |
 |------|---------------|
@@ -184,63 +401,45 @@ Built on Rust. No GIL. No garbage collector. No excuses.
 | Prometheus | Metrics: latency, throughput, cache hits |
 | Built-in Cost Tracker | Per-query: model, tokens, cost USD, latency ms |
 
-## Architecture
+</details>
 
-NeuroGraph separates concerns between the heavy analysis runtime and a lightweight visualization frontend.
+---
 
-1. **NeuroGraph Core (Rust)**: Manages bi-temporal memory storage, incremental community detection (Louvain/Hierarchical Leiden), LLM-based ingestion, vector search, and observability.
-2. **NeuroGraph Dashboard (React/TS)**: Integrates modern components alongside AntV G6 for highly complex graph renderings, temporal sliders for playback, and minimap analysis.
-3. **NeuroGraph WASM**: Binds critical core compute logic directly to the dashboard, ensuring browser side processing operates seamlessly without server dependencies.
+## 📋 Features
 
-## Installation
-
-### Via PIP (Recommended)
-```bash
-pip install neurograph
-```
-
-### Via Docker
-Ensure you have Docker and Docker Compose installed.
-```bash
-docker-compose up --build
-```
-- REST API / Core Engine: `http://localhost:8000`
-- Visualization Dashboard: `http://localhost:3000`
-
-### Developer Setup (Source)
-Prerequisites: Rust (cargo 1.80+), Node.js (v18+)
-
-```bash
-# Build Engine
-cd crates/neurograph-core
-cargo build --release
-
-# Build Dashboard
-cd ../../dashboard
-npm install
-npm run dev
-```
-
-## Complete Feature Matrix
+| Capability | Status |
+|---|---|
+| **Temporal Knowledge Graph** — Bi-temporal facts with `valid_from` / `valid_until` | ✅ Completed |
+| **Community Detection** — Hierarchical Louvain/Leiden in native Rust | ✅ Completed |
+| **Interactive Dashboard** — Browser-based graph explorer powered by G6 + Rust WASM | ✅ Completed |
+| **Sub-200ms Queries** — Rust-native hybrid retrieval (semantic + keyword + graph walk) | ✅ Completed |
+| **Graph Version Control** — Branch, diff, and merge knowledge graphs like Git | ✅ Completed |
+| **Think-While-You-Watch** — Watch AI reasoning animate on the graph in real-time | ✅ Completed |
+| **Temporal Playback** — Scrub a timeline slider to see knowledge evolve | ✅ Completed |
+| **Intelligent Forgetting** — Importance-based decay, compression, and archival | ✅ Completed |
+| **Cost-Aware Routing** — Auto-selects cheapest query strategy within your budget | ✅ Completed |
+| **Multi-Agent Graph Building** — 5 collaborative agents with visual debugging | ✅ Completed |
+| **MCP Server** — Give Claude, Cursor, and other AI tools graph-based memory | ✅ Completed |
+| **Zero Config** — `pip install neurograph` → 3 lines → done. No Docker. No API key. | ✅ Completed |
 
 <details>
-<summary>Click to expand all 87 features</summary>
+<summary><b>Click to expand all 87 features</b></summary>
 
 ### Reasoning and Knowledge
 
 | Feature | Details |
 |---------|---------|
 | Entity extraction (LLM) | Structured JSON output via OpenAI / Anthropic / Gemini / Ollama |
-| Entity extraction (offline) | Regex-based NER fallback - works without any API key |
+| Entity extraction (offline) | Regex-based NER fallback — works without any API key |
 | Relationship extraction | Automatic from text + manual from structured JSON |
 | Multi-hop reasoning | Graph walk + LLM reasoning across connected entities |
-| Community detection (Louvain) | Native Rust implementation on petgraph - O(n log n) |
+| Community detection (Louvain) | Native Rust implementation on petgraph — O(n log n) |
 | Community detection (Leiden) | Hierarchical with resolution parameter and level control |
-| Incremental community updates | k-hop delta recomputation - only affected neighborhoods |
+| Incremental community updates | k-hop delta recomputation — only affected neighborhoods |
 | Community summarization | LLM map-reduce with hierarchical rollup |
 | Diff-based re-summarization | Update summaries incrementally at ~30% token cost |
 | Hierarchical community levels | Multi-resolution from macro themes to micro topics |
-| Cost-aware query routing | Classifies query -> estimates cost per strategy -> selects optimal |
+| Cost-aware query routing | Classifies query → estimates cost per strategy → selects optimal |
 | Local queries | Direct entity/subgraph retrieval (fastest, cheapest) |
 | Global queries | Community summary map-reduce (comprehensive) |
 | DRIFT search | Dynamic local-global fusion |
@@ -257,7 +456,7 @@ npm run dev
 | Hybrid retrieval | Reciprocal Rank Fusion (RRF) combining all three methods |
 | Cross-encoder reranking | LLM-based passage relevance scoring |
 | Pre-built search recipes | `find_entity`, `find_connections`, `find_community`, `temporal_search` |
-| Context assembly | Token-budget-aware graph -> LLM prompt with citations + confidence |
+| Context assembly | Token-budget-aware graph → LLM prompt with citations + confidence |
 
 ### Temporal and Data Management
 
@@ -288,19 +487,19 @@ npm run dev
 |---------|---------|
 | Built-in interactive dashboard | `await ng.dashboard()` opens browser at localhost:7777 |
 | WebGL/Canvas rendering | G6 engine with multi-layer canvas (background, main, label) |
-| Force-directed layout | Rust WASM - 10-50x faster than JavaScript equivalent |
+| Force-directed layout | Rust WASM — 10-50x faster than JavaScript equivalent |
 | Hierarchical layout | Dagre-style for tree/DAG structures |
 | Radial layout | Ego-centric view centered on selected entity |
 | Circular layout | For small, dense subgraphs |
 | Temporal layout | X-axis = time, Y-axis = entity groups |
 | Think-While-You-Watch | Live animation of AI reasoning path on the graph |
-| Temporal playback slider | Scrub through time - nodes appear/disappear as facts change |
+| Temporal playback slider | Scrub through time — nodes appear/disappear as facts change |
 | Semantic zoom | Zoom in = entity details. Zoom out = community summaries |
 | Community clusters | G6 Combos with color-coded boundaries |
-| Natural language search | Type a question -> results highlight paths on graph |
-| Entity detail panel | Click any node -> see summary, relationships, full history |
-| Relationship detail panel | Click any edge -> see fact, validity window, provenance |
-| Community detail panel | Click any cluster -> see summary, members, sub-communities |
+| Natural language search | Type a question → results highlight paths on graph |
+| Entity detail panel | Click any node → see summary, relationships, full history |
+| Relationship detail panel | Click any edge → see fact, validity window, provenance |
+| Community detail panel | Click any cluster → see summary, members, sub-communities |
 | Graph statistics panel | Node count, edge count, community count, cost tracker |
 | Dark mode | Default premium dark theme with glassmorphism |
 | Light mode | Clean light theme for presentations |
@@ -332,7 +531,7 @@ npm run dev
 
 | Feature | Details |
 |---------|---------|
-| Zero-config embedded mode | `pip install neurograph` -> 3 lines -> works |
+| Zero-config embedded mode | `pip install neurograph` → 3 lines → works |
 | Embedded database (sled) | Persistent storage, no Docker required |
 | In-memory mode | Pure petgraph backend for testing and prototyping |
 | Neo4j driver | Connect to existing Neo4j instances |
@@ -341,12 +540,12 @@ npm run dev
 | OpenAI LLM | GPT-4o, GPT-4o-mini, GPT-4-turbo |
 | Anthropic LLM | Claude 4, Claude 3.5 Sonnet |
 | Google Gemini | Gemini 2.0 Flash, Gemini Pro |
-| Ollama (local) | DeepSeek, Llama, Mistral - fully offline |
+| Ollama (local) | DeepSeek, Llama, Mistral — fully offline |
 | Generic OpenAI-compatible | Any API following OpenAI spec (LM Studio, vLLM, etc.) |
-| No API key mode | Regex NER + local FastEmbed - zero cost, zero internet |
+| No API key mode | Regex NER + local FastEmbed — zero cost, zero internet |
 | REST API | Axum-based, async, production-ready |
 | WebSocket | Real-time graph updates + reasoning traces |
-| Python SDK | Native PyO3 bindings - Rust speed with Python API |
+| Python SDK | Native PyO3 bindings — Rust speed with Python API |
 | TypeScript SDK | `@neurograph/client` for Node.js + browser |
 | Rust SDK | Native, zero-overhead Rust API |
 | CLI | `neurograph serve`, `neurograph ingest`, `neurograph query` |
@@ -362,23 +561,59 @@ npm run dev
 
 </details>
 
-## Documentation
+---
 
-Full documentation is available across the repository.
-Detailed guides:
+## 📚 Documentation
+
 - [Architecture Details](docs/architecture.md)
 - [Temporal Engine Guide](docs/temporal.md)
 - [Community Detection](docs/community.md)
+- [Developing Guide](DEVELOPING.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
-## Roadmap
+## 🗺️ Roadmap
 
-- Upcoming features involve expanding the distributed computing models for the graph and enriching the Python SDK hooks.
-- See the main issue tracker for feature voting.
+- Distributed graph sharding across multiple nodes
+- Enriched Python SDK hooks and async iterators
+- Helm chart for Kubernetes one-click deploy
+- Browser extension for knowledge capture
+- See the [issue tracker](https://github.com/neurographai/neurograph/issues) for feature voting
 
-## Contributing
+## 🤝 Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. 
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## License
+```bash
+# Quick dev setup
+git clone https://github.com/neurographai/neurograph.git
+cd neurograph
+cargo test --workspace
+```
 
-Apache-2.0 License.
+## 📄 License
+
+[Apache-2.0](LICENSE) — use it freely in commercial and open-source projects.
+
+## 📖 Citation
+
+If you use NeuroGraph in your research, please cite it:
+
+```bibtex
+@software{neurograph,
+  title = {NeuroGraph: A Rust-Powered Temporal Knowledge Graph Engine for AI Agents},
+  author = {Ashutosh Kumar Singh},
+  year = {2026},
+  url = {https://github.com/neurographai/neurograph},
+  license = {Apache-2.0}
+}
+```
+
+---
+
+<p align="center">
+  <b>Built with 🧠 by <a href="https://github.com/Ashutosh0x">Ashutosh Kumar Singh</a></b>
+  <br/>
+  <sub>If NeuroGraph helps your project, consider ⭐ starring the repo!</sub>
+</p>

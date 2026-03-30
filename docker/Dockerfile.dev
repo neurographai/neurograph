@@ -1,0 +1,20 @@
+# ============================================================
+# NEUROGRAPH DEVELOPMENT DOCKERFILE
+# Includes hot-reload, debug tools, and all dev dependencies
+# ============================================================
+
+FROM rust:1.82-bookworm
+
+RUN apt-get update && apt-get install -y \
+    cmake protobuf-compiler libssl-dev pkg-config \
+    libclang-dev git curl wget jq \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN cargo install cargo-watch cargo-nextest
+
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
+
+WORKDIR /workspace
+
+CMD ["cargo", "watch", "-x", "run --bin neurograph-server"]

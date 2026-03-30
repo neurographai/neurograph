@@ -393,6 +393,89 @@ impl NeuroGraph {
         })
     }
 
+    /// Add text to the knowledge graph with an explicit timestamp.
+    ///
+    /// Like `add_text`, but sets the episode and entity timestamps
+    /// to the provided date rather than `Utc::now()`.
+    ///
+    /// ```rust,no_run
+    /// # use neurograph_core::NeuroGraph;
+    /// # async fn example() -> anyhow::Result<()> {
+    /// let ng = NeuroGraph::builder().build().await?;
+    /// ng.add_text_at("Alice works at Google", "2023-01-15").await?;
+    /// ng.add_text_at("Alice works at Anthropic", "2025-06-15").await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn add_text_at(&self, text: &str, date: &str) -> Result<Episode> {
+        let timestamp = temporal::TemporalManager::parse_date(date)
+            .map_err(|e: temporal::TemporalError| NeuroGraphError::Temporal(e.to_string()))?;
+
+        let pipeline = ingestion::pipeline::IngestionPipeline::new(
+            self.driver.clone(),
+            self.embedder.clone(),
+            self.llm.clone(),
+            self.config.ontology.clone(),
+            self.config.default_group_id.clone(),
+        );
+
+        let (mut episode, result) = pipeline
+            .ingest_text(text, "text-input")
+            .await
+            .map_err(|e| NeuroGraphError::Parse(e.to_string()))?;
+
+        // Override timestamps with the provided date
+        episode.created_at = timestamp;
+
+        self.cost_tracker.record(result.cost_usd);
+
+        tracing::info!(
+            episode_id = %episode.id,
+            timestamp = %timestamp,
+            entities = result.entities_stored,
+            "Text ingested at specific date"
+        );
+
+        Ok(episode)
+    }
+
+    /// Get the history of relationships for a named entity.
+    ///
+    /// Returns all relationships (including invalidated ones) associated
+    /// with the first entity whose name matches the query.
+    ///
+    /// ```rust,no_run
+    /// # use neurograph_core::NeuroGraph;
+    /// # async fn example() -> anyhow::Result<()> {
+    /// let ng = NeuroGraph::builder().build().await?;
+    /// let history = ng.entity_history("Alice").await?;
+    /// for rel in &history {
+    ///     println!("{} (valid: {} → {:?})", rel.fact, rel.valid_from, rel.valid_until);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn entity_history(&self, entity_name: &str) -> Result<Vec<graph::Relationship>> {
+        // Find entity by name
+        let entities = self
+            .driver
+            .search_entities_by_text(entity_name, 1, None)
+            .await?;
+
+        let entity = entities
+            .into_iter()
+            .next()
+            .ok_or_else(|| NeuroGraphError::Query(format!("Entity '{}' not found", entity_name)))?;
+
+        // Get ALL relationships (including invalidated ones)
+        let mut rels = self.driver.get_entity_relationships(&entity.entity.id).await?;
+
+        // Sort by valid_from ascending (chronological order)
+        rels.sort_by_key(|r| r.valid_from);
+
+        Ok(rels)
+    }
+
     /// Show what changed between two dates.
     ///
     /// Returns entities added, modified, and relationships invalidated

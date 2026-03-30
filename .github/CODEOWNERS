@@ -1,0 +1,23 @@
+# ============================================================
+# CODEOWNERS — Auto-assign reviewers for PRs
+# ============================================================
+
+# Default owner for everything
+* @Ashutosh0x
+
+# Core engine — requires owner review
+/crates/neurograph-core/ @Ashutosh0x
+
+# Security-sensitive files — always require owner
+/SECURITY.md @Ashutosh0x
+/.github/workflows/ @Ashutosh0x
+/docker/ @Ashutosh0x
+/Cargo.toml @Ashutosh0x
+/Cargo.lock @Ashutosh0x
+
+# Dashboard — can be reviewed by frontend contributors
+/dashboard/ @Ashutosh0x
+
+# Documentation — lower bar for review
+/docs/ @Ashutosh0x
+*.md @Ashutosh0x

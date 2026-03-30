@@ -1,0 +1,49 @@
+# ============================================================
+# Publish to npm
+# Builds WASM + TypeScript SDK, publishes @neurograph/sdk
+# ============================================================
+
+name: Publish to npm
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Build WASM
+        run: |
+          cd crates/neurograph-wasm
+          wasm-pack build --target web --release --out-dir ../../sdk/typescript/dist/wasm
+
+      - name: Build TypeScript SDK
+        run: |
+          cd sdk/typescript
+          npm ci
+          npm run build
+          npm test
+
+      - name: Publish
+        run: |
+          cd sdk/typescript
+          npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

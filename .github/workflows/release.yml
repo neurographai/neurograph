@@ -1,0 +1,98 @@
+# ============================================================
+# Release Pipeline
+# Triggered by pushing a tag: git tag v0.1.0 && git push --tags
+# Builds binaries, publishes packages, creates GitHub release
+# ============================================================
+
+name: Release
+on:
+  push:
+    tags:
+      - 'v[0-9]+.*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  # Create GitHub release
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          cargo install git-cliff
+          git cliff --latest --strip header > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        id: create
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+
+  # Build binaries for all platforms
+  build-binaries:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: neurograph-linux-amd64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: neurograph-linux-arm64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            name: neurograph-macos-amd64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            name: neurograph-macos-arm64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: neurograph-windows-amd64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: cargo install cross
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+            cross build --release --target ${{ matrix.target }} --bin neurograph-cli --bin neurograph-server
+          else
+            cargo build --release --target ${{ matrix.target }} --bin neurograph-cli --bin neurograph-server
+          fi
+        shell: bash
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/neurograph-cli dist/ 2>/dev/null || \
+          cp target/${{ matrix.target }}/release/neurograph-cli.exe dist/ 2>/dev/null || true
+          cp target/${{ matrix.target }}/release/neurograph-server dist/ 2>/dev/null || \
+          cp target/${{ matrix.target }}/release/neurograph-server.exe dist/ 2>/dev/null || true
+          cd dist && tar czf ../${{ matrix.name }}.tar.gz *
+        shell: bash
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.name }}.tar.gz

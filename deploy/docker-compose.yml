@@ -1,0 +1,60 @@
+# ============================================================
+# NeuroGraph Full Stack - Deploy Configuration
+# Same as root docker-compose.yml, symlinked or copied here
+# for deploy/ directory convention
+#
+# Usage:
+#   cd deploy && docker compose up
+# ============================================================
+
+name: neurograph
+
+services:
+  neurograph:
+    image: ghcr.io/neurographai/neurograph:latest
+    container_name: neurograph
+    ports:
+      - "${NEUROGRAPH_API_PORT:-8000}:8000"
+      - "${NEUROGRAPH_DASHBOARD_PORT:-3000}:3000"
+    environment:
+      - NEUROGRAPH_STORAGE=${NEUROGRAPH_STORAGE:-embedded}
+      - NEUROGRAPH_LOG_LEVEL=${NEUROGRAPH_LOG_LEVEL:-info}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - neurograph-data:/app/data
+      - neurograph-config:/app/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - neurograph-net
+
+  mcp-server:
+    image: ghcr.io/neurographai/neurograph:latest
+    command: ["mcp"]
+    container_name: neurograph-mcp
+    ports:
+      - "${NEUROGRAPH_MCP_PORT:-8001}:8001"
+    environment:
+      - NEUROGRAPH_API_URL=http://neurograph:8000
+    depends_on:
+      neurograph:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - neurograph-net
+
+volumes:
+  neurograph-data:
+    driver: local
+  neurograph-config:
+    driver: local
+
+networks:
+  neurograph-net:
+    driver: bridge

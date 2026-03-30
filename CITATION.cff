@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use NeuroGraph in your research, please cite it as below."
+title: "NeuroGraph: A Rust-Powered Temporal Knowledge Graph Engine for AI Agents"
+type: software
+authors:
+  - given-names: Ashutosh
+    family-names: "Kumar Singh"
+    alias: Ashutosh0x
+repository-code: "https://github.com/neurographai/neurograph"
+url: "https://neurograph.dev"
+license: Apache-2.0
+keywords:
+  - temporal-knowledge-graph
+  - graph-rag
+  - ai-agents
+  - rust
+  - wasm

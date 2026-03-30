@@ -1,0 +1,89 @@
+# OpenSSF Security Insights Specification v1.0.0
+# https://github.com/ossf/security-insights-spec
+
+header:
+  schema-version: "1.0.0"
+  expiry-date: "2027-03-30T00:00:00Z"
+  last-updated: "2026-03-30"
+  last-reviewed: "2026-03-30"
+  commit-hash: ""
+  project-url: "https://github.com/neurographai/neurograph"
+  project-release: "https://github.com/neurographai/neurograph/releases/latest"
+  changelog: "https://github.com/neurographai/neurograph/blob/main/CHANGELOG.md"
+  license: "https://github.com/neurographai/neurograph/blob/main/LICENSE"
+
+project-lifecycle:
+  status: "active"
+  roadmap: "https://github.com/neurographai/neurograph/blob/main/ROADMAP.md"
+  bug-fixes-only: false
+  core-maintainers:
+    - "https://github.com/Ashutosh0x"
+
+contribution-policy:
+  accepts-pull-requests: true
+  accepts-automated-pull-requests: true
+  contributing-policy: "https://github.com/neurographai/neurograph/blob/main/CONTRIBUTING.md"
+  code-of-conduct: "https://github.com/neurographai/neurograph/blob/main/CODE_OF_CONDUCT.md"
+
+documentation:
+  - "https://github.com/neurographai/neurograph/blob/main/README.md"
+  - "https://github.com/neurographai/neurograph/blob/main/DEVELOPING.md"
+
+distribution-points:
+  - "https://crates.io/crates/neurograph"
+  - "https://pypi.org/project/neurograph/"
+  - "https://www.npmjs.com/package/@neurograph/sdk"
+  - "https://ghcr.io/neurographai/neurograph"
+
+security-artifacts:
+  self-assessment:
+    - comment: "Security self-assessment"
+      evidence-url:
+        - "https://github.com/neurographai/neurograph/blob/main/SECURITY.md"
+
+security-contacts:
+  - type: "email"
+    value: "security@neurograph.dev"
+  - type: "web"
+    value: "https://github.com/neurographai/neurograph/security/advisories"
+
+security-testing:
+  - tool-type: "sca"
+    tool-name: "Dependabot"
+    tool-version: "latest"
+    integration:
+      ad-hoc: false
+      ci: true
+      before-release: true
+    comment: "Automated dependency vulnerability scanning"
+  - tool-type: "sast"
+    tool-name: "CodeQL"
+    tool-version: "latest"
+    integration:
+      ad-hoc: false
+      ci: true
+      before-release: true
+  - tool-type: "sast"
+    tool-name: "cargo-audit"
+    tool-version: "latest"
+    integration:
+      ci: true
+      before-release: true
+  - tool-type: "sast"
+    tool-name: "cargo-deny"
+    tool-version: "latest"
+    integration:
+      ci: true
+      before-release: true
+
+vulnerability-reporting:
+  accepts-vulnerability-reports: true
+  security-policy: "https://github.com/neurographai/neurograph/security/policy"
+  bug-bounty-available: false
+  comment: "Please report vulnerabilities via GitHub Security Advisories"
+
+dependencies:
+  third-party-packages: true
+  dependencies-lists:
+    - "https://github.com/neurographai/neurograph/blob/main/Cargo.lock"
+    - "https://github.com/neurographai/neurograph/blob/main/dashboard/package-lock.json"

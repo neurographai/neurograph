@@ -10,9 +10,10 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["NeuroGraph Contributors"]
+rust-version = "1.82"
+authors = ["Ashutosh Kumar Singh <ashutosh@neurograph.dev>"]
 license = "Apache-2.0"
-repository = "https://github.com/neurograph/neurograph"
+repository = "https://github.com/neurographai/neurograph"
 homepage = "https://neurograph.dev"
 description = "The Operating System for AI Knowledge — ingest anything, remember everything, forget intelligently, reason visually."
 readme = "README.md"

@@ -61,6 +61,7 @@ regex = { workspace = true }
 [dev-dependencies]
 tokio-test = "0.4"
 tempfile = "3"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
 [features]
 default = []
@@ -84,3 +85,35 @@ path = "tests/test_ingestion.rs"
 [[test]]
 name = "test_retrieval"
 path = "tests/test_retrieval.rs"
+
+[[test]]
+name = "test_temporal_scenarios"
+path = "tests/test_temporal_scenarios.rs"
+
+[[test]]
+name = "test_community_correctness"
+path = "tests/test_community_correctness.rs"
+
+[[test]]
+name = "test_search_correctness"
+path = "tests/test_search_correctness.rs"
+
+[[test]]
+name = "test_cost_tracking"
+path = "tests/test_cost_tracking.rs"
+
+[[bench]]
+name = "engine_benchmarks"
+harness = false
+
+[[bench]]
+name = "search_benchmarks"
+harness = false
+
+[[bench]]
+name = "community_benchmarks"
+harness = false
+
+[[bench]]
+name = "temporal_benchmarks"
+harness = false
