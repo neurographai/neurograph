@@ -1,0 +1,95 @@
+/* ============================================================
+   NeuroGraph — Animations & Keyframes
+   ============================================================ */
+
+/* ── Fade In ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Slide ── */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+
+/* ── Pulse / Glow ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px var(--ng-accent-glow); }
+  50%      { box-shadow: 0 0 24px var(--ng-accent-glow), 0 0 48px hsla(258, 90%, 66%, 0.1); }
+}
+
+@keyframes nodeRipple {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Spin ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Shimmer (loading) ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Edge Flow (animated dashed edges) ── */
+@keyframes edgeFlow {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ── Graph Breathe ── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+/* ── Utility animation classes ── */
+.animate-fadeIn      { animation: fadeIn 0.3s var(--ng-ease-out) forwards; }
+.animate-fadeInUp    { animation: fadeInUp 0.35s var(--ng-ease-out) forwards; }
+.animate-fadeInScale { animation: fadeInScale 0.3s var(--ng-ease-out) forwards; }
+.animate-slideInRight { animation: slideInRight 0.35s var(--ng-ease-out) forwards; }
+.animate-slideOutRight { animation: slideOutRight 0.3s var(--ng-ease-out) forwards; }
+.animate-pulse       { animation: pulse 2s ease-in-out infinite; }
+.animate-glow        { animation: glow 2.5s ease-in-out infinite; }
+.animate-spin        { animation: spin 1s linear infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, hsla(225,20%,20%,0.4) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

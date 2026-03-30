@@ -1,0 +1,106 @@
+/* ============================================================
+   NeuroGraph Design System — CSS Custom Properties
+   Premium dark-mode knowledge graph dashboard
+   ============================================================ */
+
+:root {
+  /* ── Color Palette ── */
+  --ng-bg-primary:    hsl(225, 25%, 6%);
+  --ng-bg-secondary:  hsl(225, 22%, 9%);
+  --ng-bg-tertiary:   hsl(225, 20%, 12%);
+  --ng-bg-elevated:   hsl(225, 18%, 14%);
+  --ng-bg-hover:      hsl(225, 18%, 17%);
+
+  --ng-surface:       hsl(225, 18%, 11%);
+  --ng-surface-alt:   hsl(225, 15%, 15%);
+  --ng-border:        hsl(225, 14%, 18%);
+  --ng-border-subtle: hsl(225, 12%, 14%);
+
+  /* Text hierarchy */
+  --ng-text-primary:   hsl(0, 0%, 95%);
+  --ng-text-secondary: hsl(225, 10%, 65%);
+  --ng-text-tertiary:  hsl(225, 8%, 45%);
+  --ng-text-muted:     hsl(225, 6%, 35%);
+
+  /* Accent palette — vibrant neon spectrum */
+  --ng-accent:        hsl(258, 90%, 66%);
+  --ng-accent-hover:  hsl(258, 95%, 72%);
+  --ng-accent-muted:  hsl(258, 50%, 30%);
+  --ng-accent-glow:   hsla(258, 90%, 66%, 0.25);
+
+  --ng-cyan:          hsl(185, 85%, 55%);
+  --ng-cyan-muted:    hsl(185, 40%, 25%);
+  --ng-green:         hsl(155, 75%, 50%);
+  --ng-green-muted:   hsl(155, 35%, 22%);
+  --ng-amber:         hsl(38, 92%, 58%);
+  --ng-amber-muted:   hsl(38, 40%, 22%);
+  --ng-rose:          hsl(350, 85%, 60%);
+  --ng-rose-muted:    hsl(350, 35%, 22%);
+  --ng-blue:          hsl(215, 90%, 60%);
+  --ng-blue-muted:    hsl(215, 40%, 22%);
+  --ng-indigo:        hsl(240, 70%, 62%);
+  --ng-teal:          hsl(170, 70%, 48%);
+  --ng-orange:        hsl(25, 90%, 55%);
+  --ng-pink:          hsl(330, 80%, 60%);
+  --ng-lime:          hsl(85, 70%, 50%);
+
+  /* Glassmorphism */
+  --ng-glass-bg:      hsla(225, 25%, 10%, 0.65);
+  --ng-glass-border:  hsla(225, 20%, 30%, 0.25);
+  --ng-glass-blur:    12px;
+  --ng-glass-shadow:  0 8px 32px hsla(0, 0%, 0%, 0.35);
+
+  /* ── Typography ── */
+  --ng-font-sans:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ng-font-mono:     'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --ng-text-xs:    0.6875rem; /* 11px */
+  --ng-text-sm:    0.75rem;   /* 12px */
+  --ng-text-base:  0.8125rem; /* 13px */
+  --ng-text-md:    0.875rem;  /* 14px */
+  --ng-text-lg:    1rem;      /* 16px */
+  --ng-text-xl:    1.25rem;   /* 20px */
+  --ng-text-2xl:   1.5rem;    /* 24px */
+  --ng-text-3xl:   2rem;      /* 32px */
+
+  --ng-leading-tight:  1.25;
+  --ng-leading-normal: 1.5;
+  --ng-leading-loose:  1.75;
+
+  /* ── Spacing ── */
+  --ng-space-1:  4px;
+  --ng-space-2:  8px;
+  --ng-space-3:  12px;
+  --ng-space-4:  16px;
+  --ng-space-5:  20px;
+  --ng-space-6:  24px;
+  --ng-space-8:  32px;
+  --ng-space-10: 40px;
+  --ng-space-12: 48px;
+
+  /* ── Radii ── */
+  --ng-radius-sm:   6px;
+  --ng-radius-md:   10px;
+  --ng-radius-lg:   14px;
+  --ng-radius-xl:   20px;
+  --ng-radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --ng-shadow-sm:    0 1px 3px hsla(0,0%,0%,0.3);
+  --ng-shadow-md:    0 4px 12px hsla(0,0%,0%,0.35);
+  --ng-shadow-lg:    0 8px 32px hsla(0,0%,0%,0.4);
+  --ng-shadow-glow:  0 0 20px var(--ng-accent-glow);
+
+  /* ── Transitions ── */
+  --ng-ease-out:     cubic-bezier(0.22, 1, 0.36, 1);
+  --ng-ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ng-duration-fast:   120ms;
+  --ng-duration-normal: 200ms;
+  --ng-duration-slow:   350ms;
+
+  /* ── Layout ── */
+  --ng-sidebar-width: 320px;
+  --ng-toolbar-height: 48px;
+  --ng-statsbar-height: 40px;
+  --ng-header-height: 56px;
+}

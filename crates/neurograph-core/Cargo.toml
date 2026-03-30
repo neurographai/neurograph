@@ -1,0 +1,86 @@
+[package]
+name = "neurograph-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Core temporal knowledge graph engine for NeuroGraph"
+readme = "../../README.md"
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Data types
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Graph algorithms
+petgraph = { workspace = true }
+
+# HTTP client (for LLM API calls)
+reqwest = { workspace = true }
+
+# Embedded storage
+sled = { workspace = true }
+
+# OpenAI client
+async-openai = { workspace = true }
+
+# Hashing
+sha2 = { workspace = true }
+blake3 = { workspace = true }
+
+# Collections & concurrency
+ordered-float = { workspace = true }
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+rand = { workspace = true }
+regex = { workspace = true }
+
+# Web server (behind feature flag for Sprint 4)
+# axum = { workspace = true, optional = true }
+# tower = { workspace = true, optional = true }
+# tower-http = { workspace = true, optional = true }
+# tokio-tungstenite = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+
+[features]
+default = []
+# server = ["axum", "tower", "tower-http", "tokio-tungstenite"]
+# neo4j = []
+# falkordb = []
+# multimodal = []
+
+[[test]]
+name = "test_neurograph"
+path = "tests/test_neurograph.rs"
+
+[[test]]
+name = "test_drivers"
+path = "tests/test_drivers.rs"
+
+[[test]]
+name = "test_ingestion"
+path = "tests/test_ingestion.rs"
+
+[[test]]
+name = "test_retrieval"
+path = "tests/test_retrieval.rs"
