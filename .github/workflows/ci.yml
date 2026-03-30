@@ -18,6 +18,11 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
 
+permissions:
+  contents: read
+  security-events: write
+  checks: write
+
 jobs:
   # Rust checks across OS and MSRV
   rust-check:

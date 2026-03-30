@@ -1,0 +1,37 @@
+[package]
+name = "neurograph-mcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "MCP (Model Context Protocol) server for NeuroGraph — enables Claude, Cursor, and VS Code Copilot integration"
+
+[[bin]]
+name = "neurograph-mcp"
+path = "src/main.rs"
+
+[dependencies]
+neurograph-core = { path = "../neurograph-core" }
+
+# Async
+tokio = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Data types
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

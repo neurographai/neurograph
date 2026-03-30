@@ -5,7 +5,6 @@
 
 import type { NeuroGraphData } from '../types/graph';
 
-const now = new Date().toISOString();
 const past = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
 
 export const MOCK_DATA: NeuroGraphData = {

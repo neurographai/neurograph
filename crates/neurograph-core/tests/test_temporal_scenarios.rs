@@ -7,7 +7,7 @@ use chrono::{Duration, Utc};
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
 use neurograph_core::graph::{Entity, EntityId, Relationship};
-use neurograph_core::temporal::manager::{TemporalManager, TimelineEventType};
+use neurograph_core::temporal::manager::TemporalManager;
 use neurograph_core::temporal::versioning::{
     EntityChangeType, EntityHistory, FactVersion, FactVersionChain,
 };

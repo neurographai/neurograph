@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "neurograph": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-p", "8765:8765",
+        "ghcr.io/neurographai/neurograph-mcp:latest"
+      ]
+    }
+  }
+}

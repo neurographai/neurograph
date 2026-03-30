@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "neurograph": {
+      "url": "http://localhost:8765/sse",
+      "headers": {
+        "Authorization": "Bearer ${NEUROGRAPH_API_KEY}"
+      }
+    }
+  }
+}

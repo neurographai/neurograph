@@ -5,11 +5,10 @@
 
 use neurograph_core::drivers::memory::MemoryDriver;
 use neurograph_core::drivers::traits::GraphDriver;
-use neurograph_core::graph::{Entity, EntityId, Relationship};
+use neurograph_core::graph::{Entity, Relationship};
 use neurograph_core::retrieval::hybrid::{HybridRetriever, RetrievalWeights};
 use neurograph_core::retrieval::semantic::ScoredEntity;
 use neurograph_core::NeuroGraph;
-use std::sync::Arc;
 
 // ============================================================
 // VECTOR SEARCH CORRECTNESS
@@ -188,7 +187,7 @@ async fn test_text_search_group_id_filter() {
 
 #[test]
 fn test_rrf_fusion_multilist_boost() {
-    let retriever = HybridRetriever::new();
+    let _retriever = HybridRetriever::new();
 
     let alice = Entity::new("Alice", "Person");
     let bob = Entity::new("Bob", "Person");
@@ -198,7 +197,7 @@ fn test_rrf_fusion_multilist_boost() {
         ScoredEntity { entity: alice.clone(), score: 0.9, source: "semantic".into() },
         ScoredEntity { entity: bob.clone(), score: 0.8, source: "semantic".into() },
     ];
-    let keyword = vec![
+    let _keyword = vec![
         ScoredEntity { entity: alice.clone(), score: 0.7, source: "keyword".into() },
     ];
 

@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="neurograph_logo-removebg.png" alt="NeuroGraph Logo" width="120" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/NeuroGraph-Temporal_Knowledge_Graphs_for_AI-blueviolet?style=for-the-badge" alt="NeuroGraph"/>
 </p>
 
@@ -32,6 +36,15 @@
 
 NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Every fact has a validity window, every query can time-travel, and the graph can branch like Git. It's designed to be the memory layer for AI agents — from personal assistants to multi-agent research systems.
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/ded5bb1c-0e6a-4a56-82e5-586102aac480" />
+
+### What's New in v0.2
+
+- 🧠 **Intent-Aware Query Router** — Classifies queries as semantic/temporal/causal/entity and routes to specialized sub-graphs with multi-hop planning
+- 🗄️ **Tiered Memory System** — 4-layer memory (Working → Episodic → Semantic → Procedural) with episode grouping, learned rules, and context assembly
+- 🔀 **Multi-Strategy Graph Engine** — Fused entity, semantic, temporal, and causal sub-graphs with cross-layer adaptive retrieval
+- 🖥️ **Dashboard Rewrite** — React 19 + Zustand + AntV G6 with 3-column layout, query panel, branch diff, timeline playback, dark/light mode toggle
+- 🔌 **MCP Server Crate** — Dedicated `neurograph-mcp` crate with dual transport (stdio + SSE) for Claude Desktop and Cursor integration
+- 🐳 **Dashboard Dockerfile** — Nginx-based production container for the dashboard
 
 <br/>
 
@@ -89,6 +102,21 @@ graph TB
             VALIDATOR["Validator"]
             RESOLVER["Resolver"]
             SUMMARIZER["Summarizer"]
+        end
+
+        subgraph INTENT["Intent Router"]
+            direction LR
+            CLASSIFY["Query<br/>Classifier"]
+            PLANNER["Multi-Hop<br/>Planner"]
+            ROUTER["Sub-Graph<br/>Dispatch"]
+        end
+
+        subgraph MEMORY["Tiered Memory"]
+            direction LR
+            L1["L1 Working"]
+            L2["L2 Episodic"]
+            L3["L3 Semantic"]
+            L4["L4 Procedural"]
         end
     end
 
@@ -262,13 +290,16 @@ cd dashboard && npm install && npm run dev
 | **Hybrid Retrieval** — Semantic + BM25 + graph walk with RRF fusion | **Stable** |
 | **Cost-Aware Routing** — Auto-selects cheapest query strategy within budget | **Stable** |
 | **Zero Config** — `pip install neurograph`, 3 lines, works. No API key needed. | **Stable** |
-| **Interactive Dashboard** — Browser graph explorer (G6 + Rust WASM layouts) | **Beta** |
+| **Intent-Aware Query Router** — Classifies queries → semantic/temporal/causal/entity sub-graphs with multi-hop planning | **Beta** |
+| **Tiered Memory** — 4-layer memory (Working/Episodic/Semantic/Procedural) with episode grouping and learned rules | **Beta** |
+| **Multi-Strategy Graph** — Fused entity, semantic, temporal, causal sub-graphs with cross-layer retrieval | **Beta** |
+| **Interactive Dashboard** — React 19 + G6 with 3-column layout, Zustand state, dark/light mode | **Beta** |
 | **Graph Version Control** — Branch, diff, merge knowledge graphs | **Beta** |
 | **Temporal Playback** — Timeline slider to scrub through knowledge history | **Beta** |
+| **MCP Server** — Claude/Cursor integration via Model Context Protocol (stdio + SSE) | **Beta** |
 | **Think-While-You-Watch** — Real-time reasoning animation on graph | **Experimental** |
 | **Intelligent Forgetting** — Importance-based decay and compression | **Experimental** |
 | **Multi-Agent Graph Building** — Collaborative agents for extraction/validation | **Experimental** |
-| **MCP Server** — Claude/Cursor integration via Model Context Protocol | **Experimental** |
 | **Python SDK** — Native PyO3 bindings | **Planned** |
 | **TypeScript SDK** — WASM-powered browser/Node client | **Planned** |
 | **Distributed Sharding** — Scale across multiple nodes | **Planned** |
@@ -314,16 +345,28 @@ cd dashboard && npm install && npm run dev
 | Graph merge | 4 strategies: SourceWins, TargetWins, VerifiedOnly, TemporalMerge |
 | 2-phase deduplication | Phase 1: embedding similarity + hash. Phase 2: LLM fallback |
 
+### Intent Router & Memory (Beta)
+
+| Feature | Details |
+|---------|--------|
+| Intent classification | Classifies queries as semantic, temporal, causal, or entity-scoped |
+| Multi-hop planner | `plan()` decomposes complex queries into sub-steps with confidence scores |
+| Tiered memory (4 layers) | Working → Episodic → Semantic → Procedural with automatic promotion |
+| Episode grouping | Groups related facts into coherent episodes with temporal bounds |
+| Learned rules (procedural) | Stores and retrieves reusable patterns and rules from past interactions |
+| Context assembly | `get_context_for_query()` assembles relevant context across all memory tiers |
+
 ### Visualization (Beta)
 
 | Feature | Details |
-|---------|---------|
-| Interactive dashboard | `await ng.dashboard()` launches browser UI |
-| WebGL/Canvas rendering | G6 engine with multi-layer canvas |
-| Force-directed layout | Rust WASM for compute-heavy layouts |
-| Temporal playback | Scrub through time — nodes appear/disappear as facts change |
-| Community clusters | Color-coded G6 Combos |
-| Dark/Light mode | Premium dark theme by default |
+|---------|--------|
+| Interactive dashboard | React 19 + Zustand + AntV G6 3-column layout |
+| Query panel | Natural-language queries with reasoning path visualization |
+| Branch diff viewer | Side-by-side branch comparison with added/removed/modified nodes |
+| Node detail panel | Inspector panel with metadata, connections, importance, and tier info |
+| Temporal playback | Timeline slider with density heatmap and playback controls |
+| Graph view switcher | Filter by edge type: All / Semantic / Temporal / Causal / Entity |
+| Dark/Light mode | Animated sun/moon toggle with localStorage persistence |
 
 ### Infrastructure
 
@@ -471,6 +514,7 @@ These numbers reflect current development builds and will change. We plan to add
 - [Architecture](docs/architecture.md)
 - [Temporal Engine](docs/temporal.md)
 - [Community Detection](docs/community.md)
+- [Intent Router & Memory](docs/intent-memory.md)
 - [Developer Guide](DEVELOPING.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)

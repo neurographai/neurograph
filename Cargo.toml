@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/neurograph-core",
+    "crates/neurograph-mcp",
     # "crates/neurograph-wasm",    # Sprint 4
     # "crates/neurograph-python",  # Sprint 4
     # "crates/neurograph-cli",     # Sprint 4

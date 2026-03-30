@@ -9,7 +9,6 @@ use neurograph_core::drivers::traits::GraphDriver;
 use neurograph_core::graph::{Entity, Relationship};
 use neurograph_core::NeuroGraph;
 use std::collections::HashSet;
-use std::sync::Arc;
 
 // ============================================================
 // LOUVAIN CORE ALGORITHM TESTS

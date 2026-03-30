@@ -69,7 +69,11 @@ tempfile = "3"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
 [features]
-default = []
+default = ["multigraph", "tiered-memory", "rl-forgetting"]
+multigraph = []
+tiered-memory = []
+rl-forgetting = []
+full = ["multigraph", "tiered-memory", "rl-forgetting"]
 # server = ["axum", "tower", "tower-http", "tokio-tungstenite"]
 # neo4j = []
 # falkordb = []

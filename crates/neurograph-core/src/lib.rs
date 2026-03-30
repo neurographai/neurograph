@@ -61,6 +61,8 @@ pub mod retrieval;
 pub mod utils;
 pub mod temporal;
 pub mod community;
+pub mod multigraph;
+pub mod memory;
 
 // Re-export key types at crate root
 pub use config::{
@@ -72,6 +74,22 @@ pub use graph::{Community, Entity, EntityId, Episode, Relationship};
 pub use llm::traits::LlmClient;
 pub use temporal::{TemporalSnapshot, TemporalDiff, LogicalClock};
 pub use community::{CommunityDetectionResult, LouvainDetector, LouvainConfig, LeidenDetector, LeidenConfig};
+
+// Multi-graph memory re-exports
+pub use multigraph::{
+    MultiGraphMemory, MultiGraphConfig, MemoryItem, MemoryTier,
+    GraphView, GraphEdge, QueryOptions as MultiGraphQueryOptions,
+    IntentRouter, IntentType, FusionEngine,
+};
+pub use memory::{
+    TieredMemory, ConsolidationConfig, PromotionPolicy,
+    MemoryEvolution, DecayPolicy, RetentionPolicy,
+};
+pub use retrieval::{
+    BM25Index, PersonalizedPageRank,
+    CrossEncoderReranker, RerankCandidate, RerankResult,
+    DriftSearch, DriftResult, DriftStrategy,
+};
 
 use std::sync::Arc;
 
@@ -190,6 +208,15 @@ pub struct NeuroGraph {
 
     /// Cost tracker for budget enforcement.
     cost_tracker: CostTracker,
+
+    /// Multi-graph memory subsystem (optional, enabled via builder).
+    multigraph: Option<tokio::sync::RwLock<MultiGraphMemory>>,
+
+    /// Tiered memory subsystem (optional, enabled via builder).
+    tiered_memory: Option<parking_lot::RwLock<TieredMemory>>,
+
+    /// Memory evolution engine (optional, enabled via builder).
+    memory_evolution: Option<parking_lot::RwLock<MemoryEvolution>>,
 }
 
 impl NeuroGraph {
@@ -561,6 +588,93 @@ impl NeuroGraph {
         self.cost_tracker.reset();
         Ok(())
     }
+
+    // ─── Multi-Graph Memory API ──────────────────────────────────
+
+    /// Check if multi-graph memory is enabled.
+    pub fn has_multigraph(&self) -> bool {
+        self.multigraph.is_some()
+    }
+
+    /// Check if tiered memory is enabled.
+    pub fn has_tiered_memory(&self) -> bool {
+        self.tiered_memory.is_some()
+    }
+
+    /// Remember a piece of text in the tiered memory system (enters at L1 Working).
+    ///
+    /// ```rust,no_run
+    /// # use neurograph_core::NeuroGraph;
+    /// # async fn example() -> anyhow::Result<()> {
+    /// let ng = NeuroGraph::builder().tiered_memory().build().await?;
+    /// let id = ng.remember("Alice works at Anthropic");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn remember(&self, content: &str) -> Option<uuid::Uuid> {
+        self.tiered_memory.as_ref().map(|tm| {
+            tm.write().remember(content.to_string())
+        })
+    }
+
+    /// Search tiered memory for matching content.
+    pub fn recall(&self, query: &str, max_results: usize) -> Vec<String> {
+        self.tiered_memory
+            .as_ref()
+            .map(|tm| {
+                tm.read()
+                    .search(query, max_results)
+                    .into_iter()
+                    .map(|item| item.content.clone())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Run maintenance on the tiered memory (promotions, demotions, evictions).
+    pub fn maintain_memory(&self) -> Option<memory::tiered::MaintenanceReport> {
+        self.tiered_memory.as_ref().map(|tm| tm.write().maintain())
+    }
+
+    /// Get tiered memory statistics.
+    pub fn tiered_stats(&self) -> Option<memory::tiered::TieredStats> {
+        self.tiered_memory.as_ref().map(|tm| tm.read().stats())
+    }
+
+    /// Add a memory item to the multi-graph memory and index across all views.
+    pub async fn multigraph_ingest(&self, content: &str, embedding: Vec<f32>) {
+        if let Some(mg) = &self.multigraph {
+            let item = multigraph::MemoryItem::new(content.to_string(), embedding);
+            mg.write().await.ingest(item).await;
+        }
+    }
+
+    /// Query the multi-graph memory with intent-aware routing.
+    pub async fn multigraph_query(
+        &self,
+        query: &str,
+        max_results: usize,
+    ) -> Option<multigraph::QueryResult> {
+        if let Some(mg) = &self.multigraph {
+            let opts = multigraph::QueryOptions {
+                max_results,
+                ..Default::default()
+            };
+            Some(mg.read().await.query(query, opts).await)
+        } else {
+            None
+        }
+    }
+
+    /// Run a memory evolution cycle (scoring, decay, RL forgetting, consolidation).
+    pub fn evolve_memory(
+        &self,
+        items: &mut Vec<memory::evolution::EvolvableItem>,
+    ) -> Option<memory::evolution::EvolutionResult> {
+        self.memory_evolution
+            .as_ref()
+            .map(|evo| evo.write().evolve(items))
+    }
 }
 
 impl std::fmt::Debug for NeuroGraph {
@@ -621,6 +735,12 @@ pub struct NeuroGraphBuilder {
     config_builder: Option<NeuroGraphConfigBuilder>,
     driver: Option<Arc<dyn GraphDriver>>,
     embedder: Option<Arc<dyn Embedder>>,
+    enable_multigraph: bool,
+    enable_tiered_memory: bool,
+    enable_evolution: bool,
+    multigraph_config: Option<MultiGraphConfig>,
+    promotion_policy: Option<PromotionPolicy>,
+    decay_policy: Option<DecayPolicy>,
 }
 
 impl NeuroGraphBuilder {
@@ -668,6 +788,50 @@ impl NeuroGraphBuilder {
     pub fn embedder(mut self, embedder: Arc<dyn Embedder>) -> Self {
         self.embedder = Some(embedder);
         self
+    }
+
+    /// Enable multi-graph memory subsystem.
+    pub fn multigraph(mut self) -> Self {
+        self.enable_multigraph = true;
+        self
+    }
+
+    /// Enable multi-graph memory with custom config.
+    pub fn multigraph_with(mut self, config: MultiGraphConfig) -> Self {
+        self.enable_multigraph = true;
+        self.multigraph_config = Some(config);
+        self
+    }
+
+    /// Enable tiered memory (L1–L4) subsystem.
+    pub fn tiered_memory(mut self) -> Self {
+        self.enable_tiered_memory = true;
+        self
+    }
+
+    /// Enable tiered memory with custom promotion policy.
+    pub fn tiered_memory_with(mut self, policy: PromotionPolicy) -> Self {
+        self.enable_tiered_memory = true;
+        self.promotion_policy = Some(policy);
+        self
+    }
+
+    /// Enable memory evolution (RL-guided forgetting).
+    pub fn evolution(mut self) -> Self {
+        self.enable_evolution = true;
+        self
+    }
+
+    /// Enable memory evolution with custom decay policy.
+    pub fn evolution_with(mut self, policy: DecayPolicy) -> Self {
+        self.enable_evolution = true;
+        self.decay_policy = Some(policy);
+        self
+    }
+
+    /// Enable all v0.2 subsystems (multi-graph + tiered memory + evolution).
+    pub fn full(self) -> Self {
+        self.multigraph().tiered_memory().evolution()
     }
 
     /// Build the NeuroGraph instance.
@@ -752,6 +916,37 @@ impl NeuroGraphBuilder {
             "NeuroGraph initialized"
         );
 
+        // Initialize optional subsystems
+        let multigraph = if self.enable_multigraph {
+            let mg_config = self.multigraph_config.unwrap_or_default();
+            tracing::info!("Multi-graph memory enabled");
+            Some(tokio::sync::RwLock::new(MultiGraphMemory::new(mg_config)))
+        } else {
+            None
+        };
+
+        let tiered_memory = if self.enable_tiered_memory {
+            let policy = self.promotion_policy.unwrap_or_default();
+            tracing::info!("Tiered memory (L1–L4) enabled");
+            Some(parking_lot::RwLock::new(TieredMemory::with_policies(
+                policy,
+                ConsolidationConfig::default(),
+            )))
+        } else {
+            None
+        };
+
+        let memory_evolution = if self.enable_evolution {
+            let decay = self.decay_policy.unwrap_or_default();
+            tracing::info!("Memory evolution (RL forgetting) enabled");
+            Some(parking_lot::RwLock::new(MemoryEvolution::with_policies(
+                decay,
+                RetentionPolicy::default(),
+            )))
+        } else {
+            None
+        };
+
         Ok(NeuroGraph {
             config,
             driver,
@@ -761,6 +956,9 @@ impl NeuroGraphBuilder {
             router,
             limiter,
             cost_tracker,
+            multigraph,
+            tiered_memory,
+            memory_evolution,
         })
     }
 }
