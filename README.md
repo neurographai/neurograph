@@ -31,6 +31,8 @@
 > A Rust-powered temporal knowledge graph engine with interactive visualization, built for AI agents that need to remember, reason, and forget.
 
 NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Every fact has a validity window, every query can time-travel, and the graph can branch like Git. It's designed to be the memory layer for AI agents — from personal assistants to multi-agent research systems.
+<img width="2752" height="1536" alt="neuro graph banner" src="https://github.com/user-attachments/assets/5b05cad5-cd8b-478f-9066-443e814c9f90" />
+
 
 <br/>
 
