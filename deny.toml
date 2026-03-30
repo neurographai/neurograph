@@ -1,14 +1,6 @@
 # cargo-deny configuration
 # https://embarkstudios.github.io/cargo-deny/
 
-[graph]
-targets = []
-all-features = true
-
-[advisories]
-db-path = "~/.cargo/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db"]
-
 [licenses]
 unlicensed = "deny"
 allow = [
@@ -26,18 +18,11 @@ allow = [
   "MPL-2.0",
   "OpenSSL",
 ]
-deny = [
-  "GPL-2.0",
-  "GPL-3.0",
-  "AGPL-3.0",
-]
-copyleft = "warn"
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
 highlight = "all"
-deny = []
 
 [sources]
 unknown-registry = "deny"

@@ -39,7 +39,8 @@ jobs:
           alert-threshold: '120%'
           comment-on-alert: true
           fail-on-alert: false
-          auto-push: true
+          auto-push: false
+          save-data-file: false
           benchmark-data-dir-path: benchmarks/results
 
       - name: Compare PR benchmarks

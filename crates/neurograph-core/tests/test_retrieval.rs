@@ -201,9 +201,10 @@ async fn test_hybrid_search_custom_weights() {
     let (driver, embedder) = setup_test_graph().await;
 
     let weights = RetrievalWeights {
-        semantic: 0.8,
+        semantic: 0.6,
         keyword: 0.1,
         traversal: 0.1,
+        ppr: 0.2,
     };
     let retriever = HybridRetriever::with_weights(weights);
 
@@ -262,7 +263,7 @@ async fn test_hybrid_search_with_seeds() {
 #[test]
 fn test_rrf_weights_sum_to_one() {
     let weights = RetrievalWeights::default();
-    let total = weights.semantic + weights.keyword + weights.traversal;
+    let total = weights.semantic + weights.keyword + weights.traversal + weights.ppr;
     assert!(
         (total - 1.0).abs() < f64::EPSILON,
         "Default weights should sum to 1.0, got {}",

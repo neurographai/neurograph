@@ -90,7 +90,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd dashboard
-          npm ci
+          npm install --no-audit
 
       - name: Build
         run: |
