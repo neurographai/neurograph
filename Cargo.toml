@@ -89,6 +89,9 @@ urlencoding = "2"
 # XML parsing (arXiv API)
 quick-xml = { version = "0.36", features = ["serialize"] }
 
+# TOML parsing (config files)
+toml = "0.8"
+
 # Temp files
 tempfile = "3"
 

@@ -80,6 +80,15 @@ pub use community::{
 pub use config::{EmbeddingProvider, NeuroGraphConfig, NeuroGraphConfigBuilder, StorageBackend};
 pub use drivers::traits::{DriverError, GraphDriver};
 pub use embedders::traits::Embedder;
+
+// Embedding architecture re-exports
+pub use embedders::{
+    EmbeddingConfig, EmbeddingFactory, EmbeddingModelInfo, EmbeddingRegistry,
+    EmbeddingRouter, OpenAICompatibleConfig, OpenAICompatibleEmbedder,
+    ApiKeySource, DimensionAligner, EmbeddingMetadata,
+    HnswConfig, HnswIndex,
+    build_from_toml,
+};
 pub use graph::{Community, Entity, EntityId, Episode, Relationship, Saga, SagaId};
 pub use llm::traits::LlmClient;
 pub use temporal::{LogicalClock, TemporalDiff, TemporalSnapshot};
@@ -113,8 +122,6 @@ use std::sync::Arc;
 
 use drivers::embedded::EmbeddedDriver;
 use drivers::memory::MemoryDriver;
-use embedders::fastembed::HashEmbedder;
-use embedders::openai::OpenAiEmbedder;
 use engine::router::QueryRouter;
 use graph::schema::GraphSchema;
 use ingestion::pipeline::IngestionPipeline;
@@ -824,6 +831,105 @@ impl NeuroGraphBuilder {
         self
     }
 
+    /// Use OpenAI text-embedding-3-small (requires `OPENAI_API_KEY`).
+    pub fn openai_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().openai_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use a specific OpenAI embedding model.
+    pub fn openai_embeddings_model(self, model: &str) -> Self {
+        let cb = self.config_builder.unwrap_or_default().openai_embeddings_model(model);
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Google Gemini text-embedding-004 (free tier, requires `GEMINI_API_KEY`).
+    pub fn gemini_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().gemini_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Cohere embed-v4.0 (requires `COHERE_API_KEY`).
+    pub fn cohere_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().cohere_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Voyage AI voyage-3-large (requires `VOYAGE_API_KEY`).
+    pub fn voyage_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().voyage_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Jina AI jina-embeddings-v3 (requires `JINA_API_KEY`).
+    pub fn jina_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().jina_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Mistral mistral-embed (requires `MISTRAL_API_KEY`).
+    pub fn mistral_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().mistral_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use Ollama local embeddings with the given model.
+    pub fn ollama_embeddings(self, model: &str) -> Self {
+        let cb = self.config_builder.unwrap_or_default().ollama_embeddings(model);
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use hash-based embeddings (zero-cost, offline, deterministic).
+    pub fn hash_embeddings(self) -> Self {
+        let cb = self.config_builder.unwrap_or_default().local_embeddings();
+        Self { config_builder: Some(cb), ..self }
+    }
+
+    /// Use any OpenAI-compatible embedding endpoint.
+    pub fn custom_embeddings(mut self, config: OpenAICompatibleConfig) -> Self {
+        let cb = self.config_builder.take().unwrap_or_default().embedding(
+            EmbeddingProvider::Custom {
+                base_url: config.base_url.clone(),
+                model: config.model.clone(),
+                api_key_env: match &config.api_key {
+                    embedders::openai_compatible::ApiKeySource::Env(k) => k.clone(),
+                    _ => String::new(),
+                },
+                dimensions: config.model_info.dimensions,
+            },
+        );
+        self.config_builder = Some(cb);
+        self
+    }
+
+    /// Load embedding provider from a TOML config file.
+    ///
+    /// The TOML file defines providers and the active selection.
+    /// New models can be added without any code changes.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// # use neurograph_core::NeuroGraph;
+    /// # async fn example() -> anyhow::Result<()> {
+    /// let ng = NeuroGraph::builder()
+    ///     .embeddings_from_config("neurograph.toml")
+    ///     .build().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn embeddings_from_config(mut self, path: impl AsRef<std::path::Path>) -> Self {
+        match embedders::config_file::build_from_toml(path) {
+            Ok(embedder) => {
+                self.embedder = Some(embedder);
+            }
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to load embedding config from TOML");
+            }
+        }
+        self
+    }
+
     /// Enable multi-graph memory subsystem.
     pub fn multigraph(mut self) -> Self {
         self.enable_multigraph = true;
@@ -903,18 +1009,38 @@ impl NeuroGraphBuilder {
             }
         };
 
-        // Create embedder
+        // Create embedder via universal EmbeddingFactory
         let embedder: Arc<dyn Embedder> = if let Some(embedder) = self.embedder {
             embedder
         } else {
-            match &config.embedding {
-                EmbeddingProvider::Local => Arc::new(HashEmbedder::default()),
+            let embed_config = match &config.embedding {
+                EmbeddingProvider::Local => EmbeddingConfig::Hash { dimensions: 384 },
                 EmbeddingProvider::OpenAi { model } => {
-                    let embedder = OpenAiEmbedder::new(model)
-                        .map_err(|e| NeuroGraphError::Config(e.to_string()))?;
-                    Arc::new(embedder)
+                    EmbeddingConfig::OpenAIModel(model.clone())
                 }
-            }
+                EmbeddingProvider::Gemini { model } => {
+                    EmbeddingConfig::GeminiModel(model.clone())
+                }
+                EmbeddingProvider::Cohere => EmbeddingConfig::Cohere,
+                EmbeddingProvider::Voyage => EmbeddingConfig::Voyage,
+                EmbeddingProvider::Jina => EmbeddingConfig::Jina,
+                EmbeddingProvider::Mistral => EmbeddingConfig::Mistral,
+                EmbeddingProvider::Ollama { model } => {
+                    EmbeddingConfig::Ollama(model.clone())
+                }
+                EmbeddingProvider::Custom {
+                    base_url,
+                    model,
+                    api_key_env,
+                    dimensions,
+                } => EmbeddingConfig::Custom(
+                    embedders::providers::EmbeddingRegistry::custom_openai_compatible(
+                        base_url, model, api_key_env, *dimensions,
+                    ),
+                ),
+            };
+            EmbeddingFactory::build(&embed_config)
+                .map_err(|e| NeuroGraphError::Config(e.to_string()))?
         };
 
         // Create schema

@@ -148,7 +148,7 @@ graph TB
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/>
 </p>
 <p align="center">
-  <a href="docs/NeuroGraph_Paper.pdf"><img src="https://img.shields.io/badge/📄_Research_Paper-Read_the_Paper-FF6B6B?style=for-the-badge" alt="Research Paper"/></a>
+  <a href="docs/NeuroGraph_Paper.pdf"><img src="https://img.shields.io/badge/Research_Paper-Read_the_Paper-FF6B6B?style=for-the-badge" alt="Research Paper"/></a>
   <a href="docs/neurograph_paper.tex"><img src="https://img.shields.io/badge/LaTeX-Source-008080?style=for-the-badge&logo=latex&logoColor=white" alt="LaTeX Source"/></a>
 </p>
 
@@ -284,7 +284,10 @@ cargo install --path crates/neurograph-cli
 | **Paper Search** — Multi-source aggregator (arXiv, Semantic Scholar, PubMed) | **Beta** |
 | **RAG Chat** — Context-aware chat with conversation history | **Beta** |
 | **REST API & Dashboard** — Axum-based server with embedded React SPA | **Beta** |
-| **Embedding Router** — Ollama, OpenAI, and hash providers with LRU cache | **Beta** |
+| **Universal Embedding Router** — 19 models, 7 providers, TOML config, LRU cache, auto-fallback | **Stable** |
+| **HNSW Vector Index** — O(log n) approximate nearest-neighbor search | **Stable** |
+| **TOML Config Providers** — Zero-code model registration via config file | **Stable** |
+| **Evaluation CLI** — `neurograph-eval` with LongMemEval + 9-config ablation study | **Beta** |
 | **Entity Extraction (LLM)** — Structured output via OpenAI | **Beta** |
 | **Entity Extraction (Offline)** — Regex-based NER, no API key needed | **Stable** |
 | **MCP Server** — Claude/Cursor integration via Model Context Protocol (stdio) | **Beta** |
@@ -335,7 +338,7 @@ cargo install --path crates/neurograph-cli
 
 | Feature | Details |
 |---------|---------|
-| Semantic vector search | Cosine similarity on embeddings (hash-based default, OpenAI/Ollama optional) |
+| Semantic vector search | Cosine similarity on embeddings with HNSW index (O(log n) ANN search) |
 | BM25 keyword search | Full BM25 scoring with stopword filtering and tokenization |
 | Graph traversal search | Scored BFS from seed entities |
 | Hybrid retrieval | Reciprocal Rank Fusion (RRF) combining all three methods |
@@ -431,22 +434,23 @@ neurograph/
 ## Comparison
 
 > Trade-offs are real. This table is our honest assessment.
-> NeuroGraph has **not yet been evaluated on standard benchmarks** — we're working on LongMemEval integration.
 
 | | NeuroGraph | Graphiti / Zep | GraphRAG (Microsoft) | Mem0 |
 |---|---|---|---|---|
 | **Best for** | Research paper intelligence + temporal reasoning | Production agent memory (SaaS) | Global document analysis at scale | Simple key-value memory |
 | **Language** | Rust | Python + Neo4j | Python | Python |
 | **Maturity** | **Pre-release (v0.1-alpha)** | Production | 31.9k stars, v3 | Production |
-| **PDF Ingestion** | ✅ Two-tier (fast + structured) | ❌ | ❌ | ❌ |
-| **Academic Search** | ✅ arXiv + S2 + PubMed aggregator | ❌ | ❌ | ❌ |
-| **RAG Chat** | ✅ Multi-provider (Ollama, OpenAI) | ✅ | ✅ | Basic |
+| **PDF Ingestion** | Yes — Two-tier (fast + structured) | No | No | No |
+| **Academic Search** | Yes — arXiv + S2 + PubMed aggregator | No | No | No |
+| **RAG Chat** | Yes — Multi-provider (Ollama, OpenAI) | Yes | Yes | Basic |
+| **Embedding models** | 19 models across 7 providers | OpenAI/custom | OpenAI | OpenAI |
+| **Vector index** | HNSW (O(log n) ANN) | External DB | In-memory | External DB |
 | **Temporal model** | Bi-temporal (`valid_from`/`valid_until`) | Bi-temporal (4 timestamps per edge) | Static | Recency only |
 | **Community detection** | Louvain (Rust native) | Label propagation | Leiden (native) | None |
 | **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce, DRIFT | Vector similarity |
-| **Graph backend** | Embedded (sled) or in-memory | Neo4j (required) | In-memory / LLM-extracted | N/A |
-| **Offline mode** | ✅ Yes (regex NER + hash embed) | ❌ Requires LLM + Neo4j | ❌ Requires LLM | ❌ |
-| **REST API** | ✅ Axum + embedded dashboard | ❌ | ❌ | Standard UI |
+| **Graph backend** | Embedded (sled) or in-memory + HNSW | Neo4j (required) | In-memory / LLM-extracted | N/A |
+| **Offline mode** | Yes — regex NER + hash embed | No — Requires LLM + Neo4j | No — Requires LLM | No |
+| **REST API** | Yes — Axum + embedded dashboard | No | No | Standard UI |
 | **License** | Apache-2.0 | MIT | MIT | Proprietary |
 
 ---
@@ -459,14 +463,33 @@ neurograph/
 
 | Metric | Result | Notes |
 |--------|--------|-------|
-| **Query latency (P50)** | ~150ms | Hybrid retrieval, in-memory driver |
+| **Query latency (P50)** | ~150ms | Hybrid retrieval, HNSW-backed in-memory driver |
 | **Community detection (1k nodes)** | <100ms | Native Rust Louvain |
 | **Memory baseline** | ~10MB | Empty graph, in-memory driver |
 | **Cold start** | <500ms | Builder + driver initialization |
+| **Vector search (1k entities)** | O(log n) | HNSW vs O(n) brute-force |
 
-> We plan to add CI-tracked benchmarks and publish LongMemEval results before v0.1.0 stable.
+### Evaluation Harness
 
-> 📊 **LongMemEval evaluation in progress** — We are implementing the [LongMemEval](https://arxiv.org/abs/2410.10813) benchmark harness in `neurograph-eval`. This benchmark tests five long-term memory abilities (information extraction, multi-session reasoning, knowledge updates, temporal reasoning, abstention) across 500 questions. Current SOTA: Emergence AI (86%), EverMemOS (83%), TiMem (76.9%), Graphiti/Zep (71.2%). Results coming soon.
+The `neurograph-eval` crate provides a complete benchmarking pipeline:
+
+```bash
+# Run LongMemEval benchmark
+neurograph-eval long-mem-eval --dataset data/longmemeval_s.json
+
+# Run full ablation study (9 configurations)
+neurograph-eval ablation --dataset data/longmemeval_s.json --output results/
+
+# Generate LaTeX tables from results
+neurograph-eval tables --input results/ablation.json --format latex
+
+# List all supported embedding models
+neurograph-eval list-models
+```
+
+The ablation matrix systematically toggles: hybrid retrieval, cross-encoder reranking, tiered memory, MAGMA multi-graph, and RL-guided forgetting across 9 configurations. Results export to CSV, JSON, JSONL, and publication-ready LaTeX tables.
+
+> **LongMemEval** baseline evaluation in progress. This benchmark tests five long-term memory abilities across 500 questions. Current SOTA: Emergence AI (86%), EverMemOS (83%), TiMem (76.9%), Graphiti/Zep (71.2%).
 
 ---
 
@@ -495,6 +518,12 @@ neurograph/
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | No | Enables OpenAI embeddings + LLM extraction |
+| `GEMINI_API_KEY` | No | Google Gemini embeddings (incl. Embedding 2 Preview) |
+| `COHERE_API_KEY` | No | Cohere embed-v4.0 |
+| `VOYAGE_API_KEY` | No | Voyage AI embeddings (v3 Large, v4 Large/Lite) |
+| `JINA_API_KEY` | No | Jina embeddings (v3, v4) |
+| `MISTRAL_API_KEY` | No | Mistral embeddings |
+| `AZURE_OPENAI_API_KEY` | No | Azure OpenAI embeddings |
 | `OLLAMA_HOST` | No | Ollama server URL (default: `http://localhost:11434`) |
 | `S2_API_KEY` | No | Semantic Scholar API key for higher rate limits |
 | `NCBI_API_KEY` | No | PubMed/NCBI API key for higher rate limits |
@@ -531,15 +560,22 @@ neurograph/
 </details>
 
 <details>
-<summary><b>Embedding Providers</b></summary>
+<summary><b>Embedding Providers (19 models, 7 providers)</b></summary>
 
-| Provider | Model | Local/Cloud | Status |
-|----------|-------|-------------|--------|
-| **Hash-based (default)** | **Deterministic hashing** | **Local** | **Stable** |
-| Ollama | nomic-embed-text, mxbai-embed-large, etc. | Local | **Working** |
-| OpenAI | text-embedding-3-small/large | Cloud | **Working** |
+| Provider | Model | Dims | Cost/1M | Status |
+|----------|-------|------|---------|--------|
+| **Hash-based** | **Deterministic hashing** | 128 | **FREE** | **Default** |
+| OpenAI | text-embedding-3-small | 1536 | $0.02 | **Working** |
+| OpenAI | text-embedding-3-large | 3072 | $0.13 | **Working** |
+| Gemini | text-embedding-004 | 768 | FREE | **Working** |
+| Gemini | gemini-embedding-2-preview | 3072 | $0.20 | **Working** |
+| Cohere | embed-v4.0 | 1536 | $0.10 | **Working** |
+| Voyage AI | voyage-3-large / v4-large | 1024 | $0.18 | **Working** |
+| Jina AI | jina-embeddings-v3 / v4 | 1024–2048 | $0.018–$0.05 | **Working** |
+| Mistral | mistral-embed | 1024 | $0.10 | **Working** |
+| Ollama | nomic, mxbai, bge-m3, qwen3 | 768–1024 | FREE | **Working** |
 
-> Embedding provider is selected via `"provider:model"` spec (e.g., `"ollama:nomic-embed-text"`).
+> TOML config enables zero-code addition of future models. Run `neurograph-eval list-models` for full details.
 
 </details>
 
@@ -602,9 +638,10 @@ neurograph serve --port 8000
 
 ## Documentation
 
-- 📄 **[Research Paper (PDF)](docs/NeuroGraph_Paper.pdf)** — Comprehensive technical paper covering architecture, algorithms, and implementation
-- 📝 [LaTeX Source](docs/neurograph_paper.tex) — Paper source for citation and reference
+- **[Research Paper (PDF)](docs/NeuroGraph_Paper.pdf)** — Comprehensive technical paper covering architecture, algorithms, and implementation
+- [LaTeX Source](docs/neurograph_paper.tex) — Paper source for citation and reference
 - [Architecture](docs/architecture.md)
+- [Embedding Architecture](docs/embeddings.md) — 19 models, HNSW index, TOML config
 - [Temporal Engine](docs/temporal.md)
 - [Community Detection](docs/community.md)
 - [Developer Guide](DEVELOPING.md)
@@ -623,13 +660,14 @@ neurograph serve --port 8000
 - [x] Multi-source paper search (arXiv, S2, PubMed)
 - [x] RAG chat engine with conversation history
 - [x] REST API server with embedded dashboard
-- [x] Embedding router (Ollama, OpenAI, hash) with LRU cache
+- [x] Universal embedding router — 19 models, 7 providers, TOML config, LRU cache, auto-fallback
+- [x] HNSW vector index for O(log n) similarity search
+- [x] Evaluation CLI (`neurograph-eval`) with LongMemEval + 9-config ablation study
 - [x] CLI crate with full command suite
 - [x] MCP server for Claude/Cursor
-- [x] All 213 unit tests passing, zero warnings
 - [ ] Publish to crates.io
 - [ ] FastEmbed integration (`--features local-embed`)
-- [ ] LongMemEval benchmark baseline
+- [ ] LongMemEval benchmark baseline numbers
 
 **v0.2.0**
 - [ ] Python SDK (HTTP client)

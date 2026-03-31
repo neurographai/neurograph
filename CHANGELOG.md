@@ -41,9 +41,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **GraphDriver trait** — Async trait abstracting all storage operations. Supports `store_entity`, `get_entity`, `search_by_vector`, `search_by_text`, `snapshot_at`, `traverse`, `store_community`, and more.
 
 #### Embedding
+- **Universal Embedding Router** — `EmbeddingRouter` with primary + fallback chains, LRU caching, and automatic dimension alignment. Supports 19 models across 7 providers.
+- **OpenAI-Compatible Client** — Single `OpenAICompatibleEmbedder` client handles OpenAI, Gemini, Cohere, Voyage AI, Jina AI, Mistral, Azure OpenAI, and Ollama through a unified `/v1/embeddings` schema.
+- **HNSW Vector Index** — From-scratch Hierarchical Navigable Small World index replacing O(n) brute-force cosine scan with O(log n) approximate nearest-neighbor search in `MemoryDriver`.
+- **TOML Config-Driven Providers** — Zero-code model registration via `[embeddings.providers.*]` TOML tables. Unknown provider types gracefully fall back to OpenAI-compatible.
+- **Provider Registry (2026 models)** — Pre-configured entries for:
+  - OpenAI: text-embedding-3-small/large
+  - Gemini: text-embedding-004, gemini-embedding-exp-03, **gemini-embedding-2-preview** (MRL, multimodal)
+  - Cohere: embed-v4.0, embed-english-v3.0
+  - Voyage AI: voyage-3-large, **voyage-4-large** (MoE), **voyage-4-lite**, voyage-code-3
+  - Jina AI: jina-embeddings-v3, **jina-embeddings-v4** (multimodal)
+  - Mistral: mistral-embed
+  - Ollama: nomic-embed-text, mxbai-embed-large, snowflake-arctic-embed, bge-m3, **qwen3-embedding**
+- **Dimension Alignment** — Automatic padding/truncation + cosine similarity for cross-model compatibility.
+- **Embedding Cache** — Thread-safe LRU cache with seahash keying for zero-latency repeat queries.
+- **Builder API** — Convenience methods: `.openai_embeddings()`, `.gemini_embeddings()`, `.jina_embeddings()`, `.embeddings_from_config("neurograph.toml")`, etc.
 - **HashEmbedder** — Deterministic hash-based embedder producing 128-dimensional vectors. Zero cost, zero latency, works offline.
-- **OpenAiEmbedder** — OpenAI text-embedding-3-small/large integration for production-quality semantic search.
-- **Embedder trait** — Async trait supporting `embed_one`, `embed_batch`, with model introspection (`model_name`, `dimensions`).
+
+#### Evaluation Harness
+- **`neurograph-eval` CLI** — Binary with 4 subcommands: `long-mem-eval`, `ablation`, `tables`, `list-models`.
+- **Ablation Study Runner** — 9-configuration matrix systematically toggling hybrid retrieval, cross-encoder reranking, tiered memory, MAGMA multi-graph, and RL-guided forgetting.
+- **Multi-Format Export** — Results exported as JSON, JSONL, CSV, and publication-ready LaTeX `table*` with `\textbf` on best row.
+- **LongMemEval Harness** — Session ingestion, temporal query routing, and token-level F1 scoring aligned with the official LongMemEval protocol.
 
 #### LLM Integration
 - **OpenAI client** — Supports GPT-4o, GPT-4o-mini with structured JSON extraction, cost tracking per call, and configurable model selection.
@@ -122,9 +141,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Upgraded minimum supported Rust version (MSRV) to 1.82.
 - Moved from `NetworkX` (Python) to pure Rust for all graph algorithms.
+- **Replaced `async-openai` dependency** with direct `reqwest` HTTP calls in both embedding and LLM clients, reducing dependency tree.
+- **MemoryDriver** now uses HNSW index for entity and relationship vector search; falls back to brute-force only for group-filtered queries.
+- **Legacy `OpenAiEmbedder`** is now a type alias for `OpenAICompatibleEmbedder`.
+- Updated Cohere embed-v4.0 default dimensions from 1024 to 1536.
 
 ### Fixed
-- (No fixes yet — this is the initial release.)
+- Resolved `async_openai` unresolved module errors by rewriting `llm/openai.rs` and `embedders/openai.rs` to use `reqwest`.
+- Fixed duplicate import errors (`E0252`) for `EmbeddingFactory` and `EmbeddingConfig` in `lib.rs`.
 
 ### Security
 - All CI actions pinned to SHA hashes (not tags).

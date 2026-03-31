@@ -12,10 +12,28 @@
 //!   information extraction, multi-session reasoning, temporal reasoning,
 //!   knowledge updates, and abstention.
 //!
-//! - **NeuroGraphBench** (future): Custom benchmarks testing temporal branching,
-//!   multi-agent provenance, conflict resolution precision, and time-travel accuracy.
+//! - **Ablation Study**: 9-configuration matrix systematically toggling
+//!   hybrid retrieval, cross-encoder reranking, tiered memory, MAGMA
+//!   multi-graph, and RL-guided forgetting. Exports to CSV, JSON, JSONL,
+//!   and LaTeX tables.
 //!
-//! ## Quick Start
+//! ## CLI
+//!
+//! ```bash
+//! # Run LongMemEval benchmark
+//! neurograph-eval long-mem-eval --dataset data/longmemeval_s.json
+//!
+//! # Run full ablation study
+//! neurograph-eval ablation --dataset data/longmemeval_s.json --output results/
+//!
+//! # Generate LaTeX tables from results
+//! neurograph-eval tables --input results/ablation.json --format latex
+//!
+//! # List all 19 supported embedding models
+//! neurograph-eval list-models
+//! ```
+//!
+//! ## Programmatic Usage
 //!
 //! ```rust,no_run
 //! use neurograph_eval::longmemeval::{LongMemEvalRunner, LongMemEvalConfig};
@@ -33,9 +51,12 @@
 //! ```
 
 pub mod longmemeval;
+pub mod ablation;
 
 // Re-export key types
 pub use longmemeval::{
     EvalReport, EvalResult, LongMemEvalConfig, LongMemEvalInstance, LongMemEvalRunner,
     QuestionType,
 };
+
+pub use ablation::{AblationConfig, AblationResult, AblationSuite};

@@ -15,6 +15,8 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use std::collections::HashMap;
+
+use crate::embedders::hnsw::{HnswConfig, HnswIndex};
 use std::sync::Arc;
 
 use crate::graph::{
@@ -36,16 +38,22 @@ pub struct MemoryDriver {
     relationships: Arc<DashMap<String, Relationship>>,
     episodes: Arc<DashMap<String, Episode>>,
     communities: Arc<DashMap<String, Community>>,
+    /// HNSW index for O(log n) entity vector search.
+    entity_index: Arc<HnswIndex>,
+    /// HNSW index for O(log n) relationship vector search.
+    relationship_index: Arc<HnswIndex>,
 }
 
 impl MemoryDriver {
-    /// Create a new in-memory driver.
+    /// Create a new in-memory driver with HNSW indexing.
     pub fn new() -> Self {
         Self {
             entities: Arc::new(DashMap::new()),
             relationships: Arc::new(DashMap::new()),
             episodes: Arc::new(DashMap::new()),
             communities: Arc::new(DashMap::new()),
+            entity_index: Arc::new(HnswIndex::new(HnswConfig::default())),
+            relationship_index: Arc::new(HnswIndex::new(HnswConfig::default())),
         }
     }
 }
@@ -94,6 +102,11 @@ impl GraphDriver for MemoryDriver {
     // --- Entity Operations ---
 
     async fn store_entity(&self, entity: &Entity) -> DriverResult<()> {
+        // Index embedding in HNSW for O(log n) vector search
+        if let Some(ref embedding) = entity.name_embedding {
+            self.entity_index
+                .insert(entity.id.as_str(), embedding.clone());
+        }
         self.entities.insert(entity.id.as_str(), entity.clone());
         Ok(())
     }
@@ -107,6 +120,7 @@ impl GraphDriver for MemoryDriver {
 
     async fn delete_entity(&self, id: &EntityId) -> DriverResult<()> {
         self.entities.remove(&id.as_str());
+        self.entity_index.remove(&id.as_str());
         // Also remove related relationships
         let rels_to_remove: Vec<String> = self
             .relationships
@@ -114,8 +128,9 @@ impl GraphDriver for MemoryDriver {
             .filter(|r| r.source_entity_id == *id || r.target_entity_id == *id)
             .map(|r| r.id.as_str())
             .collect();
-        for rel_id in rels_to_remove {
-            self.relationships.remove(&rel_id);
+        for rel_id in &rels_to_remove {
+            self.relationship_index.remove(rel_id);
+            self.relationships.remove(rel_id);
         }
         Ok(())
     }
@@ -141,6 +156,11 @@ impl GraphDriver for MemoryDriver {
     // --- Relationship Operations ---
 
     async fn store_relationship(&self, relationship: &Relationship) -> DriverResult<()> {
+        // Index embedding in HNSW for O(log n) vector search
+        if let Some(ref embedding) = relationship.fact_embedding {
+            self.relationship_index
+                .insert(relationship.id.as_str(), embedding.clone());
+        }
         self.relationships
             .insert(relationship.id.as_str(), relationship.clone());
         Ok(())
@@ -265,6 +285,24 @@ impl GraphDriver for MemoryDriver {
         k: usize,
         group_id: Option<&str>,
     ) -> DriverResult<Vec<VectorSearchResult>> {
+        // Use HNSW for O(log n) search when no group filter is applied
+        if group_id.is_none() && self.entity_index.len() > 0 {
+            // Fetch more candidates than needed to account for potential misses
+            let candidates = self.entity_index.search(embedding, k * 2);
+            let results: Vec<VectorSearchResult> = candidates
+                .into_iter()
+                .filter_map(|(id, score)| {
+                    self.entities.get(&id).map(|e| VectorSearchResult {
+                        entity: e.value().clone(),
+                        score: score as f64,
+                    })
+                })
+                .take(k)
+                .collect();
+            return Ok(results);
+        }
+
+        // Fallback to brute-force for group-filtered queries
         let mut results: Vec<VectorSearchResult> = self
             .entities
             .iter()
@@ -283,7 +321,6 @@ impl GraphDriver for MemoryDriver {
             })
             .collect();
 
-        // Sort by score descending
         results.sort_by(|a, b| {
             b.score
                 .partial_cmp(&a.score)
@@ -488,6 +525,8 @@ impl GraphDriver for MemoryDriver {
         self.relationships.clear();
         self.episodes.clear();
         self.communities.clear();
+        self.entity_index.clear();
+        self.relationship_index.clear();
         Ok(())
     }
 }

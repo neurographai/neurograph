@@ -31,24 +31,47 @@ pub enum StorageBackend {
 }
 
 /// Embedding provider selection.
+///
+/// Supports all major cloud providers, local Ollama, and hash fallback.
+/// Use `Custom` for any OpenAI-compatible endpoint not listed here.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EmbeddingProvider {
     /// Local hash-based embedder (no API key required).
     /// Good for testing and deduplication, not for semantic search.
     Local,
-    /// OpenAI text-embedding-3-small.
+    /// OpenAI text-embedding-3-small/large.
     OpenAi { model: String },
-    // Future:
-    // FastEmbed { model: String },
-    // Custom { base_url: String, model: String },
+    /// Google Gemini text-embedding-004 / gemini-embedding-exp-03 (free tier).
+    Gemini { model: String },
+    /// Cohere embed-v4.0 / embed-english-v3.0.
+    Cohere,
+    /// Voyage AI voyage-3-large / voyage-code-3.
+    Voyage,
+    /// Jina AI jina-embeddings-v3.
+    Jina,
+    /// Mistral mistral-embed.
+    Mistral,
+    /// Ollama local embeddings (e.g., "nomic-embed-text").
+    Ollama { model: String },
+    /// Any OpenAI-compatible endpoint.
+    Custom {
+        base_url: String,
+        model: String,
+        api_key_env: String,
+        dimensions: usize,
+    },
 }
 
 impl Default for EmbeddingProvider {
     fn default() -> Self {
-        // Check if OpenAI API key is available
+        // Auto-detect available provider in priority order
         if std::env::var("OPENAI_API_KEY").is_ok() {
             EmbeddingProvider::OpenAi {
                 model: "text-embedding-3-small".to_string(),
+            }
+        } else if std::env::var("GEMINI_API_KEY").is_ok() {
+            EmbeddingProvider::Gemini {
+                model: "text-embedding-004".to_string(),
             }
         } else {
             EmbeddingProvider::Local
@@ -217,6 +240,54 @@ impl NeuroGraphConfigBuilder {
     pub fn openai_embeddings(mut self) -> Self {
         self.embedding = Some(EmbeddingProvider::OpenAi {
             model: "text-embedding-3-small".to_string(),
+        });
+        self
+    }
+
+    /// Use a specific OpenAI embedding model.
+    pub fn openai_embeddings_model(mut self, model: impl Into<String>) -> Self {
+        self.embedding = Some(EmbeddingProvider::OpenAi {
+            model: model.into(),
+        });
+        self
+    }
+
+    /// Use Google Gemini embeddings (free tier, requires GEMINI_API_KEY).
+    pub fn gemini_embeddings(mut self) -> Self {
+        self.embedding = Some(EmbeddingProvider::Gemini {
+            model: "text-embedding-004".to_string(),
+        });
+        self
+    }
+
+    /// Use Cohere embed-v4.0 (requires COHERE_API_KEY).
+    pub fn cohere_embeddings(mut self) -> Self {
+        self.embedding = Some(EmbeddingProvider::Cohere);
+        self
+    }
+
+    /// Use Voyage AI embeddings (requires VOYAGE_API_KEY).
+    pub fn voyage_embeddings(mut self) -> Self {
+        self.embedding = Some(EmbeddingProvider::Voyage);
+        self
+    }
+
+    /// Use Jina AI embeddings (requires JINA_API_KEY).
+    pub fn jina_embeddings(mut self) -> Self {
+        self.embedding = Some(EmbeddingProvider::Jina);
+        self
+    }
+
+    /// Use Mistral embeddings (requires MISTRAL_API_KEY).
+    pub fn mistral_embeddings(mut self) -> Self {
+        self.embedding = Some(EmbeddingProvider::Mistral);
+        self
+    }
+
+    /// Use Ollama local embeddings with the given model.
+    pub fn ollama_embeddings(mut self, model: impl Into<String>) -> Self {
+        self.embedding = Some(EmbeddingProvider::Ollama {
+            model: model.into(),
         });
         self
     }
