@@ -88,43 +88,32 @@
 
 % ════════════════════════════════════════════════════════════════════════════
 \begin{abstract}
-We present \textbf{NeuroGraph}, a production-grade knowledge graph operating
-system implemented in Rust that unifies temporal knowledge management,
-multi-strategy hybrid retrieval, and biologically-inspired memory evolution
-within a single, ergonomic framework. NeuroGraph introduces several novel
-contributions: (1)~a \emph{richly-typed graph data model} with 16-field
-entities, bi-temporal relationships, episodic provenance, saga-based
-conversation threading, and a dual-mode ontology system (prescribed
-vs.~learned types); (2)~a \emph{seven-strategy hybrid retrieval engine}
-combining semantic vector search, BM25 keyword indexing, Personalized
-PageRank, graph traversal, cross-encoder reranking, Maximal Marginal
-Relevance (MMR) for diversity, and node-distance graph-proximity
-reranking, all fused via Reciprocal Rank Fusion (RRF); (3)~a
-\emph{composable search configuration system} with per-channel
-(entity/relationship/episode/community) independent method and reranker
-selection, multi-channel typed results with provenance scoring, and
-15+ pre-built search recipes; (4)~a \emph{two-level query engine} with
-a strategy-dispatch router (Local/Global/Temporal/MultiHop) and a
-MAGMA-style intent router classifying eight distinct query intents
-across four orthogonal graph views (semantic, temporal, causal, entity);
-(5)~a \emph{tiered memory hierarchy} (L1--L4: Working, Episodic,
-Semantic, Procedural) with automatic promotion, demotion, and
-Ebbinghaus-curve forgetting; (6)~an \emph{RL-guided memory evolution
-engine} using Q-table reinforcement learning for keep/forget decisions;
-(7)~a \emph{graph-level forgetting engine} with exponential importance
-decay, access-frequency boosting, and TTL-based expiration; (8)~a
-\emph{Git-like branch isolation protocol} with copy-on-write deltas,
-diffing, and merging; (9)~a \emph{provider-agnostic LLM abstraction}
-with a dyn-compatible trait, OpenAI-format universal client, SHA-256
-keyed response caching with LRU eviction, and per-prompt-type token
-usage tracking; and (10)~a \emph{research paper intelligence platform}
-with PDF ingestion, multi-source academic search, RAG chat, and Model
-Context Protocol (MCP) integration for Claude, Cursor, and VS~Code
-Copilot. The system is architected as a Rust workspace of four crates
-totaling over 35,000 lines of code, with zero-configuration defaults,
-pluggable storage backends (in-memory DashMap, embedded Sled, planned
-Neo4j), and a REST API with an embedded visualization dashboard. We
-describe the architecture, algorithms, and implementation in detail.
+We present \textsc{NeuroGraph}, a temporal knowledge graph engine
+implemented in Rust that unifies structured memory management,
+multi-strategy retrieval, and biologically-inspired forgetting
+for LLM-based agents. Existing graph-RAG systems treat facts as
+eternally valid, employ single-strategy retrieval, and lack
+mechanisms for bounded memory growth. NeuroGraph addresses these
+gaps through four contributions:
+(1)~a \textbf{seven-strategy hybrid retrieval engine} combining
+semantic search, BM25, Personalized PageRank, graph traversal,
+cross-encoder reranking, MMR diversity, and node-distance scoring,
+unified via Reciprocal Rank Fusion with a composable per-channel
+configuration system supporting 15+ search recipes;
+(2)~a \textbf{biologically-inspired forgetting system} coupling
+Ebbinghaus retention curves with Q-table reinforcement learning
+for adaptive keep/forget decisions, enabling bounded memory growth
+without sacrificing high-value low-frequency knowledge;
+(3)~a \textbf{MAGMA-style multi-graph architecture} indexing each
+memory item across four orthogonal views (semantic, temporal,
+causal, entity) with intent-aware query routing across eight
+intent types; and
+(4)~a \textbf{bi-temporal knowledge model} with fact version
+chains, point-in-time snapshots, and Git-like copy-on-write branch
+isolation for multi-agent memory.
+The system is implemented as a 35,000-line Rust workspace with
+zero-configuration defaults, pluggable storage backends, and an
+embedded visualization dashboard.
 \end{abstract}
 
 \textbf{Keywords:} Knowledge Graph, Temporal Reasoning, Graph RAG,
@@ -220,6 +209,69 @@ This paper makes the following contributions:
     parsing, multi-source search, RAG chat, and MCP integration
     (\S\ref{sec:research}, \S\ref{sec:mcp}).
 \end{itemize}
+
+We adopt the operating-system metaphor deliberately:
+Table~\ref{tab:os-mapping} maps each classical OS responsibility
+to a concrete NeuroGraph subsystem. The metaphor is not merely
+branding---it captures a genuine architectural parallel where the
+knowledge graph engine must manage isolation, scheduling, memory
+hierarchies, and resource limits, much as an operating system
+manages processes, memory, and I/O.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Operating system metaphor mapping.}
+\label{tab:os-mapping}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{OS Concept} & \textbf{NeuroGraph Equivalent} \\
+\midrule
+Process isolation & Branch isolation (\S\ref{sec:temporal}) \\
+Virtual memory & Tiered memory L1--L4 (\S\ref{sec:memory}) \\
+Page replacement & RL-guided eviction (\S\ref{sec:memory}) \\
+File system & \texttt{GraphDriver} trait (\S\ref{sec:architecture}) \\
+Scheduler & Query budget + concurrency limiter (\S\ref{sec:engine}) \\
+IPC & Branch merge protocol (\S\ref{sec:temporal}) \\
+Resource limits & \texttt{CostTracker} + budget (\S\ref{sec:architecture}) \\
+Device drivers & Pluggable embedders + LLM clients (\S\ref{sec:llm}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:comparison} provides a feature comparison with
+existing knowledge graph memory systems.
+
+\begin{table*}[t]
+\centering
+\caption{Feature comparison of knowledge graph memory systems.
+$\checkmark$ = supported, --- = not supported,
+$\sim$ = partial support.}
+\label{tab:comparison}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Feature} & \textbf{NeuroGraph} & \textbf{Graphiti} &
+\textbf{GraphRAG} & \textbf{Mem0} & \textbf{MAGMA} & \textbf{Cognee} \\
+\midrule
+Retrieval strategies & 7 & 3 & 2 & 1 & 4 & 2 \\
+Composable search config & 15+ recipes & Configurable & Fixed & Fixed
+& Policy & Fixed \\
+Temporal model & Bi-temporal & Bi-temporal & Static & Recency
+& Temporal & --- \\
+Forgetting mechanism & RL+Ebbinghaus & --- & --- & --- & --- & --- \\
+Memory tiers (L1--L4) & $\checkmark$ & --- & --- & --- & --- & --- \\
+Multi-graph views & 4 & 1 & 1 & 0 & 4 & 1 \\
+Branch isolation & Git-like COW & --- & --- & --- & --- & --- \\
+Community detection & Louvain+Leiden & Label prop. & Leiden & ---
+& --- & --- \\
+Conversation threading & Saga & $\sim$ & --- & --- & --- & --- \\
+Offline / zero-API mode & $\checkmark$ & --- & --- & --- & --- & --- \\
+Implementation & Rust (35K LoC) & Python & Python & Python
+& Python & Python \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 % ════════════════════════════════════════════════════════════════════════════
 \section{System Architecture}
@@ -1031,6 +1083,52 @@ five steps:
     are truncated.
 \end{enumerate}
 
+Figure~\ref{fig:rl-forgetting} illustrates the complete pipeline.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm and 0.5cm,
+    block/.style={rectangle, draw, rounded corners,
+        minimum width=2.0cm, minimum height=0.6cm,
+        font=\scriptsize, fill=codebg},
+    decision/.style={diamond, draw, aspect=2.2,
+        font=\scriptsize, inner sep=1pt, fill=codebg},
+    arrow/.style={->, >=stealth, thick},
+    every node/.style={font=\scriptsize}
+]
+    \node[block] (score) {Composite Scoring\\$I = \sum w_i \cdot f_i$};
+    \node[block, below=of score] (decay)
+        {Ebbinghaus Decay\\$R = e^{-t/(S \cdot 24)}$};
+    \node[decision, below=of decay] (thresh) {$R < \tau$?};
+    \node[block, left=1.2cm of thresh] (keep) {\textbf{Keep}};
+    \node[block, right=1.2cm of thresh] (rl)
+        {RL Q-Table\\$\epsilon$-greedy};
+    \node[decision, below=of rl] (action) {Action?};
+    \node[block, below left=0.6cm and 0.3cm of action] (forget)
+        {\textbf{Forget}};
+    \node[block, below right=0.6cm and 0.3cm of action] (rescue)
+        {\textbf{Rescue}};
+    \node[block, below=1.0cm of action] (reward)
+        {Reward: $\Delta$ retrieval};
+
+    \draw[arrow] (score) -- (decay);
+    \draw[arrow] (decay) -- (thresh);
+    \draw[arrow] (thresh) -- node[above] {No} (keep);
+    \draw[arrow] (thresh) -- node[above] {Yes} (rl);
+    \draw[arrow] (rl) -- (action);
+    \draw[arrow] (action) -- node[left, pos=0.4] {forget} (forget);
+    \draw[arrow] (action) -- node[right, pos=0.4] {keep} (rescue);
+    \draw[arrow] (reward.east) -- ++(0.8,0) |- (rl.east);
+\end{tikzpicture}
+\caption{The Ebbinghaus + RL forgetting pipeline. Items
+above the retention threshold are kept; items below threshold
+enter the Q-table RL agent, which learns to rescue high-value
+items that pure decay would delete. The reward signal derives
+from downstream retrieval quality changes.}
+\label{fig:rl-forgetting}
+\end{figure}
+
 % ════════════════════════════════════════════════════════════════════════════
 \section{Multi-Graph Memory (MAGMA)}
 \label{sec:multigraph}
@@ -1434,30 +1532,158 @@ SECURITY.md with vulnerability disclosure procedures.
 \section{Related Work}
 \label{sec:related}
 
-NeuroGraph draws inspiration from and extends several systems:
+We situate NeuroGraph within the taxonomy proposed by
+Yang et al.~\cite{yang2026graph}, who categorize graph-based agent
+memory along two axes: structural representation (flat vs.\
+hierarchical vs.\ multi-view) and temporal modeling
+(static vs.\ windowed vs.\ bi-temporal).
 
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Microsoft GraphRAG} \cite{graphrag2024}: Hierarchical
-    Leiden community detection and global/local search. NeuroGraph
-    extends this with DRIFT adaptive switching and five-strategy
-    hybrid retrieval.
-  \item \textbf{Graphiti} \cite{graphiti2024}: Temporal knowledge
-    graph with episode-based ingestion. NeuroGraph adds bi-temporal
-    validity, branch isolation, and RL-guided forgetting.
-  \item \textbf{Cognee}: Pipeline-oriented knowledge processing.
-    NeuroGraph adopts the clean \texttt{add/query} API pattern.
-  \item \textbf{LightRAG}: Lightweight RAG with knowledge graphs.
-    NeuroGraph provides richer retrieval and memory management.
-  \item \textbf{Mem0/EverMemOS}: Tiered memory with L1--L4
-    hierarchy. NeuroGraph implements the tiered model and adds
-    RL-guided evolution.
-  \item \textbf{A-MEM}: Zettelkasten self-organizing memory.
-    NeuroGraph implements the keyword evolution insight with
-    Ebbinghaus forgetting integration.
-  \item \textbf{MAGMA}: Multi-graph memory architecture.
-    NeuroGraph implements four orthogonal views with intent-aware
-    routing and RRF fusion.
-\end{itemize}
+\subsection{Knowledge Graph Memory Systems}
+
+\textbf{Graphiti/Zep}~\cite{graphiti2024,graphiti2025} introduced
+bi-temporal edges with four timestamps per relationship and
+episode-based ingestion, achieving 94.8\% on the Deep Memory
+Retrieval benchmark and 71.2\% on LongMemEval~\cite{longmemeval2025}.
+NeuroGraph adopts Graphiti's bi-temporal model but extends it with
+fact version chains (\S\ref{sec:temporal}), saga-based conversation
+threading (\S\ref{sec:architecture}), Git-like branch isolation
+(\S\ref{sec:temporal}), and seven-strategy hybrid retrieval
+(\S\ref{sec:retrieval}).
+
+\textbf{MAGMA}~\cite{magma2026} proposed indexing memory items
+across four orthogonal graph views (semantic, temporal, causal,
+entity) with policy-guided traversal. NeuroGraph implements all
+four views (\S\ref{sec:multigraph}) with a keyword-heuristic
+intent router rather than a learned policy, trading adaptivity
+for zero-training-cost deployment.
+
+\textbf{Microsoft GraphRAG}~\cite{graphrag2024} introduced
+hierarchical Leiden community detection with map-reduce global
+search. NeuroGraph implements both Louvain and Leiden
+(\S\ref{sec:community}) and extends global search with DRIFT
+adaptive switching~\cite{drift2026} (\S\ref{sec:retrieval}).
+
+\subsection{Memory Management and Forgetting}
+
+\textbf{EverMemOS}~\cite{evermemos2026,evermemos2026b} proposed
+a tiered memory OS with L1--L4 hierarchy, achieving 83.0\% on
+LongMemEval. NeuroGraph implements a similar tiered model
+(\S\ref{sec:memory}) but adds Ebbinghaus-curve forgetting and
+RL-guided keep/forget decisions---to our knowledge, the first
+system combining biologically-inspired decay with reinforcement
+learning for memory management.
+
+\textbf{A-MEM}~\cite{amem2025} introduced self-organizing
+Zettelkasten memory with keyword evolution. NeuroGraph implements
+the keyword injection insight and extends it with
+Ebbinghaus-modulated memory strength (\S\ref{sec:memory}).
+
+\textbf{TiMem}~\cite{timem2026} proposed temporal-hierarchical
+memory consolidation, achieving 76.88\% on LongMemEval-S.
+NeuroGraph's tiered memory shares the hierarchical principle
+but uses access-frequency promotion rather than sleep-inspired
+consolidation.
+
+\subsection{Retrieval Strategies}
+
+\textbf{Mem0} provides simple vector-similarity retrieval.
+\textbf{LightRAG}~\cite{lightrag2024} adds lightweight graph
+structure. \textbf{Cognee} offers pipeline-oriented processing.
+NeuroGraph's seven-strategy hybrid retrieval with composable
+per-channel configuration (\S\ref{sec:searchconfig}) is, to our
+knowledge, the most comprehensive retrieval system in this space,
+supporting independent method and reranker selection across four
+result channels.
+
+\subsection{Benchmarks and Evaluation}
+
+LongMemEval~\cite{longmemeval2025} tests five long-term memory
+abilities across 500 questions and has become the standard
+evaluation for this space. The current state of the art includes
+Emergence AI (86\%) and EverMemOS (83\%).
+Zhang et al.~\cite{memsurvey2024} provide a broader survey on
+memory mechanisms for LLM-based agents, cataloging approaches
+across short-term, long-term, knowledge, and experience memory.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Evaluation}
+\label{sec:evaluation}
+
+We evaluate NeuroGraph on LongMemEval~\cite{longmemeval2025},
+a benchmark of 500 questions testing five long-term memory
+abilities across multi-session conversations.
+
+\subsection{Experimental Setup}
+
+\textbf{Baselines.} We compare against reported numbers for
+Graphiti/Zep (71.2\%, GPT-4o)~\cite{graphiti2025},
+TiMem (76.88\%, GPT-4o-mini)~\cite{timem2026},
+EverMemOS (83.0\%)~\cite{evermemos2026b}, and
+Emergence AI (86\%).
+
+\textbf{Configuration.} We evaluate NeuroGraph with GPT-4o-mini
+for extraction and generation, OpenAI
+\texttt{text-embedding-3-small} for embeddings, in-memory storage,
+and the \texttt{combined\_hybrid\_rrf} search recipe. All sessions
+are ingested before querying.
+
+\subsection{Main Results}
+
+\begin{table}[H]
+\centering
+\caption{LongMemEval results by category (\% accuracy).
+IE = Information Extraction, MR = Multi-Session Reasoning,
+KU = Knowledge Update, TR = Temporal Reasoning,
+ABS = Abstention.}
+\label{tab:longmemeval}
+\footnotesize
+\begin{tabular}{lccccc|c}
+\toprule
+\textbf{System} & \textbf{IE} & \textbf{MR} & \textbf{KU}
+& \textbf{TR} & \textbf{ABS} & \textbf{Overall} \\
+\midrule
+Graphiti/Zep & --- & --- & --- & --- & --- & 71.2 \\
+TiMem & --- & --- & --- & --- & --- & 76.9 \\
+EverMemOS & --- & --- & --- & --- & --- & 83.0 \\
+Emergence AI & --- & --- & --- & --- & --- & 86.0 \\
+\midrule
+NeuroGraph & \textit{TBD} & \textit{TBD} & \textit{TBD}
+& \textit{TBD} & \textit{TBD} & \textit{TBD} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We expect NeuroGraph's bi-temporal fact model and temporal
+conflict resolution to provide structural advantages on the
+Knowledge Update (KU) and Temporal Reasoning (TR) categories
+specifically.
+
+\subsection{Ablation Study}
+
+To quantify the contribution of each retrieval strategy and
+memory subsystem, we run the following ablation matrix:
+
+\begin{table}[H]
+\centering
+\caption{Retrieval strategy ablation on LongMemEval (overall
+\% accuracy). Each row removes one component from the full system.}
+\label{tab:ablation}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+\textbf{Configuration} & \textbf{Accuracy} & \textbf{$\Delta$} \\
+\midrule
+Full system (7 strategies) & \textit{TBD} & --- \\
+\quad $-$ BM25 & \textit{TBD} & \textit{TBD} \\
+\quad $-$ PPR & \textit{TBD} & \textit{TBD} \\
+\quad $-$ MMR reranking & \textit{TBD} & \textit{TBD} \\
+\quad $-$ Temporal filtering & \textit{TBD} & \textit{TBD} \\
+\quad $-$ RL forgetting & \textit{TBD} & \textit{TBD} \\
+\quad $-$ Ebbinghaus decay & \textit{TBD} & \textit{TBD} \\
+Cosine-only baseline & \textit{TBD} & \textit{TBD} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ════════════════════════════════════════════════════════════════════════════
 \section{Conclusion and Future Work}
@@ -1469,6 +1695,13 @@ biologically-inspired memory evolution, and multi-agent collaboration.
 By implementing the entire stack in Rust, we achieve both developer
 ergonomics (via the builder pattern and zero-config defaults) and
 production-grade performance (async I/O, lock-free concurrency).
+
+The central insight of this work is that combining
+neurobiologically-inspired forgetting (Ebbinghaus retention curves)
+with reinforcement learning (Q-table keep/forget decisions) produces
+a memory system that forgets \emph{intelligently} rather than
+uniformly---preserving high-value low-frequency knowledge that pure
+decay would discard.
 
 \paragraph{Future Directions.}
 \begin{itemize}[leftmargin=*]
@@ -1485,7 +1718,7 @@ production-grade performance (async I/O, lock-free concurrency).
 \end{itemize}
 
 % ════════════════════════════════════════════════════════════════════════════
-\begin{thebibliography}{9}
+\begin{thebibliography}{16}
 
 \bibitem{graphrag2024}
 Edge, D. \textit{et al.}
@@ -1534,6 +1767,43 @@ Ebbinghaus, H.
 \newblock \"{U}ber das Ged\"{a}chtnis.
 \newblock Duncker \& Humblot, Leipzig, 1885.
 
+\bibitem{yang2026graph}
+Yang, C., Zhou, C., Xiao, Y., \textit{et al.}
+\newblock Graph-based Agent Memory: Taxonomy, Techniques, and Applications.
+\newblock \textit{arXiv preprint arXiv:2602.05665}, 2026.
+
+\bibitem{magma2026}
+Jiang, D., Li, Y., Li, G., and Li, B.
+\newblock MAGMA: A Multi-Graph based Agentic Memory Architecture for AI Agents.
+\newblock \textit{arXiv preprint arXiv:2601.03236}, 2026.
+
+\bibitem{graphiti2025}
+Zep AI.
+\newblock Graphiti: Building Real-Time Knowledge Graphs for AI Agents.
+\newblock \textit{arXiv preprint arXiv:2501.13956}, 2025.
+
+\bibitem{evermemos2026b}
+Zhang, L. \textit{et al.}
+\newblock EverMemOS: A Tiered Memory Operating System for Lifelong AI Agents.
+\newblock \textit{arXiv preprint arXiv:2601.02163}, 2026.
+
+\bibitem{longmemeval2025}
+Wang, D. \textit{et al.}
+\newblock LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive
+  Memory.
+\newblock \textit{Proc.\ ICLR}, 2025. arXiv:2410.10813.
+
+\bibitem{timem2026}
+Li, Z. \textit{et al.}
+\newblock TiMem: Temporal-Hierarchical Memory Consolidation for AI Agents.
+\newblock \textit{arXiv preprint arXiv:2601.02845}, 2026.
+
+\bibitem{memsurvey2024}
+Zhang, Z. \textit{et al.}
+\newblock A Survey on the Memory Mechanism of Large Language Model based Agents.
+\newblock \textit{arXiv preprint arXiv:2404.13501}, 2024.
+
 \end{thebibliography}
 
 \end{document}
+

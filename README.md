@@ -466,6 +466,8 @@ neurograph/
 
 > We plan to add CI-tracked benchmarks and publish LongMemEval results before v0.1.0 stable.
 
+> 📊 **LongMemEval evaluation in progress** — We are implementing the [LongMemEval](https://arxiv.org/abs/2410.10813) benchmark harness in `neurograph-eval`. This benchmark tests five long-term memory abilities (information extraction, multi-session reasoning, knowledge updates, temporal reasoning, abstention) across 500 questions. Current SOTA: Emergence AI (86%), EverMemOS (83%), TiMem (76.9%), Graphiti/Zep (71.2%). Results coming soon.
+
 ---
 
 ## API at a Glance
