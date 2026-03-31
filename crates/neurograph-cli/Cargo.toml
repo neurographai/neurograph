@@ -1,0 +1,30 @@
+[package]
+name = "neurograph"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82.0"
+description = "CLI for NeuroGraph — temporal knowledge graph engine for AI agents"
+license = "Apache-2.0"
+readme = "../../README.md"
+homepage = "https://github.com/neurographai/neurograph"
+repository = "https://github.com/neurographai/neurograph"
+keywords = ["cli", "knowledge-graph", "temporal", "ai-memory", "rag"]
+categories = ["command-line-utilities", "database"]
+
+[[bin]]
+name = "neurograph"
+path = "src/main.rs"
+
+[dependencies]
+neurograph-core = { path = "../neurograph-core", version = "0.1.0", features = ["full"] }
+clap = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+tracing-subscriber = { workspace = true }
+colored = { workspace = true }
+indicatif = { workspace = true }
+dialoguer = { workspace = true }
+open = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }

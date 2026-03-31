@@ -1,27 +1,22 @@
 [package]
-name = "neurograph-mcp"
+name = "neurograph-eval"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-keywords.workspace = true
-categories.workspace = true
-description = "MCP (Model Context Protocol) server for NeuroGraph — enables Claude, Cursor, and VS Code Copilot integration"
-readme = "../../README.md"
-
-[[bin]]
-name = "neurograph-mcp"
-path = "src/main.rs"
+description = "Benchmarking harness for NeuroGraph — LongMemEval, NeuroGraphBench, and competitive evaluation"
+publish = false
 
 [dependencies]
-neurograph-core = { path = "../neurograph-core", version = "0.1.0" }
+# Core
+neurograph-core = { path = "../neurograph-core" }
 
-# Async
+# Async runtime
 tokio = { workspace = true }
 async-trait = { workspace = true }
+futures = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
@@ -37,4 +32,6 @@ anyhow = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"

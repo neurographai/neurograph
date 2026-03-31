@@ -12,6 +12,14 @@ dist/
 *.err
 test_errors.txt
 test_errs.log
+test_output*.txt
+test_fail*.txt
+test_final*.txt
+doctest_err*.txt
+
+# Test data
+test_paper.pdf
+*.test.pdf
 
 # Environment tracking
 .env

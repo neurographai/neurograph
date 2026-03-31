@@ -3,48 +3,30 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NeuroGraph-Temporal_Knowledge_Graphs_for_AI-blueviolet?style=for-the-badge" alt="NeuroGraph"/>
-</p>
-
-<p align="center">
-  <a href="https://crates.io/crates/neurograph"><img src="https://img.shields.io/crates/v/neurograph?style=flat-square&logo=rust&logoColor=white&label=crates.io&color=e6522c" alt="crates.io"/></a>
-  <a href="https://pypi.org/project/neurograph/"><img src="https://img.shields.io/pypi/v/neurograph?style=flat-square&logo=pypi&logoColor=white&label=PyPI&color=3775A9" alt="PyPI"/></a>
-  <a href="https://www.npmjs.com/package/@neurograph/sdk"><img src="https://img.shields.io/npm/v/@neurograph/sdk?style=flat-square&logo=npm&logoColor=white&label=npm&color=CB3837" alt="npm"/></a>
-  <a href="https://ghcr.io/neurographai/neurograph"><img src="https://img.shields.io/badge/Docker-ghcr.io-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/></a>
-  <a href="https://docs.rs/neurograph"><img src="https://img.shields.io/docsrs/neurograph?style=flat-square&logo=docs.rs&logoColor=white&label=docs.rs" alt="docs.rs"/></a>
+  <img src="https://img.shields.io/badge/NeuroGraph-Research_Intelligence_Platform-blueviolet?style=for-the-badge" alt="NeuroGraph"/>
 </p>
 
 <p align="center">
   <a href="https://github.com/neurographai/neurograph/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/neurographai/neurograph/ci.yml?style=flat-square&logo=github&label=CI" alt="CI"/></a>
-  <a href="https://codecov.io/gh/neurographai/neurograph"><img src="https://img.shields.io/codecov/c/github/neurographai/neurograph?style=flat-square&logo=codecov&logoColor=white" alt="Codecov"/></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/neurographai/neurograph"><img src="https://img.shields.io/ossf-scorecard/github.com/neurographai/neurograph?style=flat-square&label=OpenSSF" alt="OpenSSF Scorecard"/></a>
   <a href="https://github.com/neurographai/neurograph/blob/main/LICENSE"><img src="https://img.shields.io/github/license/neurographai/neurograph?style=flat-square&color=blue" alt="License"/></a>
-</p>
-
-<p align="center">
   <a href="https://github.com/neurographai/neurograph/stargazers"><img src="https://img.shields.io/github/stars/neurographai/neurograph?style=flat-square&color=yellow" alt="Stars"/></a>
-  <a href="https://github.com/neurographai/neurograph/network/members"><img src="https://img.shields.io/github/forks/neurographai/neurograph?style=flat-square&color=blue" alt="Forks"/></a>
   <a href="https://github.com/neurographai/neurograph/issues"><img src="https://img.shields.io/github/issues/neurographai/neurograph?style=flat-square&color=red" alt="Issues"/></a>
   <a href="https://github.com/neurographai/neurograph/discussions"><img src="https://img.shields.io/github/discussions/neurographai/neurograph?style=flat-square&color=purple&label=Discussions" alt="Discussions"/></a>
 </p>
+
+>  **Pre-release software** — NeuroGraph is under active development (`v0.1.0-alpha`). APIs may change. Not yet published to crates.io.
+
 <img width="2752" height="1536" alt="neuro graph banner" src="https://github.com/user-attachments/assets/5b05cad5-cd8b-478f-9066-443e814c9f90" />
+
 ---
 
 # NeuroGraph
 
-> A Rust-powered temporal knowledge graph engine with interactive visualization, built for AI agents that need to remember, reason, and forget.
+> A Rust-powered research paper intelligence platform — ingest PDFs, search across arXiv/Semantic Scholar/PubMed, build temporal knowledge graphs, and chat with your research using AI.
 
-NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Every fact has a validity window, every query can time-travel, and the graph can branch like Git. It's designed to be the memory layer for AI agents — from personal assistants to multi-agent research systems.
+NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Feed it research papers, and it extracts entities, builds a knowledge graph, and lets you query it with natural language. Every fact has a validity window, every query can time-travel, and the graph can branch like Git.
+
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/ded5bb1c-0e6a-4a56-82e5-586102aac480" />
-
-### What's New in v0.2
-
-- 🧠 **Intent-Aware Query Router** — Classifies queries as semantic/temporal/causal/entity and routes to specialized sub-graphs with multi-hop planning
-- 🗄️ **Tiered Memory System** — 4-layer memory (Working → Episodic → Semantic → Procedural) with episode grouping, learned rules, and context assembly
-- 🔀 **Multi-Strategy Graph Engine** — Fused entity, semantic, temporal, and causal sub-graphs with cross-layer adaptive retrieval
-- 🖥️ **Dashboard Rewrite** — React 19 + Zustand + AntV G6 with 3-column layout, query panel, branch diff, timeline playback, dark/light mode toggle
-- 🔌 **MCP Server Crate** — Dedicated `neurograph-mcp` crate with dual transport (stdio + SSE) for Claude Desktop and Cursor integration
-- 🐳 **Dashboard Dockerfile** — Nginx-based production container for the dashboard
 
 <br/>
 
@@ -54,23 +36,23 @@ NeuroGraph is an open-source knowledge graph engine that treats **time as a firs
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#6C5CE7', 'primaryTextColor': '#DFE6E9', 'primaryBorderColor': '#A29BFE', 'lineColor': '#74B9FF', 'secondaryColor': '#00CEC9', 'tertiaryColor': '#2D3436', 'background': '#0D1117', 'mainBkg': '#161B22', 'nodeBorder': '#A29BFE', 'clusterBkg': '#161B2288', 'clusterBorder': '#30363D', 'titleColor': '#F8F8F2', 'edgeLabelBackground': '#161B22'}}}%%
 
 graph TB
-    subgraph CLIENTS["Client SDKs"]
+    subgraph CLIENTS["Client Layer"]
         direction LR
-        PY["Python SDK<br/><i>pip install neurograph</i>"]
-        TS["TypeScript SDK<br/><i>npm install @neurograph/sdk</i>"]
-        RS["Rust Crate<br/><i>cargo add neurograph</i>"]
-        CLI["CLI<br/><i>neurograph query ...</i>"]
-    end
-
-    subgraph GATEWAY["API Gateway"]
-        direction LR
-        REST["REST API<br/><i>Axum</i>"]
-        WS["WebSocket<br/><i>Real-time</i>"]
+        RS["Rust Crate<br/><i>cargo add neurograph-core</i>"]
+        CLI["CLI<br/><i>neurograph ingest / query / chat</i>"]
         MCP["MCP Server<br/><i>Claude / Cursor</i>"]
+        API["REST API<br/><i>neurograph dashboard</i>"]
     end
 
     subgraph ENGINE["Core Engine — Rust"]
         direction TB
+
+        subgraph RESEARCH["Research Intelligence"]
+            direction LR
+            PDF["PDF Ingestion<br/>(fast + structured)"]
+            SEARCH["Paper Search<br/>(arXiv/S2/PubMed)"]
+            RAG["RAG Chat<br/>(Ollama/OpenAI)"]
+        end
 
         subgraph INGESTION["Ingestion Pipeline"]
             direction LR
@@ -83,92 +65,54 @@ graph TB
         subgraph KNOWLEDGE["Knowledge Layer"]
             direction LR
             TEMPORAL["Bi-Temporal<br/>Engine"]
-            BRANCH["Branch &<br/>Merge"]
             COMMUNITY["Community<br/>Detection"]
+            MEMORY["Tiered Memory<br/>(L1–L4)"]
             DECAY["Intelligent<br/>Forgetting"]
         end
 
         subgraph RETRIEVAL["Hybrid Retrieval"]
             direction LR
             SEMANTIC["Semantic<br/>Search"]
-            BM25["BM25<br/>Keyword"]
+            BM25["BM25<br/>Search"]
             GRAPH_WALK["Graph<br/>Walk"]
             RRF["RRF<br/>Fusion"]
-        end
-
-        subgraph AGENT_SYS["Multi-Agent System"]
-            direction LR
-            BUILDER["Builder"]
-            VALIDATOR["Validator"]
-            RESOLVER["Resolver"]
-            SUMMARIZER["Summarizer"]
-        end
-
-        subgraph INTENT["Intent Router"]
-            direction LR
-            CLASSIFY["Query<br/>Classifier"]
-            PLANNER["Multi-Hop<br/>Planner"]
-            ROUTER["Sub-Graph<br/>Dispatch"]
-        end
-
-        subgraph MEMORY["Tiered Memory"]
-            direction LR
-            L1["L1 Working"]
-            L2["L2 Episodic"]
-            L3["L3 Semantic"]
-            L4["L4 Procedural"]
         end
     end
 
     subgraph STORAGE["Storage Backends"]
         direction LR
-        SLED["Sled<br/><i>Embedded</i>"]
-        NEO4J["Neo4j<br/><i>Client-Server</i>"]
-        FALKOR["FalkorDB<br/><i>Redis-Speed</i>"]
-        KUZU["Kuzu<br/><i>Embedded OLAP</i>"]
-        MEMORY["In-Memory<br/><i>petgraph</i>"]
+        SLED["Sled<br/><i>Embedded (default)</i>"]
+        MEMORY_DRV["In-Memory<br/><i>petgraph</i>"]
     end
 
     subgraph DASHBOARD["Interactive Dashboard"]
         direction LR
         REACT["React 19"]
         G6["AntV G6"]
-        WASM["Rust WASM<br/><i>Layout Engine</i>"]
         TIMELINE["Temporal<br/>Playback"]
     end
 
-    subgraph OBSERVE["Observability"]
-        direction LR
-        OTEL["OpenTelemetry"]
-        PROM["Prometheus"]
-        COST["Cost Tracker"]
-    end
-
-    CLIENTS --> GATEWAY
-    GATEWAY --> ENGINE
+    CLIENTS --> ENGINE
     ENGINE --> STORAGE
-    ENGINE --> OBSERVE
-    GATEWAY --> DASHBOARD
-    WASM -.->|"compiled to WASM"| ENGINE
+    ENGINE --> DASHBOARD
 
+    PDF --> PARSER
     PARSER --> NER --> REL --> DEDUP
     SEMANTIC --> RRF
     BM25 --> RRF
     GRAPH_WALK --> RRF
 
     classDef clientNode fill:#6C5CE7,stroke:#A29BFE,color:#fff,stroke-width:2px
-    classDef gatewayNode fill:#0984E3,stroke:#74B9FF,color:#fff,stroke-width:2px
     classDef engineNode fill:#00B894,stroke:#55EFC4,color:#fff,stroke-width:2px
+    classDef researchNode fill:#0984E3,stroke:#74B9FF,color:#fff,stroke-width:2px
     classDef storageNode fill:#E17055,stroke:#FAB1A0,color:#fff,stroke-width:2px
     classDef dashNode fill:#FDCB6E,stroke:#FFEAA7,color:#2D3436,stroke-width:2px
-    classDef observeNode fill:#636E72,stroke:#B2BEC3,color:#fff,stroke-width:2px
 
-    class PY,TS,RS,CLI clientNode
-    class REST,WS,MCP gatewayNode
-    class PARSER,NER,REL,DEDUP,TEMPORAL,BRANCH,COMMUNITY,DECAY,SEMANTIC,BM25,GRAPH_WALK,RRF,BUILDER,VALIDATOR,RESOLVER,SUMMARIZER engineNode
-    class SLED,NEO4J,FALKOR,KUZU,MEMORY storageNode
-    class REACT,G6,WASM,TIMELINE dashNode
-    class OTEL,PROM,COST observeNode
+    class RS,CLI,MCP,API clientNode
+    class PARSER,NER,REL,DEDUP,TEMPORAL,COMMUNITY,MEMORY,DECAY,SEMANTIC,BM25,GRAPH_WALK,RRF engineNode
+    class PDF,SEARCH,RAG researchNode
+    class SLED,MEMORY_DRV storageNode
+    class REACT,G6,TIMELINE dashNode
 ```
 
 <br/>
@@ -177,17 +121,9 @@ graph TB
 <p align="center">
   <b>Core</b><br/>
   <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust"/>
-  <img src="https://img.shields.io/badge/WebAssembly-654FF0?style=for-the-badge&logo=webassembly&logoColor=white" alt="WebAssembly"/>
   <img src="https://img.shields.io/badge/Tokio-232323?style=for-the-badge&logo=rust&logoColor=white" alt="Tokio"/>
-  <img src="https://img.shields.io/badge/PyO3-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="PyO3"/>
-</p>
-<p align="center">
-  <b>Storage</b><br/>
+  <img src="https://img.shields.io/badge/Axum-E6522C?style=for-the-badge&logo=rust&logoColor=white" alt="Axum"/>
   <img src="https://img.shields.io/badge/Sled-E6522C?style=for-the-badge&logo=rust&logoColor=white" alt="Sled"/>
-  <img src="https://img.shields.io/badge/Tantivy-FF6B35?style=for-the-badge&logo=apache-lucene&logoColor=white" alt="Tantivy"/>
-  <img src="https://img.shields.io/badge/Neo4j-4581C3?style=for-the-badge&logo=neo4j&logoColor=white" alt="Neo4j"/>
-  <img src="https://img.shields.io/badge/FalkorDB-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="FalkorDB"/>
-  <img src="https://img.shields.io/badge/Kuzu-00A98F?style=for-the-badge&logo=database&logoColor=white" alt="Kuzu"/>
 </p>
 <p align="center">
   <b>Frontend</b><br/>
@@ -197,49 +133,109 @@ graph TB
   <img src="https://img.shields.io/badge/AntV_G6-1890FF?style=for-the-badge&logo=antdesign&logoColor=white" alt="AntV G6"/>
 </p>
 <p align="center">
-  <b>AI / ML</b><br/>
+  <b>AI / LLM</b><br/>
   <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"/>
-  <img src="https://img.shields.io/badge/Anthropic-191919?style=for-the-badge&logo=anthropic&logoColor=white" alt="Anthropic"/>
   <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama"/>
-  <img src="https://img.shields.io/badge/FastEmbed-FF6F00?style=for-the-badge&logo=python&logoColor=white" alt="FastEmbed"/>
+  <img src="https://img.shields.io/badge/Offline_Mode-333333?style=for-the-badge&logo=shield&logoColor=white" alt="Offline"/>
 </p>
 <p align="center">
   <b>Infrastructure</b><br/>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/>
-  <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus"/>
-  <img src="https://img.shields.io/badge/OpenTelemetry-7B5EA7?style=for-the-badge&logo=opentelemetry&logoColor=white" alt="OpenTelemetry"/>
 </p>
 
 ---
 
 ## Quick Start
 
-```python
-from neurograph import NeuroGraph
+```rust
+use neurograph_core::NeuroGraph;
 
-ng = NeuroGraph()
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Zero config — in-memory, offline, no API key needed
+    let ng = NeuroGraph::builder().memory().build().await?;
 
-# Ingest knowledge
-await ng.add("Alice joined Anthropic as a research scientist in March 2026")
-await ng.add("Bob moved from Google to OpenAI in January 2026")
+    // Ingest knowledge (regex NER extracts entities + relationships)
+    ng.add_text("Alice joined Anthropic as a research scientist in March 2026").await?;
+    ng.add_text("Bob moved from Google to OpenAI in January 2026").await?;
 
-# Query with graph-powered RAG
-result = await ng.query("Where does Alice work?")
-print(result.answer)  # "Anthropic"
+    // Query with hybrid retrieval (semantic + keyword + graph walk)
+    let result = ng.query("Where does Alice work?").await?;
+    println!("{}", result.answer);       // "Anthropic"
+    println!("{:.0}%", result.confidence * 100.0);  // "85%"
 
-# Time travel
-past = await ng.at("2025-12-01")
-result = await past.query("Where does Bob work?")
-print(result.answer)  # "Google"
+    // Time travel — query the graph as it was in the past
+    let past = ng.at("2025-12-01").await?;
+    let result = past.query("Where does Bob work?").await?;
+    println!("{}", result.answer);  // "Google" (before he moved)
 
-# Branch reality
-await ng.branch("what-if")
-await ng.add("Alice leaves Anthropic for DeepMind")
-diff = ng.diff_branches("main", "what-if")
+    // Entity history — see how facts evolved over time
+    let history = ng.entity_history("Bob").await?;
+    for rel in &history {
+        println!("{}", rel.fact);
+    }
 
-# Open interactive dashboard
-await ng.dashboard()  # localhost:7777
+    // Community detection — discover clusters of related entities
+    let communities = ng.detect_communities().await?;
+    println!("Found {} communities", communities.communities.len());
+
+    Ok(())
+}
+```
+
+### Research Paper Intelligence
+
+```bash
+# Ingest a research paper (PDF → structured chunks → knowledge graph)
+neurograph ingest --pdf paper.pdf
+neurograph ingest --dir ./papers/
+
+# Search across arXiv, Semantic Scholar, and PubMed
+neurograph search "attention mechanisms in transformers" --arxiv --s2
+neurograph search "CRISPR gene editing" --pubmed --since 2024
+
+# Interactive RAG chat with your knowledge graph
+neurograph chat --model ollama:llama3.2
+
+# Launch the dashboard with REST API
+neurograph dashboard --port 8000 --open
+```
+
+### CLI
+
+```bash
+# Install from source
+cargo install --path crates/neurograph-cli
+
+# Ingest
+neurograph ingest "Alice joined Anthropic in March 2026"
+neurograph ingest --file meeting_notes.txt
+neurograph ingest --pdf paper.pdf
+neurograph ingest --dir ./research_papers/
+
+# Query
+neurograph query "Where does Alice work?"
+neurograph query "Where did Bob work?" --at "2025-12-01"
+
+# Research Paper Search
+neurograph search "transformer architecture" --arxiv --s2 --limit 20
+neurograph search "protein folding" --pubmed --since 2023 --sort citations
+
+# Interactive Chat
+neurograph chat --model ollama:llama3.2
+
+# Dashboard & API
+neurograph dashboard --port 8000 --open
+neurograph serve --port 8000
+
+# Explore
+neurograph history "Alice"
+neurograph communities
+neurograph stats
+
+# Benchmark
+neurograph bench
 ```
 
 ---
@@ -247,90 +243,97 @@ await ng.dashboard()  # localhost:7777
 ## Install
 
 ```bash
-# Rust
-cargo install neurograph
-
-# Python
-pip install neurograph
-
-# Node / TypeScript
-npm install @neurograph/sdk
-
-# Docker (API + Dashboard)
-docker run -p 8000:8000 -p 3000:3000 ghcr.io/neurographai/neurograph
-
-# Docker Compose (full stack)
-docker compose up
-```
-
-<details>
-<summary><b>Build from source</b></summary>
-
-Prerequisites: Rust 1.82+, Node.js 18+
-
-```bash
+# From source (recommended for now)
 git clone https://github.com/neurographai/neurograph.git
 cd neurograph
 cargo build --release
-cd dashboard && npm install && npm run dev
+
+# Install CLI
+cargo install --path crates/neurograph-cli
+
+# As a library dependency
+# Add to your Cargo.toml:
+# [dependencies]
+# neurograph-core = { git = "https://github.com/neurographai/neurograph" }
 ```
 
-</details>
+> **Coming soon:** `cargo install neurograph` (crates.io), `pip install neurograph` (PyPI), `npm install @neurograph/sdk` (npm). See [Roadmap](#roadmap).
 
 ---
 
 ## Feature Status
 
-> **Legend:** `Stable` = production-ready, API stable | `Beta` = functional, breaking changes possible | `Experimental` = proof-of-concept | `Planned` = on roadmap
+> **Legend:** `Stable` = tested, reliable | `Beta` = functional, API may change | `Alpha` = proof-of-concept | `Planned` = on roadmap
 
 | Capability | Status |
 |---|---|
 | **Temporal Knowledge Graph** — Bi-temporal facts with `valid_from` / `valid_until` | **Stable** |
-| **Community Detection** — Louvain/Leiden in native Rust | **Stable** |
-| **Hybrid Retrieval** — Semantic + BM25 + graph walk with RRF fusion | **Stable** |
-| **Cost-Aware Routing** — Auto-selects cheapest query strategy within budget | **Stable** |
-| **Zero Config** — `pip install neurograph`, 3 lines, works. No API key needed. | **Stable** |
-| **Intent-Aware Query Router** — Classifies queries → semantic/temporal/causal/entity sub-graphs with multi-hop planning | **Beta** |
-| **Tiered Memory** — 4-layer memory (Working/Episodic/Semantic/Procedural) with episode grouping and learned rules | **Beta** |
-| **Multi-Strategy Graph** — Fused entity, semantic, temporal, causal sub-graphs with cross-layer retrieval | **Beta** |
-| **Interactive Dashboard** — React 19 + G6 with 3-column layout, Zustand state, dark/light mode | **Beta** |
-| **Graph Version Control** — Branch, diff, merge knowledge graphs | **Beta** |
-| **Temporal Playback** — Timeline slider to scrub through knowledge history | **Beta** |
-| **MCP Server** — Claude/Cursor integration via Model Context Protocol (stdio + SSE) | **Beta** |
-| **Think-While-You-Watch** — Real-time reasoning animation on graph | **Experimental** |
-| **Intelligent Forgetting** — Importance-based decay and compression | **Experimental** |
-| **Multi-Agent Graph Building** — Collaborative agents for extraction/validation | **Experimental** |
-| **Python SDK** — Native PyO3 bindings | **Planned** |
-| **TypeScript SDK** — WASM-powered browser/Node client | **Planned** |
-| **Distributed Sharding** — Scale across multiple nodes | **Planned** |
+| **Community Detection** — Louvain in native Rust | **Stable** |
+| **Hybrid Retrieval** — Semantic + keyword + graph walk with RRF fusion | **Stable** |
+| **Cost-Aware Routing** — Tracks per-query LLM cost in USD | **Stable** |
+| **Zero Config** — In-memory default, works offline with regex NER | **Stable** |
+| **PDF Ingestion** — Two-tier parser (fast text + structured academic detection) | **Beta** |
+| **Paper Search** — Multi-source aggregator (arXiv, Semantic Scholar, PubMed) | **Beta** |
+| **RAG Chat** — Context-aware chat with conversation history | **Beta** |
+| **REST API & Dashboard** — Axum-based server with embedded React SPA | **Beta** |
+| **Embedding Router** — Ollama, OpenAI, and hash providers with LRU cache | **Beta** |
+| **Entity Extraction (LLM)** — Structured output via OpenAI | **Beta** |
+| **Entity Extraction (Offline)** — Regex-based NER, no API key needed | **Stable** |
+| **MCP Server** — Claude/Cursor integration via Model Context Protocol (stdio) | **Beta** |
+| **CLI** — Full command suite: ingest, query, search, chat, dashboard, bench | **Beta** |
+| **Interactive Dashboard** — React 19 + G6 graph visualization | **Alpha** |
+| **Intent-Aware Query Router** — Classifies queries → semantic/temporal/causal | **Alpha** |
+| **Tiered Memory System** — Working / Episodic / Semantic / Procedural layers | **Alpha** |
+| **Intelligent Forgetting** — Importance-based decay with RL-guided retention | **Alpha** |
+| **Graph Branching** — Branch + diff knowledge graphs (multigraph feature flag) | **Alpha** |
+| **Memory Evolution** — Zettelkasten self-organizing memory with Ebbinghaus decay | **Alpha** |
+| **Embedded storage (sled)** — Persistent, zero-config | **Stable** |
+| **Python SDK** — HTTP client over `neurograph serve` | **Planned** |
+| **TypeScript SDK** — HTTP client over `neurograph serve` | **Planned** |
+| **FastEmbed integration** — Offline embeddings via `--features local-embed` | **Planned** |
+| **Neo4j / FalkorDB drivers** — External graph backends | **Planned** |
 
 <details>
-<summary><b>Full feature breakdown</b></summary>
+<summary><b>Detailed feature breakdown</b></summary>
+
+### Research Intelligence
+
+| Feature | Details |
+|---------|---------|
+| PDF parsing (fast) | Text extraction via `pdf-extract`, page-level splitting |
+| PDF parsing (structured) | Academic heuristic detection: title, authors, abstract, sections, references |
+| Document classification | Scores documents for academic structure to auto-select parse strategy |
+| Section-aware chunking | Configurable max tokens, sentence overlap, section boundary respect |
+| arXiv search | XML API, no key required, category filtering, PDF download |
+| Semantic Scholar search | Paper search, citation graph, DOI resolution |
+| PubMed search | E-utilities API, optional NCBI_API_KEY for higher rate limits |
+| Unified aggregator | Cross-source deduplication via DOI match + Jaccard title similarity |
+| RAG context builder | Token-budget-aware chunk selection with source citations |
+| Conversation history | Persistent sessions with user/assistant message tracking |
 
 ### Reasoning and Knowledge
 
 | Feature | Details |
 |---------|---------|
-| Entity extraction (LLM) | Structured JSON output via OpenAI / Anthropic / Gemini / Ollama |
+| Entity extraction (LLM) | Structured JSON output via OpenAI (`OPENAI_API_KEY` required) |
 | Entity extraction (offline) | Regex-based NER fallback — works without any API key |
 | Relationship extraction | Automatic from text + manual from structured JSON |
-| Multi-hop reasoning | Graph walk + LLM reasoning across connected entities |
 | Community detection (Louvain) | Native Rust implementation on petgraph |
-| Community detection (Leiden) | Hierarchical with resolution parameter |
 | Incremental community updates | k-hop delta recomputation |
-| Community summarization | LLM map-reduce with hierarchical rollup |
-| Diff-based re-summarization | Update summaries incrementally (~30% token cost vs full regen) |
-| Cost-aware query routing | Classifies query, estimates cost per strategy, selects optimal |
+| Community summarization | LLM map-reduce (requires API key) |
+| Cost-aware query routing | Classifies query, tracks cost per operation |
 
 ### Retrieval and Search
 
 | Feature | Details |
 |---------|---------|
-| Semantic vector search | Cosine similarity on embeddings (OpenAI / FastEmbed / any provider) |
-| BM25 keyword search | Full-text search via tantivy |
-| Graph traversal search | Scored BFS/DFS from seed entities |
+| Semantic vector search | Cosine similarity on embeddings (hash-based default, OpenAI/Ollama optional) |
+| BM25 keyword search | Full BM25 scoring with stopword filtering and tokenization |
+| Graph traversal search | Scored BFS from seed entities |
 | Hybrid retrieval | Reciprocal Rank Fusion (RRF) combining all three methods |
-| Context assembly | Token-budget-aware prompt building with citations |
+| Personalized PageRank | PPR-based entity scoring in retrieval pipeline |
+| Cross-encoder reranking | Rule-based reranker with exact phrase boosting |
+| DRIFT retrieval | Dynamic breadth/depth selection based on query specificity |
 
 ### Temporal and Data Management
 
@@ -341,47 +344,33 @@ cd dashboard && npm install && npm run dev
 | Point-in-time queries | `ng.at("2026-03-15")` returns graph state at that moment |
 | Entity history | Full chronological fact chain per entity |
 | Temporal diff | `ng.what_changed("2026-01", "2026-06")` |
-| Graph branching | Copy-on-write branches for hypothetical scenarios |
-| Graph merge | 4 strategies: SourceWins, TargetWins, VerifiedOnly, TemporalMerge |
+| Timeline generation | Temporal events for visualization |
+| Git-like branching | Create, diff, merge, and abandon knowledge graph branches |
 | 2-phase deduplication | Phase 1: embedding similarity + hash. Phase 2: LLM fallback |
 
-### Intent Router & Memory (Beta)
+### Memory Subsystems
 
 | Feature | Details |
-|---------|--------|
-| Intent classification | Classifies queries as semantic, temporal, causal, or entity-scoped |
-| Multi-hop planner | `plan()` decomposes complex queries into sub-steps with confidence scores |
-| Tiered memory (4 layers) | Working → Episodic → Semantic → Procedural with automatic promotion |
-| Episode grouping | Groups related facts into coherent episodes with temporal bounds |
-| Learned rules (procedural) | Stores and retrieves reusable patterns and rules from past interactions |
-| Context assembly | `get_context_for_query()` assembles relevant context across all memory tiers |
-
-### Visualization (Beta)
-
-| Feature | Details |
-|---------|--------|
-| Interactive dashboard | React 19 + Zustand + AntV G6 3-column layout |
-| Query panel | Natural-language queries with reasoning path visualization |
-| Branch diff viewer | Side-by-side branch comparison with added/removed/modified nodes |
-| Node detail panel | Inspector panel with metadata, connections, importance, and tier info |
-| Temporal playback | Timeline slider with density heatmap and playback controls |
-| Graph view switcher | Filter by edge type: All / Semantic / Temporal / Causal / Entity |
-| Dark/Light mode | Animated sun/moon toggle with localStorage persistence |
+|---------|---------|
+| Multi-graph memory | Semantic, temporal, causal, entity, and episodic graph views |
+| Intent-aware routing | classifies queries → selects optimal graph views |
+| Tiered memory (L1–L4) | Working → Episodic → Semantic → Procedural with promotion/demotion |
+| Zettelkasten memory | Self-organizing notes with auto-linking and keyword evolution |
+| Ebbinghaus forgetting | Spaced-repetition-inspired memory strength decay |
+| RL-guided retention | Q-table reinforcement learning for forget/retain decisions |
+| Memory evolution | Consolidation, overflow eviction, importance scoring |
 
 ### Infrastructure
 
 | Feature | Details |
 |---------|---------|
 | Embedded database (sled) | Default, zero-config persistent storage |
-| In-memory mode | petgraph backend for testing |
-| Neo4j driver | Connect to existing instances |
-| FalkorDB driver | Redis-speed graph queries |
-| Kuzu driver | Embedded analytical graph database |
-| REST API | Axum-based, async |
-| WebSocket | Real-time graph updates |
-| Docker | Multi-stage build, non-root, slim image |
-| OpenTelemetry | Distributed tracing + metrics |
-| Per-operation cost tracking | Model, tokens, cost USD, latency per call |
+| In-memory mode | petgraph + DashMap backend for testing |
+| REST API (Axum) | Health, ingestion, search, query, chat, graph traversal endpoints |
+| Embedded dashboard | React SPA served from binary via `rust-embed` |
+| MCP server | stdio transport for Claude Desktop and Cursor |
+| Docker | Multi-stage build for dashboard |
+| Per-operation cost tracking | Model, tokens, cost USD per call |
 
 </details>
 
@@ -391,68 +380,116 @@ cd dashboard && npm install && npm run dev
 
 | Concept | What It Does | Why It Matters |
 |---------|-------------|----------------|
+| **PDF Intelligence** | Parses PDFs with academic structure detection (title, abstract, sections, refs) | Turns papers into structured knowledge automatically |
+| **Multi-Source Search** | Searches arXiv, Semantic Scholar, PubMed in parallel with dedup | One query, all major academic databases |
 | **Bi-Temporal Facts** | Every fact has a validity window (`valid_from`, `valid_until`) | Query what was true at any point in time |
-| **Graph Branching** | `ng.branch("hypothesis")` creates a copy-on-write branch | Explore what-if scenarios without corrupting real data |
 | **Hybrid Retrieval** | Semantic + BM25 + graph traversal, fused with RRF | Better recall than any single search method |
-| **Cost-Aware Routing** | Classifies your query and picks the cheapest strategy that meets quality | Predictable LLM spend |
-| **Intelligent Forgetting** | Importance = PageRank + access frequency + recency. Low-importance facts decay. | Graph doesn't grow unbounded |
-| **Zero API Key Mode** | Regex NER + local FastEmbed + embedded sled | Fully offline, air-gapped, $0 |
+| **RAG Chat** | Retrieval-augmented generation with source citations | Ask questions, get answers with provenance |
+| **Cost-Aware Tracking** | Every LLM call tracked with model, tokens, and USD cost | Predictable LLM spend |
+| **Intelligent Forgetting** | Importance = PageRank + access frequency + recency | Graph doesn't grow unbounded |
+| **Zero API Key Mode** | Regex NER + hash embeddings + embedded sled | Fully offline, air-gapped, $0 |
+
+---
+
+## Workspace Structure
+
+```
+neurograph/
+├── crates/
+│   ├── neurograph-core/     # Core library — knowledge graph, PDF, search, chat, server
+│   ├── neurograph-cli/      # CLI binary — ingest, query, search, chat, dashboard
+│   ├── neurograph-mcp/      # Model Context Protocol server for AI assistants
+│   └── neurograph-eval/     # Benchmarks and evaluation harness
+├── dashboard/               # React 19 + TypeScript SPA (embedded in binary)
+├── benchmarks/              # Criterion micro-benchmarks
+└── docs/                    # Architecture and design documentation
+```
+
+### Feature Flags (neurograph-core)
+
+| Flag | What It Enables |
+|------|-----------------|
+| `pdf` | PDF parsing via `pdf-extract` + `lopdf` (default) |
+| `paper-search` | arXiv, Semantic Scholar, PubMed search clients |
+| `chat` | RAG chat engine with conversation history |
+| `server` | Axum REST API + embedded dashboard |
+| `multigraph` | Multi-graph memory with intent-aware routing |
+| `tiered-memory` | L1–L4 tiered memory with promotion/demotion |
+| `rl-forgetting` | RL-guided memory evolution and decay |
+| `full` | All features enabled |
 
 ---
 
 ## Comparison
 
 > Trade-offs are real. This table is our honest assessment.
-> NeuroGraph has not yet been evaluated on standard benchmarks — contributions welcome.
+> NeuroGraph has **not yet been evaluated on standard benchmarks** — we're working on LongMemEval integration.
 
 | | NeuroGraph | Graphiti / Zep | GraphRAG (Microsoft) | Mem0 |
 |---|---|---|---|---|
-| **Best for** | Embedded temporal reasoning, offline-first | Production agent memory (SaaS) | Global document analysis at scale | Simple key-value memory |
-| **Language** | Rust core, Py/TS wrappers | Python + Neo4j | Python (v3, uv-managed) | Python |
-| **Stars / Maturity** | Pre-release (v0.1) | Production | 31.9k stars, v3.0.8 | Production |
+| **Best for** | Research paper intelligence + temporal reasoning | Production agent memory (SaaS) | Global document analysis at scale | Simple key-value memory |
+| **Language** | Rust | Python + Neo4j | Python | Python |
+| **Maturity** | **Pre-release (v0.1-alpha)** | Production | 31.9k stars, v3 | Production |
+| **PDF Ingestion** | ✅ Two-tier (fast + structured) | ❌ | ❌ | ❌ |
+| **Academic Search** | ✅ arXiv + S2 + PubMed aggregator | ❌ | ❌ | ❌ |
+| **RAG Chat** | ✅ Multi-provider (Ollama, OpenAI) | ✅ | ✅ | Basic |
 | **Temporal model** | Bi-temporal (`valid_from`/`valid_until`) | Bi-temporal (4 timestamps per edge) | Static | Recency only |
-| **Architecture** | Episode / Entity / Community tiers | Episode / Entity / Community tiers | Entity / Community (hierarchical) | Flat memory |
-| **Community detection** | Louvain / Leiden (Rust native) | Label propagation | Leiden (native, removed NetworkX) | None |
-| **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce, DRIFT, LazyGraphRAG | Vector similarity |
-| **Graph backend** | Embedded (sled, default) or Neo4j | Neo4j (required) | In-memory / any LLM-extracted | N/A |
-| **Offline mode** | Yes (regex NER + local embed) | No (requires LLM + Neo4j) | No (requires LLM for indexing) | No |
-| **Benchmarks** | Not yet evaluated | DMR 94.8%, LongMemEval 71.2% | BenchmarkQED (own framework) | N/A |
-| **Visualization** | Built-in dashboard (Beta) | None | External | Standard UI |
+| **Community detection** | Louvain (Rust native) | Label propagation | Leiden (native) | None |
+| **Search** | Semantic + BM25 + graph walk + RRF | Semantic + BM25 + BFS + rerankers | Map-reduce, DRIFT | Vector similarity |
+| **Graph backend** | Embedded (sled) or in-memory | Neo4j (required) | In-memory / LLM-extracted | N/A |
+| **Offline mode** | ✅ Yes (regex NER + hash embed) | ❌ Requires LLM + Neo4j | ❌ Requires LLM | ❌ |
+| **REST API** | ✅ Axum + embedded dashboard | ❌ | ❌ | Standard UI |
 | **License** | Apache-2.0 | MIT | MIT | Proprietary |
 
 ---
 
 ## Benchmarks
 
-> All numbers from `cargo bench` on an M2 MacBook Pro (16GB) with default embedded config.
-> Reproduce locally: `cd benchmarks && cargo bench`. See [`benchmarks/README.md`](./benchmarks/README.md) for methodology.
+> All numbers from `cargo bench` on an M2 MacBook Pro (16GB) with default in-memory config.
+> These are **development numbers** and will change. Reproduce locally: `cd benchmarks && cargo bench`.
+> See [`benchmarks/README.md`](./benchmarks/README.md) for methodology.
 
 | Metric | Result | Notes |
 |--------|--------|-------|
-| **Query latency (P50)** | ~150ms | Hybrid retrieval, embedded sled |
-| **Query latency (P99)** | ~500ms | Includes LLM round-trip for answer generation |
+| **Query latency (P50)** | ~150ms | Hybrid retrieval, in-memory driver |
 | **Community detection (1k nodes)** | <100ms | Native Rust Louvain |
-| **Graph layout (10k nodes)** | <200ms | Rust WASM force-directed |
-| **Memory baseline** | ~50MB | Empty graph with sled |
-| **Cold start** | <2s | Server ready to accept queries |
+| **Memory baseline** | ~10MB | Empty graph, in-memory driver |
+| **Cold start** | <500ms | Builder + driver initialization |
 
-These numbers reflect current development builds and will change. We plan to add CI-tracked benchmarks via [Bencher](https://bencher.dev) or [GitHub Actions benchmark tracking](https://github.com/benchmark-action/github-action-benchmark).
+> We plan to add CI-tracked benchmarks and publish LongMemEval results before v0.1.0 stable.
 
 ---
 
 ## API at a Glance
 
-| Operation | Python | Rust |
-|-----------|--------|------|
-| **Create** | `ng = NeuroGraph()` | `let ng = NeuroGraph::builder().build().await?;` |
-| **Ingest** | `await ng.add("Alice joined Anthropic")` | `ng.add_text("Alice joined Anthropic").await?;` |
-| **Query** | `await ng.query("Where does Alice work?")` | `ng.query("Where does Alice work?").await?;` |
-| **Time travel** | `await ng.at("2025-01-01")` | `ng.at("2025-01-01").await?;` |
-| **History** | `await ng.history("alice")` | `ng.history("alice").await?;` |
-| **Branch** | `await ng.branch("hypothesis")` | `ng.branch("hypothesis").await?;` |
-| **Diff** | `ng.diff_branches("main", "hypothesis")` | `ng.diff_branches("main", "hypothesis")?;` |
-| **Search** | `await ng.search("Alice")` | `ng.search("Alice").await?;` |
-| **Dashboard** | `await ng.dashboard()` | `ng.serve(7777).await?;` |
+| Operation | Rust API |
+|-----------|----------|
+| **Create** | `let ng = NeuroGraph::builder().build().await?;` |
+| **Ingest text** | `ng.add_text("Alice joined Anthropic").await?;` |
+| **Ingest PDF** | `PdfParser::new(ParseStrategy::Auto).parse_paper(&path)?` |
+| **Query** | `ng.query("Where does Alice work?").await?;` |
+| **Time travel** | `let view = ng.at("2025-01-01").await?;` |
+| **History** | `ng.entity_history("Alice").await?;` |
+| **What changed** | `ng.what_changed("2025-01", "2026-01").await?;` |
+| **Search entities** | `ng.search_entities("Alice", 10).await?;` |
+| **Search papers** | `UnifiedPaperSearch::new().search(query, &config).await?` |
+| **Communities** | `ng.detect_communities().await?;` |
+| **Remember** | `ng.remember("important fact");` |
+| **Recall** | `ng.recall("query", 10);` |
+| **Stats** | `ng.stats().await?;` |
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | No | Enables OpenAI embeddings + LLM extraction |
+| `OLLAMA_HOST` | No | Ollama server URL (default: `http://localhost:11434`) |
+| `S2_API_KEY` | No | Semantic Scholar API key for higher rate limits |
+| `NCBI_API_KEY` | No | PubMed/NCBI API key for higher rate limits |
+
+> **Zero API key mode** is the default — NeuroGraph works fully offline using regex NER + hash embeddings.
 
 ---
 
@@ -461,51 +498,95 @@ These numbers reflect current development builds and will change. We plan to add
 <details>
 <summary><b>LLM Providers</b></summary>
 
-| Provider | Models | Local/Cloud |
-|----------|--------|-------------|
-| OpenAI | GPT-4o, GPT-4o-mini | Cloud |
-| Anthropic | Claude 4, Claude 3.5 Sonnet | Cloud |
-| Google Gemini | Gemini 2.0 Flash, Gemini Pro | Cloud |
-| Ollama | Llama 3, DeepSeek, Mistral, Phi | Local |
-| Any OpenAI-compatible | LM Studio, vLLM, Together AI | Local/Cloud |
-| **None (offline)** | **Regex NER + rule-based** | **Local** |
+| Provider | Models | Local/Cloud | Status |
+|----------|--------|-------------|--------|
+| OpenAI | GPT-4o, GPT-4o-mini | Cloud | **Working** |
+| Ollama | Any model via OpenAI-compatible API | Local | **Working** |
+| **None (offline)** | **Regex NER + rule-based** | **Local** | **Default** |
+
+> Anthropic, Gemini, and other providers are planned but not yet integrated.
 
 </details>
 
 <details>
 <summary><b>Storage Backends</b></summary>
 
-| Backend | Type | Setup |
-|---------|------|-------|
-| **Sled (default)** | **Embedded** | **None** |
-| In-Memory (petgraph) | In-process | None |
-| Kuzu | Embedded | None |
-| Neo4j | Client-server | Docker |
-| FalkorDB | Client-server | Docker |
+| Backend | Type | Setup | Status |
+|---------|------|-------|--------|
+| **In-Memory (petgraph)** | **In-process** | **None** | **Stable** |
+| **Sled** | **Embedded** | **None** | **Stable** |
+
+> Neo4j and FalkorDB drivers are on the roadmap but not yet implemented.
 
 </details>
 
 <details>
 <summary><b>Embedding Providers</b></summary>
 
-| Provider | Models | Local/Cloud |
+| Provider | Model | Local/Cloud | Status |
+|----------|-------|-------------|--------|
+| **Hash-based (default)** | **Deterministic hashing** | **Local** | **Stable** |
+| Ollama | nomic-embed-text, mxbai-embed-large, etc. | Local | **Working** |
+| OpenAI | text-embedding-3-small/large | Cloud | **Working** |
+
+> Embedding provider is selected via `"provider:model"` spec (e.g., `"ollama:nomic-embed-text"`).
+
+</details>
+
+---
+
+## MCP Integration (Claude Desktop / Cursor)
+
+```jsonc
+// Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "neurograph": {
+      "command": "neurograph-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+```jsonc
+// Cursor: .cursor/mcp.json
+{
+  "mcpServers": {
+    "neurograph": {
+      "command": "neurograph-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+The MCP server exposes: `add`, `query`, `search`, `at`, `history`, `stats`, and `communities` as tools.
+
+---
+
+## REST API
+
+Start the server:
+
+```bash
+neurograph dashboard --port 8000 --open
+# or API-only:
+neurograph serve --port 8000
+```
+
+| Endpoint | Method | Description |
 |----------|--------|-------------|
-| **FastEmbed (default)** | **bge-small-en-v1.5** | **Local** |
-| OpenAI | text-embedding-3-small/large | Cloud |
-| Sentence Transformers | Any HuggingFace model | Local |
-
-</details>
-
-<details>
-<summary><b>Observability</b></summary>
-
-| Tool | What's Tracked |
-|------|---------------|
-| OpenTelemetry | Distributed traces per operation |
-| Prometheus | Latency, throughput, cache hit metrics |
-| Built-in Cost Tracker | Per-query: model, tokens, USD cost, latency |
-
-</details>
+| `/api/v1/health` | GET | Health check |
+| `/api/v1/ingest` | POST | Ingest text/JSON into knowledge graph |
+| `/api/v1/ingest/pdf` | POST | Upload and parse PDF |
+| `/api/v1/query` | POST | Natural language query |
+| `/api/v1/search` | POST | Search research papers |
+| `/api/v1/chat` | POST | RAG chat with conversation context |
+| `/api/v1/entities` | GET | List/search entities |
+| `/api/v1/graph` | GET | Get graph data for visualization |
+| `/api/v1/stats` | GET | Graph statistics |
+| `/*` | GET | Dashboard SPA (when using `neurograph dashboard`) |
 
 ---
 
@@ -514,7 +595,6 @@ These numbers reflect current development builds and will change. We plan to add
 - [Architecture](docs/architecture.md)
 - [Temporal Engine](docs/temporal.md)
 - [Community Detection](docs/community.md)
-- [Intent Router & Memory](docs/intent-memory.md)
 - [Developer Guide](DEVELOPING.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
@@ -522,23 +602,43 @@ These numbers reflect current development builds and will change. We plan to add
 
 ## Roadmap
 
-See the [issue tracker](https://github.com/neurographai/neurograph/issues) for the full roadmap. High-priority items:
+> See the [issue tracker](https://github.com/neurographai/neurograph/issues) for the full roadmap.
 
-- Native Python SDK (PyO3 bindings)
-- TypeScript SDK (WASM-powered)
-- MCP server stabilization
-- CI-tracked performance benchmarks
-- Helm chart for Kubernetes
-- Distributed graph sharding
+**v0.1.0 (current)**
+- [x] Temporal knowledge graph with bi-temporal facts
+- [x] Hybrid retrieval (semantic + BM25 + graph walk + RRF)
+- [x] PDF ingestion with academic structure detection
+- [x] Multi-source paper search (arXiv, S2, PubMed)
+- [x] RAG chat engine with conversation history
+- [x] REST API server with embedded dashboard
+- [x] Embedding router (Ollama, OpenAI, hash) with LRU cache
+- [x] CLI crate with full command suite
+- [x] MCP server for Claude/Cursor
+- [x] All 213 unit tests passing, zero warnings
+- [ ] Publish to crates.io
+- [ ] FastEmbed integration (`--features local-embed`)
+- [ ] LongMemEval benchmark baseline
+
+**v0.2.0**
+- [ ] Python SDK (HTTP client)
+- [ ] TypeScript SDK (HTTP client)
+- [ ] Neo4j driver
+- [ ] CI-tracked performance benchmarks
+- [ ] OCR support for scanned PDFs
+
+**v0.3.0**
+- [ ] Multi-agent branch/merge protocol
+- [ ] WASM build for browser
+- [ ] Distributed sharding
 
 ## Contributing
 
-We welcome contributions, especially in areas marked **Experimental** or **Planned** above. See [CONTRIBUTING.md](CONTRIBUTING.md).
+We welcome contributions, especially in areas marked **Alpha** or **Planned** above. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
 git clone https://github.com/neurographai/neurograph.git
 cd neurograph
-cargo test --workspace
+cargo test -p neurograph-core --lib --features full  # 213 tests, all passing
 ```
 
 ## License

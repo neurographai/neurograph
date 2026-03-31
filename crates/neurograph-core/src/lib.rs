@@ -64,6 +64,15 @@ pub mod retrieval;
 pub mod temporal;
 pub mod utils;
 
+// Research Paper Intelligence modules
+#[cfg(feature = "pdf")]
+pub mod pdf;
+pub mod embeddings;
+pub mod papers;
+pub mod chat;
+#[cfg(feature = "server")]
+pub mod server;
+
 // Re-export key types at crate root
 pub use community::{
     CommunityDetectionResult, LeidenConfig, LeidenDetector, LouvainConfig, LouvainDetector,
@@ -477,11 +486,11 @@ impl NeuroGraph {
     ///
     /// ```rust,no_run
     /// # use neurograph_core::NeuroGraph;
-    /// # async fn example() -> anyhow::Result<()> {
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let ng = NeuroGraph::builder().build().await?;
     /// let history = ng.entity_history("Alice").await?;
     /// for rel in &history {
-    ///     println!("{} (valid: {} → {:?})", rel.fact, rel.valid_from, rel.valid_until);
+    ///     println!("{} (valid: {:?} -> {:?})", rel.fact, rel.valid_from, rel.valid_until);
     /// }
     /// # Ok(())
     /// # }

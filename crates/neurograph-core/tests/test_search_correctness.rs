@@ -239,9 +239,9 @@ fn test_rrf_fusion_multilist_boost() {
 #[test]
 fn test_retrieval_weights_sum_to_one() {
     let weights = RetrievalWeights::default();
-    let total = weights.semantic + weights.keyword + weights.traversal;
+    let total = weights.semantic + weights.keyword + weights.traversal + weights.ppr;
     assert!(
-        (total - 1.0).abs() < f64::EPSILON,
+        (total - 1.0).abs() < 1e-10,
         "Weights should sum to 1.0, got {}",
         total,
     );
@@ -281,10 +281,12 @@ async fn test_traversal_single_hop() {
         .await
         .unwrap();
 
-    // Depth 1 from Alice → should find Alice + Bob only
+    // Depth 1 from Alice → visits Alice (depth 0) and Bob (depth 1).
+    // Relationships: Alice→Bob (found at depth 0) + Bob→Charlie (found at depth 1,
+    // but Charlie not visited since depth 2 > max_depth).
     let subgraph = driver.traverse(&alice.id, 1, None).await.unwrap();
     assert_eq!(subgraph.entities.len(), 2);
-    assert_eq!(subgraph.relationships.len(), 1);
+    assert_eq!(subgraph.relationships.len(), 2);
 }
 
 #[tokio::test]

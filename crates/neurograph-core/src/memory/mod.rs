@@ -1,13 +1,17 @@
 // Copyright 2026 NeuroGraph Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-//! Tiered memory system: L1–L4 hierarchy with automatic promotion/demotion.
+//! Memory systems: tiered hierarchy, self-evolution, and self-organizing Zettelkasten.
 
 pub mod evolution;
 pub mod tiered;
+pub mod zettelkasten;
 
 pub use evolution::{DecayPolicy, EvolutionResult, MemoryEvolution, RetentionPolicy};
 pub use tiered::{
     ConsolidationConfig, Episode, LearnedRule, PromotionPolicy, QueryContext, TieredMemory,
     TieredStats,
+};
+pub use zettelkasten::{
+    AddNoteResult, ForgetResult, MemoryNote, ZettelkastenConfig, ZettelkastenMemory,
 };

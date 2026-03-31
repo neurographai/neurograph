@@ -3,9 +3,12 @@ resolver = "2"
 members = [
     "crates/neurograph-core",
     "crates/neurograph-mcp",
+    "crates/neurograph-eval",
+    "crates/neurograph-cli",
+    # "crates/neurograph-agents",  # Phase 3
+    # "crates/neurograph-ffi",     # Phase 5
     # "crates/neurograph-wasm",    # Sprint 4
     # "crates/neurograph-python",  # Sprint 4
-    # "crates/neurograph-cli",     # Sprint 4
 ]
 
 [workspace.package]
@@ -15,7 +18,7 @@ rust-version = "1.82"
 authors = ["Ashutosh Kumar Singh <ashutosh@neurograph.dev>"]
 license = "Apache-2.0"
 repository = "https://github.com/neurographai/neurograph"
-homepage = "https://neurograph.dev"
+homepage = "https://github.com/neurographai/neurograph"
 description = "The Operating System for AI Knowledge — ingest anything, remember everything, forget intelligently, reason visually."
 readme = "README.md"
 keywords = ["knowledge-graph", "rag", "temporal", "ai", "graph"]
@@ -49,11 +52,10 @@ petgraph = "0.6"
 # HTTP client
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
-# Web server (Sprint 4)
-# axum = "0.7"
-# tower = "0.4"
-# tower-http = { version = "0.5", features = ["cors", "trace"] }
-# tokio-tungstenite = "0.23"
+# Web server
+axum = { version = "0.8", features = ["multipart"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
 
 # Embedded storage
 sled = "0.34"
@@ -71,3 +73,36 @@ parking_lot = "0.12"
 dashmap = "6"
 rand = "0.8"
 regex = "1"
+
+# PDF parsing
+pdf-extract = "0.8"
+lopdf = "0.34"
+
+# Embedding cache
+seahash = "4"
+lru = "0.12"
+
+# URL encoding
+urlencoding = "2"
+
+# XML parsing (arXiv API)
+quick-xml = { version = "0.36", features = ["serialize"] }
+
+# Temp files
+tempfile = "3"
+
+# CLI enhancements
+dialoguer = "0.11"
+indicatif = "0.17"
+crossterm = "0.28"
+colored = "2"
+
+# Static file embedding
+rust-embed = "8"
+mime_guess = "2"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Open browser
+open = "5"

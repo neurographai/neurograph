@@ -325,6 +325,14 @@ impl IngestionPipeline {
                             .map_err(|e| PipelineError::Storage(e.to_string()))?;
                         result.conflicts_resolved += 1;
                     }
+                    ConflictType::SoftConflict => {
+                        // Non-exclusive relation with semantic overlap — coexist but log
+                        tracing::warn!(
+                            fact = %extracted_rel.fact,
+                            similarity = conflict.similarity,
+                            "Soft conflict detected on non-exclusive relation, coexisting"
+                        );
+                    }
                 }
             }
 

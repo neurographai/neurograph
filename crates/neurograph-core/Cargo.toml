@@ -55,26 +55,46 @@ ordered-float = { workspace = true }
 parking_lot = { workspace = true }
 dashmap = { workspace = true }
 rand = { workspace = true }
+
+# Embedding cache (always available)
+seahash = { workspace = true }
+lru = { workspace = true }
+tempfile = { workspace = true }
 regex = { workspace = true }
 
-# Web server (behind feature flag for Sprint 4)
-# axum = { workspace = true, optional = true }
-# tower = { workspace = true, optional = true }
-# tower-http = { workspace = true, optional = true }
-# tokio-tungstenite = { workspace = true, optional = true }
+# Optional — PDF
+pdf-extract = { workspace = true, optional = true }
+lopdf = { workspace = true, optional = true }
+
+# Optional — Paper search
+quick-xml = { workspace = true, optional = true }
+urlencoding = { workspace = true, optional = true }
+
+# Optional — Chat REPL
+crossterm = { workspace = true, optional = true }
+colored = { workspace = true, optional = true }
+
+# Optional — REST server
+axum = { workspace = true, optional = true }
+tower = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+rust-embed = { workspace = true, optional = true }
+mime_guess = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4"
-tempfile = "3"
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 
 [features]
-default = ["multigraph", "tiered-memory", "rl-forgetting"]
+default = ["multigraph", "tiered-memory", "rl-forgetting", "pdf"]
 multigraph = []
 tiered-memory = []
 rl-forgetting = []
-full = ["multigraph", "tiered-memory", "rl-forgetting"]
-# server = ["axum", "tower", "tower-http", "tokio-tungstenite"]
+pdf = ["dep:pdf-extract", "dep:lopdf"]
+paper-search = ["dep:quick-xml", "dep:urlencoding"]
+chat = ["dep:crossterm", "dep:colored"]
+server = ["dep:axum", "dep:tower", "dep:tower-http", "dep:rust-embed", "dep:mime_guess"]
+full = ["multigraph", "tiered-memory", "rl-forgetting", "pdf", "paper-search", "chat", "server"]
 # neo4j = []
 # falkordb = []
 # multimodal = []
