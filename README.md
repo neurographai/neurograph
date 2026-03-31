@@ -26,7 +26,11 @@
 
 NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Feed it research papers, and it extracts entities, builds a knowledge graph, and lets you query it with natural language. Every fact has a validity window, every query can time-travel, and the graph can branch like Git.
 
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/ded5bb1c-0e6a-4a56-82e5-586102aac480" />
+
+https://github.com/user-attachments/assets/c695117a-ebac-494e-9c13-9e86dbad47df
+
+
+
 
 <br/>
 
