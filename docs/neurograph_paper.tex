@@ -1,0 +1,1539 @@
+% ============================================================================
+% NeuroGraph: A Temporal Knowledge Graph Operating System for AI Memory
+% Comprehensive Research Paper
+% ============================================================================
+\documentclass[11pt,a4paper,twocolumn]{article}
+
+% ─── Packages ───────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{float}
+\usepackage{tabularx}
+
+\usetikzlibrary{shapes,arrows,positioning,fit,backgrounds}
+
+% ─── Code listing style ────────────────────────────────────────────────────
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codegreen}{HTML}{2E7D32}
+\definecolor{codepurple}{HTML}{7B1FA2}
+\definecolor{codeorange}{HTML}{E65100}
+\definecolor{codegray}{HTML}{757575}
+
+\lstdefinestyle{rustcode}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  captionpos=b,
+  commentstyle=\color{codegray}\itshape,
+  keywordstyle=\color{codepurple}\bfseries,
+  stringstyle=\color{codegreen},
+  numberstyle=\tiny\color{codegray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codegray!30},
+  language=C, % closest built-in to Rust
+  morekeywords={fn,let,mut,pub,struct,impl,async,await,self,use,mod,
+    trait,enum,match,if,else,for,in,return,Ok,Err,Some,None,
+    String,Vec,Arc,HashMap,Result,Option},
+  emph={NeuroGraph,IngestionPipeline,HybridRetriever,DriftSearch,
+    TieredMemory,MultiGraphMemory,BranchManager,ZettelkastenMemory,
+    MemoryEvolution,IntentRouter,FusionEngine,PdfParser},
+  emphstyle=\color{codeorange}\bfseries,
+  tabsize=4,
+  showstringspaces=false,
+}
+
+\lstset{style=rustcode}
+
+% ─── Metadata ──────────────────────────────────────────────────────────────
+\title{%
+  \textbf{NeuroGraph: A Temporal Knowledge Graph Operating System\\
+  for AI Memory with Self-Evolving Retrieval}\\[6pt]
+  \large Ingest Anything, Remember Everything, Forget Intelligently, Reason Visually
+}
+\author{
+  Ashutosh Kumar Singh\\
+  \texttt{ashutosh@neurograph.dev}\\
+  NeuroGraph AI\\
+  \url{https://github.com/neurographai/neurograph}
+}
+\date{March 2026}
+
+% ─── Headers ───────────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small NeuroGraph Research Paper}
+\fancyhead[R]{\small March 2026}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+\maketitle
+
+% ════════════════════════════════════════════════════════════════════════════
+\begin{abstract}
+We present \textbf{NeuroGraph}, a production-grade knowledge graph operating
+system implemented in Rust that unifies temporal knowledge management,
+multi-strategy hybrid retrieval, and biologically-inspired memory evolution
+within a single, ergonomic framework. NeuroGraph introduces several novel
+contributions: (1)~a \emph{richly-typed graph data model} with 16-field
+entities, bi-temporal relationships, episodic provenance, saga-based
+conversation threading, and a dual-mode ontology system (prescribed
+vs.~learned types); (2)~a \emph{seven-strategy hybrid retrieval engine}
+combining semantic vector search, BM25 keyword indexing, Personalized
+PageRank, graph traversal, cross-encoder reranking, Maximal Marginal
+Relevance (MMR) for diversity, and node-distance graph-proximity
+reranking, all fused via Reciprocal Rank Fusion (RRF); (3)~a
+\emph{composable search configuration system} with per-channel
+(entity/relationship/episode/community) independent method and reranker
+selection, multi-channel typed results with provenance scoring, and
+15+ pre-built search recipes; (4)~a \emph{two-level query engine} with
+a strategy-dispatch router (Local/Global/Temporal/MultiHop) and a
+MAGMA-style intent router classifying eight distinct query intents
+across four orthogonal graph views (semantic, temporal, causal, entity);
+(5)~a \emph{tiered memory hierarchy} (L1--L4: Working, Episodic,
+Semantic, Procedural) with automatic promotion, demotion, and
+Ebbinghaus-curve forgetting; (6)~an \emph{RL-guided memory evolution
+engine} using Q-table reinforcement learning for keep/forget decisions;
+(7)~a \emph{graph-level forgetting engine} with exponential importance
+decay, access-frequency boosting, and TTL-based expiration; (8)~a
+\emph{Git-like branch isolation protocol} with copy-on-write deltas,
+diffing, and merging; (9)~a \emph{provider-agnostic LLM abstraction}
+with a dyn-compatible trait, OpenAI-format universal client, SHA-256
+keyed response caching with LRU eviction, and per-prompt-type token
+usage tracking; and (10)~a \emph{research paper intelligence platform}
+with PDF ingestion, multi-source academic search, RAG chat, and Model
+Context Protocol (MCP) integration for Claude, Cursor, and VS~Code
+Copilot. The system is architected as a Rust workspace of four crates
+totaling over 35,000 lines of code, with zero-configuration defaults,
+pluggable storage backends (in-memory DashMap, embedded Sled, planned
+Neo4j), and a REST API with an embedded visualization dashboard. We
+describe the architecture, algorithms, and implementation in detail.
+\end{abstract}
+
+\textbf{Keywords:} Knowledge Graph, Temporal Reasoning, Graph RAG,
+Hybrid Retrieval, Memory Architecture, Reinforcement Learning,
+Multi-Agent Systems, Rust
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+
+The proliferation of large language models (LLMs) has exposed a
+fundamental limitation: LLMs lack persistent, structured memory.
+While retrieval-augmented generation (RAG) systems partially address
+this by grounding responses in external documents, they treat knowledge
+as flat text chunks, discarding the relational structure that makes
+knowledge \emph{actionable}.
+
+Knowledge graphs (KGs) offer a solution by representing information as
+typed entities connected by labeled relationships. However, existing KG
+systems suffer from several deficiencies: (1)~they lack temporal
+awareness---facts are treated as eternally valid; (2)~they employ
+single-strategy retrieval that fails on diverse query types;
+(3)~they have no mechanism for intelligent forgetting, leading to
+unbounded memory growth; and (4)~they provide no isolation mechanism
+for concurrent multi-agent access.
+
+NeuroGraph addresses all four deficiencies through an integrated
+operating-system metaphor: knowledge is \emph{ingested} through a
+multi-stage pipeline, \emph{stored} in a temporal graph with
+bi-temporal validity intervals, \emph{retrieved} through a
+five-strategy hybrid engine, \emph{evolved} through RL-guided
+forgetting, and \emph{isolated} through Git-like branching.
+
+\subsection{Design Philosophy}
+
+NeuroGraph follows three core principles:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Zero-Configuration Start}: A single line---
+    \lstinline{NeuroGraph::builder().build().await?}---creates a
+    fully functional instance with in-memory storage, local hash
+    embeddings, and regex-based entity extraction. No API keys,
+    no external services.
+  \item \textbf{Progressive Enhancement}: Each subsystem (LLM
+    extraction, tiered memory, multi-graph memory, evolution) is
+    independently opt-in via the builder pattern.
+  \item \textbf{Rust-Native Performance}: The entire system is
+    implemented in safe Rust with async/await concurrency via
+    Tokio, lock-free data structures (DashMap, parking\_lot),
+    and zero-copy serialization.
+\end{enumerate}
+
+\subsection{Contributions}
+
+This paper makes the following contributions:
+
+\begin{itemize}[leftmargin=*]
+  \item A \textbf{complete system architecture} for a temporal
+    knowledge graph OS with pluggable drivers, embedders, and LLM
+    clients (\S\ref{sec:architecture}).
+  \item A \textbf{richly-typed graph data model} with bi-temporal
+    entities, provenance episodes, dual-mode ontology, and schema
+    registry (\S\ref{sec:datamodel}).
+  \item A \textbf{pluggable driver trait} with 25 async methods and
+    two built-in implementations: lock-free in-memory (DashMap) and
+    embedded persistent (Sled B-tree) (\S\ref{sec:drivers}).
+  \item A \textbf{provider-agnostic LLM abstraction} with object-safe
+    trait, OpenAI-format universal client, and per-call cost tracking
+    (\S\ref{sec:llm}).
+  \item A \textbf{two-level query engine} with strategy dispatch,
+    token-budgeted context assembly, and per-query cost enforcement
+    (\S\ref{sec:engine}).
+  \item A \textbf{multi-stage ingestion pipeline} with extraction,
+    ontology validation, embedding-based deduplication, and temporal
+    conflict resolution (\S\ref{sec:ingestion}).
+  \item A \textbf{seven-strategy hybrid retrieval engine} with RRF fusion,
+    MMR diversity reranking, node-distance graph-proximity reranking,
+    episode-mentions citation reranking, and DRIFT adaptive local/global
+    search (\S\ref{sec:retrieval}).
+  \item A \textbf{composable search configuration system} with per-channel
+    method and reranker selection, multi-channel typed results, and 15+
+    pre-built search recipes (\S\ref{sec:searchconfig}).
+  \item A \textbf{biologically-inspired memory system} combining tiered
+    hierarchy, Zettelkasten self-organization, and RL-guided evolution
+    (\S\ref{sec:memory}).
+  \item A \textbf{multi-graph memory architecture} with intent-aware
+    routing across four orthogonal graph views (\S\ref{sec:multigraph}).
+  \item A \textbf{temporal subsystem} with bi-temporal validity,
+    point-in-time snapshots, Git-like branching, hybrid logical clock,
+    fact version chains, and graph-level forgetting
+    (\S\ref{sec:temporal}).
+  \item A \textbf{research paper intelligence platform} with PDF
+    parsing, multi-source search, RAG chat, and MCP integration
+    (\S\ref{sec:research}, \S\ref{sec:mcp}).
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{Workspace Organization}
+
+NeuroGraph is organized as a Rust Cargo workspace comprising four
+crates:
+
+\begin{table}[H]
+\centering
+\caption{NeuroGraph workspace crate organization.}
+\label{tab:crates}
+\begin{tabularx}{\columnwidth}{lX}
+\toprule
+\textbf{Crate} & \textbf{Responsibility} \\
+\midrule
+\texttt{neurograph-core} & Core library: graph, ingestion, retrieval,
+  memory, temporal, PDF, papers, chat, server, embedders, community \\
+\texttt{neurograph-cli} & Command-line interface with 12 subcommands \\
+\texttt{neurograph-mcp} & Model Context Protocol server (stdio/SSE) \\
+\texttt{neurograph-eval} & Evaluation harness and benchmarks \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The core crate exposes 17 top-level modules, each encapsulating a
+distinct subsystem. The workspace uses Rust 2021 edition with a
+minimum supported Rust version (MSRV) of 1.82.
+
+\subsection{Layered Architecture}
+
+The system follows a strict layered architecture:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Public API Layer} (\texttt{NeuroGraph} struct): Exposes
+    \texttt{add\_text()}, \texttt{add\_json()}, \texttt{query()},
+    \texttt{at()}, \texttt{entity\_history()}, \texttt{what\_changed()},
+    \texttt{remember()}, \texttt{recall()}, \texttt{detect\_communities()},
+    and builder methods.
+  \item \textbf{Engine Layer}: Query routing
+    (\texttt{QueryRouter}), ingestion pipeline
+    (\texttt{IngestionPipeline}), community detection.
+  \item \textbf{Service Layer}: LLM clients (OpenAI, Ollama),
+    embedding providers (OpenAI, Ollama, FastEmbed/Hash, cached),
+    paper search APIs.
+  \item \textbf{Driver Layer}: Pluggable storage backends via the
+    \texttt{GraphDriver} trait---\texttt{MemoryDriver} (in-memory
+    with \texttt{DashMap}), \texttt{EmbeddedDriver} (Sled persistent
+    B-tree), and planned Neo4j driver.
+\end{enumerate}
+
+\subsection{Builder Pattern and Configuration}
+
+The \texttt{NeuroGraphBuilder} provides a fluent API for progressive
+configuration:
+
+\begin{lstlisting}
+let ng = NeuroGraph::builder()
+    .name("research-kg")
+    .embedded("./data")
+    .budget(5.0)            // USD limit
+    .multigraph()           // Enable MAGMA
+    .tiered_memory()        // Enable L1-L4
+    .evolution()            // Enable RL forgetting
+    .build().await?;
+\end{lstlisting}
+
+The \texttt{.full()} shorthand enables all v0.2 subsystems
+simultaneously. When no configuration is provided,
+\texttt{NeuroGraphConfig::zero\_config()} creates sensible defaults:
+in-memory storage, local hash embeddings (128-dimensional), no LLM
+(regex extraction), and a \$10 USD budget ceiling.
+
+\subsection{Error Model and Cost Tracking}
+
+NeuroGraph employs a typed error hierarchy via \texttt{thiserror}:
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{NeuroGraphError::Driver} --- storage failures
+  \item \texttt{NeuroGraphError::Llm} --- LLM API errors
+  \item \texttt{NeuroGraphError::Embedder} --- embedding failures
+  \item \texttt{NeuroGraphError::BudgetExceeded\{spent, limit\}} ---
+    hard budget enforcement
+  \item \texttt{NeuroGraphError::Temporal} --- date parsing, snapshot
+  \item \texttt{NeuroGraphError::Community} --- detection/summarization
+\end{itemize}
+
+Every LLM call records its cost via the \texttt{CostTracker}, and
+the \texttt{ConcurrencyLimiter} throttles parallel LLM calls to
+prevent rate-limit breaches.
+
+\subsection{Graph Data Model}
+\label{sec:datamodel}
+
+The \texttt{graph} module defines the core data structures that
+underpin all subsystems. Each type uses UUID~v4 identifiers,
+\texttt{serde} serialization, and the builder pattern.
+
+\paragraph{Entity.}
+The \texttt{Entity} struct carries 16 fields: \texttt{id} (UUID),
+\texttt{name}, \texttt{entity\_type} (wrapped \texttt{EntityType(String)}
+for type safety), \texttt{summary} (LLM-generated regional
+description), \texttt{name\_embedding} (\texttt{Option<Vec<f32>>}),
+\texttt{group\_id} (multi-tenant partition), \texttt{labels}
+(flexible categorization, e.g., \texttt{["Entity", "Person"]}),
+\texttt{attributes} (\texttt{HashMap<String, serde\_json::Value>}),
+\texttt{importance\_score} ($[0,1]$, PageRank + access frequency),
+\texttt{access\_count}, \texttt{community\_ids}
+(\texttt{HashMap<u32, String>} mapping hierarchy level to community),
+\texttt{created\_at}, \texttt{updated\_at}, and \texttt{metadata}.
+The \texttt{record\_access()} method atomically increments the
+access counter and touches the modification timestamp.
+
+\paragraph{Relationship.}
+Edges carry bi-temporal fields directly from Graphiti's
+\texttt{EntityEdge}: \texttt{valid\_from} / \texttt{valid\_until}
+(real-world validity), \texttt{created\_at} / \texttt{expired\_at}
+(system time). Additional fields include \texttt{fact} (natural
+language statement), \texttt{fact\_embedding}, \texttt{weight}
+(default 1.0), \texttt{confidence} ($[0,1]$), and
+\texttt{episode\_ids} (provenance chain). The \texttt{is\_valid\_at(t)}
+method enables point-in-time queries, and \texttt{invalidate()}
+sets both \texttt{valid\_until} and \texttt{expired\_at}.
+
+\paragraph{Episode.}
+Episodes are immutable provenance records with an \texttt{EpisodeType}
+enum supporting six source types: \texttt{Message}, \texttt{Json},
+\texttt{Text}, \texttt{Image}, \texttt{Audio}, and \texttt{Pdf}.
+Each episode carries \texttt{valid\_at} (real-world timestamp of
+the source data) and \texttt{entity\_edge\_ids} (extracted
+relationship UUIDs).
+
+\paragraph{Saga (Conversation Thread).}
+The \texttt{Saga} struct groups \texttt{Episode}s into ordered
+conversation threads, closing a critical competitive gap with
+Graphiti's \texttt{SagaNode}. Each saga maintains: \texttt{SagaId}
+(UUID), \texttt{name}, optional \texttt{description} and
+\texttt{source} identifiers, \texttt{group\_id} for multi-tenant
+isolation, and an append-only \texttt{episode\_ids} vector that
+preserves chronological insertion order.
+
+The graph structure uses two well-known edge types:
+\texttt{HAS\_EPISODE} (with a \texttt{position} attribute) from
+Saga to Episode, and \texttt{NEXT\_EPISODE} between consecutive
+episodes. The \texttt{episode\_pairs()} method generates
+$(\text{source}, \text{target})$ pairs for constructing the
+linked-list threading edges. This enables queries such as ``What
+was discussed in conversation~X?'' and chronological replay of
+multi-turn interactions.
+
+\paragraph{TemporalFact.}
+The \texttt{TemporalFact} struct wraps a relationship with a
+dedicated \texttt{TemporalValidity} struct (\texttt{valid\_from},
+\texttt{valid\_until}, \texttt{recorded\_at},
+\texttt{invalidated\_at}), plus \texttt{superseded\_by}
+(\texttt{Option<RelationshipId>}) and
+\texttt{invalidation\_reason}. This enables fact version chains
+where superseded facts link to their replacements.
+
+\paragraph{Ontology.}
+The \texttt{Ontology} system supports two modes:
+\emph{prescribed} (user-defined \texttt{EntityTypeDefinition}
+with expected attributes, data types, required flags, and
+few-shot examples) and \emph{learned} (auto-discovered types
+from extraction). \texttt{RelationshipTypeDefinition} specifies
+allowed source/target entity types. The \texttt{to\_extraction\_prompt()}
+method generates LLM-ready markdown from the ontology, and
+\texttt{strict\_mode} constrains extraction to prescribed types only.
+
+\paragraph{GraphSchema.}
+The \texttt{GraphSchema} registry tracks all types currently present
+in the graph: entity type counts, relationship type counts, known
+type sets, and totals. It auto-registers learned types into the
+ontology via \texttt{record\_entity\_type()} and
+\texttt{record\_relationship\_type()}.
+
+\subsection{GraphDriver Trait and Implementations}
+\label{sec:drivers}
+
+The \texttt{GraphDriver} trait defines 25 \texttt{async} methods
+across six operation categories:
+
+\begin{table}[H]
+\centering
+\caption{GraphDriver trait method categories.}
+\label{tab:driver}
+\begin{tabularx}{\columnwidth}{lcX}
+\toprule
+\textbf{Category} & \textbf{Methods} & \textbf{Operations} \\
+\midrule
+Entity & 5 & store, get, batch get, delete, list \\
+Relationship & 4 & store, batch store, get, get by entity \\
+Episode & 3 & store, get, list recent \\
+Community & 5 & store, get, by level, dirty, list \\
+Search & 3 & vector entities, vector rels, text search \\
+Graph/Temporal & 3 & traverse, snapshot\_at, stats \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two implementations are provided:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{MemoryDriver}: Uses \texttt{DashMap<K, V>} for
+    lock-free concurrent access to entities, relationships,
+    episodes, and communities. Vector search uses brute-force
+    cosine similarity ($O(nk)$); text search uses case-insensitive
+    substring matching. Temporal filtering applies
+    \texttt{is\_valid\_at()} to all relationships in
+    \texttt{snapshot\_at()}.
+  \item \textbf{EmbeddedDriver}: Uses Sled embedded B-tree with
+    separate trees per data type (\texttt{entities},
+    \texttt{relationships}, \texttt{episodes}, \texttt{communities}).
+    Serialization via \texttt{bincode} for compact binary storage.
+    Inherits the same vector/text search algorithms as MemoryDriver
+    but reads from persistent disk.
+\end{itemize}
+
+\texttt{GraphDriverConfig} includes \texttt{storage\_path},
+\texttt{max\_connections}, and optional \texttt{uri}/\texttt{username}/
+\texttt{password} fields for planned remote drivers (Neo4j, FalkorDB).
+
+\subsection{LLM Abstraction Layer}
+\label{sec:llm}
+
+The \texttt{llm} module provides a provider-agnostic LLM interface
+with response caching and per-prompt-type token tracking.
+
+\paragraph{LlmClient Trait.}
+The core trait defines three methods: \texttt{model\_name()},
+\texttt{cost\_per\_token()} (returns \texttt{(input\_cost, output\_cost)}
+in USD), and \texttt{complete(request) -> CompletionResponse}.
+The trait is \texttt{dyn}-compatible (object-safe); structured
+JSON deserialization is provided via a free function
+\texttt{complete\_structured<T>()} rather than a generic trait method,
+preserving dynamic dispatch.
+
+\paragraph{CompletionRequest.}
+Encapsulates \texttt{system\_prompt}, \texttt{user\_prompt},
+\texttt{temperature}, \texttt{max\_tokens}, and \texttt{json\_mode}
+(requests \texttt{response\_format: json\_object}).
+
+\paragraph{GenericLlmClient.}
+Uses raw \texttt{reqwest} HTTP calls to any OpenAI-compatible
+endpoint (Ollama at \texttt{localhost:11434/v1}, vLLM, LiteLLM,
+Azure OpenAI). Features include: configurable timeout, bearer
+token auth, rate-limit detection (HTTP 429 $\to$
+\texttt{LlmError::RateLimited}), and per-call cost calculation
+using \texttt{LlmConfig::calculate\_cost(input\_tokens,
+output\_tokens)}.
+
+\paragraph{LlmConfig Presets.}
+Pre-built configurations: \texttt{gpt4o\_mini()} ($\$0.15/\$0.60$
+per million tokens), \texttt{ollama(model)} (zero-cost, local
+endpoint). Each config stores \texttt{input\_cost\_per\_million}
+and \texttt{output\_cost\_per\_million} for budget tracking.
+
+\paragraph{Response Cache (\texttt{LlmCache}).}
+Prevents redundant API calls for identical extraction prompts---closing
+a gap where GraphRAG provides a modular caching factory. Cache keys are
+computed deterministically via SHA-256 over the concatenation of prompt
+and model name. The cache supports:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{LRU Eviction}: When the cache exceeds
+    \texttt{max\_entries} (configurable, default 1,000), the oldest
+    entry by \texttt{cached\_at} timestamp is evicted.
+  \item \textbf{TTL Expiration}: Each \texttt{CachedResponse} carries
+    an optional TTL (\texttt{chrono::Duration}). Expired entries are
+    treated as cache misses and evicted on the next write pass.
+  \item \textbf{Observability}: \texttt{CacheStats} tracks hits,
+    misses, and evictions, with a \texttt{hit\_rate()} convenience
+    method. Thread-safety is provided via \texttt{tokio::sync::RwLock}.
+\end{itemize}
+Each cached entry records the response content, model name, input/output
+token counts, and timestamp---enabling cost tracking even for cached
+results.
+
+\paragraph{Token Usage Tracker (\texttt{TokenTracker}).}
+Tracks LLM token consumption at granular, per-prompt-type level.
+Eight built-in \texttt{PromptType} variants categorize API calls:
+\texttt{EntityExtraction}, \texttt{RelationshipExtraction},
+\texttt{EntityResolution}, \texttt{CommunitySummary},
+\texttt{QueryRewrite}, \texttt{AnswerGeneration}, \texttt{Reranking},
+and \texttt{ConflictResolution}, plus \texttt{Custom(String)} for
+extension. Each \texttt{record()} call updates both per-type
+counters (\texttt{TokenUsage}: input/output tokens, call count,
+estimated cost) and global atomic counters
+(\texttt{AtomicU64} for lock-free reads). The \texttt{print\_summary()}
+method renders a formatted table for cost analysis, and
+\texttt{get\_summary()} returns the full
+\texttt{HashMap<PromptType, TokenUsage>} for programmatic access.
+
+\subsection{Query Engine}
+\label{sec:engine}
+
+The \texttt{engine} module orchestrates query execution through
+a two-level routing architecture:
+
+\paragraph{Level 1: QueryRouter (Strategy Dispatch).}
+Classifies queries into four types via keyword heuristic scoring:
+\texttt{Local} (entity-focused, default), \texttt{Global}
+(dataset-wide: ``summarize'', ``overview'', ``all''),
+\texttt{Temporal} (``when'', ``before'', ``history'', ``in 20XX''),
+and \texttt{MultiHop} (``connected'', ``related'', ``path'').
+This router dispatches to the appropriate \texttt{QueryStrategy}
+implementation:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{LocalStrategy}: Hybrid retrieval $\to$ relationship
+    fetch $\to$ context assembly $\to$ LLM answer generation.
+    Returns raw context if no LLM is configured.
+  \item \textbf{GlobalStrategy}: Community map-reduce pipeline---
+    (1) retrieve community summaries, (2) map: LLM partial answer
+    per community, (3) reduce: synthesize final answer. Falls back
+    to hybrid search when no communities exist.
+\end{itemize}
+
+\paragraph{Level 2: IntentRouter (Graph View Selection).}
+When multi-graph memory is enabled, the \texttt{IntentRouter}
+(\S\ref{sec:multigraph}) performs finer-grained 8-type intent
+classification and selects which graph views to query. The two
+routers are complementary: the engine router selects the execution
+strategy, while the intent router selects the data sources.
+
+\paragraph{ContextBuilder.}
+Assembles LLM prompts from graph data within a configurable token
+budget (default 4,000 tokens, estimated at $\approx$4
+chars/token). Content is added in priority order: (1) entity
+descriptions with types and summaries, (2) relationship facts
+with temporal validity markers (\texttt{\checkmark~current} vs.
+\texttt{\texttimes~historical}), (3) community summaries for
+global context. Each section is truncated at the budget boundary.
+
+\paragraph{QueryBudget.}
+Per-query cost enforcement using atomic microdollar tracking
+(\texttt{AtomicU64} storing hundredths of cents). Provides
+\texttt{record\_cost()}, \texttt{can\_afford()}, and \texttt{reset()}
+operations.
+
+\subsection{Utility Infrastructure}
+\label{sec:utils}
+
+\paragraph{ConcurrencyLimiter.}
+Semaphore-based rate limiter (from Graphiti's
+\texttt{semaphore\_gather()} pattern) wrapping \texttt{tokio::sync::%
+Semaphore} with an atomic active-count tracker. Default limit: 10
+concurrent LLM calls.
+
+\paragraph{CostTracker.}
+Process-wide atomic cost accumulator storing microdollars
+(\texttt{Arc<AtomicU64>}). Provides \texttt{record()},
+\texttt{total\_cost\_usd()}, \texttt{is\_over\_budget()}, and
+\texttt{remaining\_usd()} for budget enforcement across
+all operations.
+
+\paragraph{Hashing.}
+Two-phase deduplication hashing from Graphiti:
+(1) deterministic SHA-256 content hash with text normalization
+(lowercase, whitespace collapse); (2) BLAKE3 fast hash for
+high-throughput scenarios. Helper functions
+\texttt{entity\_dedup\_key(name, type)} and
+\texttt{relationship\_dedup\_key(source, target, type)} generate
+consistent dedup keys.
+
+\paragraph{Text Utilities.}
+\texttt{normalize\_name()} (lowercase, replace underscores/hyphens),
+\texttt{extract\_terms()} (stopword-filtered tokenization),
+\texttt{truncate\_to\_tokens()} (word-boundary-aware truncation),
+\texttt{estimate\_tokens()} ($\lceil\text{chars}/4\rceil$),
+and \texttt{chunk\_text()} (sentence-boundary-respecting chunking).
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Ingestion Pipeline}
+\label{sec:ingestion}
+
+\subsection{Pipeline Architecture}
+
+The ingestion pipeline transforms raw input (text, JSON, PDF) into
+a structured knowledge graph through six stages:
+
+\begin{equation}
+\text{Src} \xrightarrow{1} \text{Ep}
+  \xrightarrow{2} \text{Ext}
+  \xrightarrow{3} \text{Val}
+  \xrightarrow{4} \text{Dup}
+  \xrightarrow{5} \text{Cfl}
+  \xrightarrow{6} \text{Str}
+\end{equation}
+
+\paragraph{Stage 1: Episode Creation.}
+Every ingestion creates an \texttt{Episode}---a provenance record
+linking the raw input to the entities and relationships it produces.
+Episodes carry a \texttt{group\_id} for multi-tenant isolation and
+a \texttt{created\_at} timestamp for temporal ordering.
+
+\paragraph{Stage 2: Entity/Relationship Extraction.}
+The \texttt{TextExtractor} supports two modes: (a)~LLM-based
+extraction using structured prompts to an OpenAI-compatible API,
+returning typed entities with summaries and relationships with
+confidence scores; (b)~regex-only fallback that identifies
+capitalized proper nouns and verb-mediated relationships, requiring
+no API keys.
+
+\paragraph{Stage 3: Ontology Validation.}
+The \texttt{SchemaValidator} checks extracted entities and relationships
+against a configurable \texttt{Ontology} that defines allowed entity
+types, relationship types, and constraints. Invalid items are logged
+and skipped; warnings are emitted for items requiring normalization.
+
+\paragraph{Stage 4: Embedding-Based Deduplication.}
+The \texttt{Deduplicator} prevents entity proliferation by computing
+cosine similarity between a new entity's name embedding and all
+existing entities of the same type. If similarity exceeds a threshold
+(default 0.85), the entities are merged:
+
+\begin{equation}
+\text{sim}(\mathbf{e}_\text{new}, \mathbf{e}_\text{existing}) > \tau
+\implies \text{Merge}(\mathbf{e}_\text{existing}, \mathbf{e}_\text{new})
+\end{equation}
+
+Merge combines summaries and preserves the existing entity's ID,
+ensuring referential integrity.
+
+\paragraph{Stage 5: Temporal Conflict Resolution.}
+The \texttt{ConflictResolver} detects four conflict types between
+a new relationship and existing ones sharing the same source entity
+and relationship type:
+
+\begin{table}[H]
+\centering
+\caption{Conflict types and resolution strategies.}
+\label{tab:conflicts}
+\begin{tabularx}{\columnwidth}{lX}
+\toprule
+\textbf{Type} & \textbf{Resolution} \\
+\midrule
+Redundant & Skip (identical fact already exists) \\
+Contradiction & Invalidate old by setting
+  \texttt{valid\_until = now} \\
+Supersession & Same as contradiction (newer fact wins) \\
+SoftConflict & Coexist (non-exclusive relationship) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Stage 6: Embedding and Storage.}
+Each surviving entity receives a name embedding and each relationship
+a fact embedding. Both are stored via the \texttt{GraphDriver} trait.
+
+\subsection{JSON Ingestion}
+
+The \texttt{JsonExtractor} recursively walks JSON objects, creating
+entities from keys and relationships from nesting structure. The
+extracted graph is then routed through the same dedup/conflict/store
+pipeline as text extraction.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Hybrid Retrieval Engine}
+\label{sec:retrieval}
+
+\subsection{Seven-Strategy Pipeline}
+
+NeuroGraph's retrieval engine combines seven complementary strategies
+in a single pipeline, each addressing different aspects of relevance:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Semantic Search}: Embeds the query via the configured
+    embedder, then performs cosine similarity search over entity name
+    embeddings using the driver's vector index. Default weight: 0.40.
+  \item \textbf{BM25 Keyword Search}: A full inverted index with
+    TF-IDF scoring, supporting configurable $k_1$ (1.2) and $b$ (0.75)
+    parameters. Default weight: 0.25.
+  \item \textbf{Personalized PageRank (PPR)}: Seeded from the top-5
+    semantic results, PPR builds a local adjacency subgraph from
+    1-hop neighborhoods and runs power iteration (damping $\alpha=0.85$,
+    max iterations 20, convergence $\epsilon=10^{-8}$). Default
+    weight: 0.20.
+  \item \textbf{Graph Traversal}: BFS from user-specified seed
+    entities up to 2 hops, scoring by hop distance with exponential
+    decay. Default weight: 0.15.
+  \item \textbf{Cross-Encoder Reranking}: Either rule-based (zero-cost,
+    offline) or API-based, reranking the fused candidate list for
+    precision. Rule-based scoring combines query-document overlap,
+    entity type boosting, summary length normalization, and original
+    score blending.
+  \item \textbf{MMR Reranking}: Maximal Marginal Relevance
+    (\S\ref{sec:mmr}) for diversity-aware result selection.
+  \item \textbf{Node Distance Reranking}: Graph proximity scoring
+    (\S\ref{sec:nodedist}) via BFS-based shortest-path distances.
+\end{enumerate}
+
+\subsection{Reciprocal Rank Fusion}
+
+Results from the retrieval stages are merged using Reciprocal Rank
+Fusion (RRF):
+
+\begin{equation}
+\text{RRF}(d) = \sum_{s \in \mathcal{S}} \frac{w_s}{k + r_s(d) + 1}
+\label{eq:rrf}
+\end{equation}
+
+where $\mathcal{S}$ is the set of strategies, $w_s$ is the strategy
+weight (summing to 1.0), $k$ is the RRF constant (default 60), and
+$r_s(d)$ is the rank of document $d$ in strategy $s$'s result list.
+Entities appearing in multiple lists receive additive score boosts,
+naturally promoting cross-strategy consensus.
+
+\subsection{Maximal Marginal Relevance (MMR)}
+\label{sec:mmr}
+
+MMR reranking balances relevance to the query with diversity among
+selected results---closing a critical competitive gap, as both Graphiti
+and GraphRAG support MMR-based reranking. The \texttt{MmrReranker}
+greedily selects items using:
+
+\begin{equation}
+\text{MMR}(d) = \lambda \cdot \text{sim}(d, q)
+  - (1-\lambda) \cdot \max_{d_j \in S} \text{sim}(d, d_j)
+\label{eq:mmr}
+\end{equation}
+
+where $\lambda \in [0, 1]$ controls the relevance-diversity trade-off:
+$\lambda = 1.0$ yields pure relevance (identical to top-$k$ by score),
+$\lambda = 0.0$ maximizes diversity, and $\lambda = 0.7$ is the
+recommended default. The similarity metric is configurable between
+cosine similarity (default) and raw dot product.
+
+The algorithm precomputes query-candidate similarities, then performs
+$k$ greedy selection steps, each computing the maximum similarity
+between each unselected candidate and all already-selected items.
+Complexity is $O(k \cdot n \cdot d)$ where $n$ is the candidate
+count and $d$ is the embedding dimension.
+
+\subsection{Node Distance Reranker}
+\label{sec:nodedist}
+
+The \texttt{NodeDistanceReranker} reranks results by graph distance
+from a center (focal) node, closing a gap where Graphiti has
+\texttt{NodeReranker.node\_distance} and
+\texttt{EdgeReranker.node\_distance}. Scores follow exponential
+decay:
+
+\begin{equation}
+\text{score}(v) = \gamma^{d(v, c)}
+\end{equation}
+
+where $\gamma$ is the decay factor (default 0.5) and $d(v,c)$ is
+the shortest BFS distance from node $v$ to center $c$, capped at
+\texttt{max\_depth} (default 3). A \texttt{combine\_scores()} method
+blends distance scores with existing relevance scores:
+$\alpha \cdot s_\text{relevance} + (1-\alpha) \cdot s_\text{distance}$.
+
+\subsection{Episode Mentions Reranker}
+\label{sec:epmention}
+
+The \texttt{EpisodeMentionsReranker} reranks results by how many
+episodes (provenance sources) reference them---a proxy for
+importance by citation frequency. Items mentioned across many
+episodes are likely more significant. Scores are normalized:
+the most-mentioned item receives 1.0, with others proportional.
+A \texttt{combine\_scores()} variant blends mention counts with
+relevance via weight $\alpha$. Any type implementing the
+\texttt{HasEpisodeIds} trait (providing \texttt{episode\_ids()}
+and \texttt{episode\_count()}) can be reranked.
+
+\subsection{DRIFT: Dynamic Reasoning and Inference with Flexible Traversal}
+
+DRIFT adaptively switches between local and global search strategies
+based on query characteristics. Query breadth is estimated via a
+composite heuristic:
+
+\begin{multline}
+\beta(q) = 0.7 \cdot \frac{|\text{broad\_kw}(q)|}{|\text{broad\_kw}(q)|
+  + |\text{specific\_kw}(q)|} \\
+  + \; 0.3 \cdot \frac{|q|_{\text{words}}}{15}
+\end{multline}
+
+\begin{itemize}[leftmargin=*]
+  \item $\beta > \tau$: \textbf{Global} --- rank community summaries
+    by keyword overlap, collect entities from top-$k$ communities,
+    generate follow-up queries from key entities, refine locally.
+  \item $\beta < 1 - \tau$: \textbf{Local} --- BFS from query-matching
+    seed entities with per-hop score decay of 0.7.
+  \item Otherwise: \textbf{Adaptive} --- execute both strategies,
+    merge with dynamic weighting (local 0.6, global 0.4 when local
+    finds results).
+\end{itemize}
+
+\subsection{Composable Search Configuration}
+\label{sec:searchconfig}
+
+The \texttt{SearchConfig} system enables per-channel independent
+configuration of search methods and rerankers, modeled after
+Graphiti's composable \texttt{SearchConfig} but made Rust-idiomatic
+with the builder pattern.
+
+\paragraph{Per-Channel Configuration.}
+Each of the four channels---entities, relationships, episodes,
+communities---has an independent \texttt{ChannelConfig} specifying:
+\begin{itemize}[leftmargin=*]
+  \item \texttt{enabled}: whether the channel participates
+  \item \texttt{methods}: one or more \texttt{SearchMethod}s
+    (Cosine, Bm25, Bfs, Ppr, DriftAdaptive)
+  \item \texttt{reranker}: the \texttt{RerankerType}
+    (Rrf, Mmr\{$\lambda$\}, CrossEncoder\{model\},
+    NodeDistance\{center\_id\}, EpisodeMentions, None)
+  \item \texttt{limit}: per-channel result cap
+  \item \texttt{sim\_min\_score}: minimum similarity threshold
+\end{itemize}
+
+\paragraph{Builder Pattern.}
+The \texttt{SearchConfigBuilder} allows selective overrides:
+\begin{lstlisting}
+let config = SearchConfig::builder()
+    .entities(ChannelConfig {
+        methods: vec![Cosine, Bm25],
+        reranker: RerankerType::Mmr { lambda: 0.7 },
+        limit: 20,
+        ..Default::default()
+    })
+    .communities(ChannelConfig::disabled())
+    .build();
+\end{lstlisting}
+
+\paragraph{Pre-Built Recipes.}
+The \texttt{SearchRecipes} module provides 15+ pre-configured
+\texttt{SearchConfig}s organized by use case
+(Table~\ref{tab:recipes}).
+
+\begin{table}[H]
+\centering
+\scriptsize
+\caption{Pre-built search configuration recipes.}
+\label{tab:recipes}
+\begin{tabularx}{\columnwidth}{lX}
+\toprule
+\textbf{Recipe} & \textbf{Description} \\
+\midrule
+\texttt{combined\_hybrid\_rrf} & All channels, RRF \\
+\texttt{combined\_hybrid\_mmr} & All channels, MMR diversity \\
+\texttt{combined\_hybrid\_cross\_enc} & All channels, LLM reranking \\
+\texttt{entity\_hybrid\_rrf} & Entity-only, RRF \\
+\texttt{entity\_hybrid\_mmr} & Entity-only, MMR \\
+\texttt{entity\_hybrid\_ep\_mentions} & Entity-only, citation rerank \\
+\texttt{entity\_only\_cosine} & Cosine only, no reranking \\
+\texttt{rel\_hybrid\_rrf} & Relationship-only, RRF \\
+\texttt{rel\_hybrid\_node\_distance} & Rel-only, graph proximity \\
+\texttt{graph\_aware\_ppr} & PPR+BFS (unique) \\
+\texttt{drift\_adaptive} & DRIFT+MMR (unique) \\
+\texttt{neighborhood\_search} & BFS, distance reranking \\
+\texttt{conversation\_replay} & Episode, BM25+cosine \\
+\texttt{community\_hybrid\_rrf} & Community-only, RRF \\
+\texttt{community\_hybrid\_mmr} & Community-only, MMR \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Multi-Channel Search Results}
+\label{sec:searchresults}
+
+The \texttt{SearchResults} struct provides typed, multi-channel
+result output---closing a gap where Graphiti returns separate
+lists for edges, nodes, episodes, and communities while NeuroGraph
+previously returned a flat entity list.
+
+Each channel carries a \texttt{Vec<ScoredItem<T>>} where
+\texttt{ScoredItem} attaches the original search score, source
+method name, and optional reranker score. The
+\texttt{effective\_score()} method returns the reranker score when
+available, falling back to the original. \texttt{SearchMetadata}
+records the original query, config name, candidate count, search
+duration, and channels searched.
+
+For backward compatibility, \texttt{SearchResults::flatten()}
+interleaves all channels into a single \texttt{Vec<FlatResult>}
+sorted by effective score descending, where each \texttt{FlatResult}
+carries an id, name, \texttt{Channel} enum variant, score, and
+snippet.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Memory Architecture}
+\label{sec:memory}
+
+NeuroGraph implements a three-layer memory architecture inspired by
+cognitive science: tiered storage, self-organizing Zettelkasten, and
+RL-guided evolution.
+
+\subsection{Tiered Memory (L1--L4)}
+
+The tiered memory system maintains four levels, each with distinct
+characteristics:
+
+\begin{table}[H]
+\centering
+\caption{Tiered memory hierarchy.}
+\label{tab:tiers}
+\begin{tabularx}{\columnwidth}{clcX}
+\toprule
+\textbf{Tier} & \textbf{Name} & \textbf{Cap} & \textbf{Role} \\
+\midrule
+L1 & Working & 100 & Current context window, hot cache \\
+L2 & Episodic & 10K & Recent interactions, time-indexed \\
+L3 & Semantic & $\infty$ & Knowledge graph facts \\
+L4 & Procedural & $\infty$ & Learned rules, heuristics \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Promotion Policy.} Items are promoted based on access
+frequency and importance score:
+\begin{itemize}[leftmargin=*]
+  \item L1 $\to$ L2: after 3 accesses
+  \item L2 $\to$ L3: after 10 accesses \emph{and} importance $\geq$ 0.6
+  \item L3 $\to$ L4: after 50 accesses (confirmed pattern)
+\end{itemize}
+
+\paragraph{Demotion and Eviction.} Items not accessed within a
+configurable window (default 168 hours / 1 week) with importance
+$<$ 0.3 are evicted from L2. L1 uses FIFO eviction when at capacity,
+with evictees demoted to L2.
+
+\paragraph{Search Tier Boosting.} When searching across tiers,
+matches in higher tiers receive multiplicative boosts: L1 $\times$4.0,
+L2 $\times$2.0, L3 $\times$1.5, L4 $\times$1.0, ensuring that
+recently active memories surface first.
+
+\paragraph{Procedural Rules.} L4 stores \texttt{LearnedRule} objects
+with a pattern string, confidence score, usage counter, and source
+memory IDs. During query context assembly, applicable rules are
+retrieved via keyword matching and included in the LLM prompt.
+
+\subsection{Zettelkasten Self-Organizing Memory}
+
+Inspired by the A-MEM framework, the Zettelkasten module implements
+a self-organizing note graph where each \texttt{MemoryNote} carries:
+
+\begin{itemize}[leftmargin=*]
+  \item Auto-extracted keywords (stop-word filtered, max 20)
+  \item Embedding vector for semantic similarity
+  \item Bidirectional links to related notes
+  \item Memory strength $S$ (Ebbinghaus)
+  \item Access count and temporal metadata
+\end{itemize}
+
+\paragraph{The A-MEM Insight: Keyword Evolution.}
+When a new note $n_\text{new}$ is added, the system:
+(1)~finds semantically similar notes by cosine similarity above
+threshold $\tau_\text{link}$ (default 0.70);
+(2)~creates bidirectional links;
+(3)~\emph{evolves existing notes' keywords} by injecting up to 3
+novel keywords from $n_\text{new}$. This causes the knowledge graph
+to self-organize---older notes become richer as related knowledge
+accumulates.
+
+\paragraph{Ebbinghaus Forgetting Curve.}
+Each note's retention probability follows:
+
+\begin{equation}
+R = e^{-t / (S \cdot 24)}
+\label{eq:ebbinghaus}
+\end{equation}
+
+where $t$ is hours since last access and $S$ is memory strength
+(starts at 1.0, increases by 0.5 per access, capped at 10.0).
+Notes with $R < \tau_\text{forget}$ (default 0.2) are candidates
+for removal. The forgetting pass also cleans up indexes and
+removes dangling links.
+
+\subsection{RL-Guided Memory Evolution}
+
+The \texttt{MemoryEvolution} engine runs periodic cycles with
+five steps:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Composite Scoring}: Each item receives an importance
+    score combining four signals:
+    \begin{equation}
+    I = 0.3 \cdot f_\text{freq} + 0.3 \cdot f_\text{recency}
+      + 0.25 \cdot f_\text{conn} + 0.15 \cdot f_\text{salience}
+    \end{equation}
+    where $f_\text{freq} = \ln(\text{accesses}+1)/10$,
+    $f_\text{recency} = 1/(1+h/168)$ (1-week half-life),
+    $f_\text{conn} = \min(\text{connectivity}, 20)/20$,
+    and $f_\text{salience} = \min(\text{words}, 50)/50$.
+
+  \item \textbf{Temporal Decay}: Importance is multiplied by a
+    decay factor $D$ according to the configured function:
+    exponential ($e^{-\lambda t}$), linear ($1 - \lambda t$),
+    or step (0 if $t > \tau$).
+
+  \item \textbf{RL Keep/Forget}: Items below the forget threshold
+    (default 0.1) are evaluated by the Q-table RL agent. State is
+    discretized into bins of (importance, access frequency, recency,
+    connectivity). The agent uses $\epsilon$-greedy exploration
+    ($\epsilon=0.1$) with Q-learning updates:
+    \begin{equation}
+    Q(s,a) \leftarrow Q(s,a) + \alpha[r + \gamma \max_{a'} Q(s',a')
+      - Q(s,a)]
+    \end{equation}
+    with $\alpha=0.1$, $\gamma=0.95$.
+
+  \item \textbf{Consolidation}: Items with cosine similarity $> 0.95$
+    are merged, keeping the higher-importance item.
+
+  \item \textbf{Overflow Eviction}: If items exceed
+    \texttt{max\_items} (default 100K), the lowest-importance items
+    are truncated.
+\end{enumerate}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Multi-Graph Memory (MAGMA)}
+\label{sec:multigraph}
+
+\subsection{Four Orthogonal Graph Views}
+
+Inspired by the MAGMA architecture, each \texttt{MemoryItem} is
+indexed across four independent graph views:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Semantic Graph}: Edges represent embedding cosine
+    similarity above a threshold (default 0.75). Uses brute-force
+    $O(n^2)$ comparison with planned HNSW upgrade.
+  \item \textbf{Temporal Graph}: Edges encode Allen's interval algebra
+    relations (before, after, during, overlaps, etc.) between items'
+    validity intervals.
+  \item \textbf{Causal Graph}: Directed edges represent cause-effect
+    relationships extracted via the \texttt{CausalExtractor}, which
+    applies five regex patterns with typed confidence scores:
+    \emph{caused/led to} (0.8), \emph{because/since} (0.7),
+    \emph{therefore/consequently} (0.75), \emph{if-then} (0.6),
+    and \emph{enabled/allowed} (0.7). Edges below the configurable
+    threshold (default 0.6) are discarded. The graph supports both
+    forward chaining (\texttt{traverse()}: BFS with per-hop
+    confidence decay) and backward chaining (\texttt{root\_causes()}:
+    enumerates all root-cause paths up to a configurable depth).
+  \item \textbf{Entity Graph}: Standard typed entity relationships
+    extracted from content.
+\end{enumerate}
+
+Ingestion is parallelized via \texttt{tokio::join!}, concurrently
+indexing each item across all four graphs.
+
+\subsection{Intent-Aware Query Router}
+
+The \texttt{IntentRouter} classifies queries into eight intent types
+using keyword-scoring heuristics:
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Intent types and primary graph views.}
+\label{tab:intents}
+\begin{tabularx}{\columnwidth}{l@{\hspace{4pt}}X@{\hspace{4pt}}l}
+\toprule
+\textbf{Intent} & \textbf{Example} & \textbf{View} \\
+\midrule
+Factual & Who is Alice? & Entity \\
+Temporal & What happened in 2024? & Temporal \\
+Causal & Why did X fail? & Causal \\
+Hypothetical & What if X hadn't\ldots? & Causal \\
+Comparative & Compare X and Y & Entity \\
+Aggregative & How many at X? & Entity \\
+MultiHop & Alice's boss reports to? & Entity \\
+Exploratory & Tell me about X & Semantic \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Each intent maps to a \texttt{TraversalPlan} specifying view weights,
+max hops (2--5), max nodes per graph (20--40), and fusion strategy
+(RRF with $k=60$ or weighted sum).
+
+\subsection{Fusion Engine}
+
+The \texttt{FusionEngine} merges \texttt{SubgraphResult}s from
+multiple views using type-aligned RRF with cross-view reinforcement.
+Items appearing in multiple views receive additive score boosts
+proportional to the view weights specified by the intent router.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Temporal Subsystem}
+\label{sec:temporal}
+
+\subsection{Bi-Temporal Model}
+
+Every \texttt{Relationship} in NeuroGraph carries two temporal
+intervals:
+\begin{itemize}[leftmargin=*]
+  \item \texttt{valid\_from} / \texttt{valid\_until}: The real-world
+    validity period of the fact.
+  \item \texttt{created\_at}: When the fact was ingested (system time).
+\end{itemize}
+
+The \texttt{TemporalManager} provides three temporal operations:
+\begin{itemize}[leftmargin=*]
+  \item \texttt{snapshot\_at(t)}: Returns all entities and relationships
+    valid at timestamp $t$, filtering by \texttt{valid\_from $\leq t$}
+    and \texttt{valid\_until} is null or $> t$.
+  \item \texttt{what\_changed(t1, t2)}: Returns entities added,
+    modified, and relationships invalidated between $t_1$ and $t_2$.
+  \item \texttt{build\_timeline()}: Constructs a chronological event
+    list for visualization (G6 Timebar integration).
+\end{itemize}
+
+\subsection{Git-Like Branch Isolation}
+
+The \texttt{BranchManager} implements a copy-on-write (COW) branching
+model for multi-agent memory isolation:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Create}: Lightweight branch forked from a parent,
+    storing only a delta set of added/removed entity and relationship
+    IDs. Thread-safe via \texttt{DashMap}.
+  \item \textbf{Read}: Visibility check walks the branch chain
+    (branch delta $\to$ parent delta $\to$ root), implementing
+    COW semantics.
+  \item \textbf{Diff}: Computes the symmetric difference between
+    two branches' delta sets.
+  \item \textbf{Merge}: Applies source branch's deltas to target,
+    detecting conflicts (e.g., entity added in source but removed
+    in target). Conflicts are flagged but the merge proceeds.
+  \item \textbf{Abandon}: Marks a branch as closed without merging.
+\end{itemize}
+
+Configuration enforces a maximum of 100 open branches and optional
+auto-abandonment after 24 hours.
+
+\subsection{Logical Clock and Versioning}
+
+The \texttt{LogicalClock} implements a hybrid logical clock combining
+wall time (\texttt{DateTime<Utc>}) with a process-global monotonic
+counter (\texttt{AtomicU64}). The \texttt{happened\_before()} method
+compares wall times first and breaks ties with the counter, ensuring
+deterministic ordering even under concurrent ingestion.
+
+The versioning module provides \texttt{FactVersionChain}---a
+chronological list of \texttt{FactVersion} records for a single
+relationship. Each version carries the fact text, validity interval,
+confidence, and an optional \texttt{superseded\_by} link. The
+\texttt{version\_at(t)} method returns the fact that was valid at
+any historical timestamp.
+
+\texttt{EntityHistory} tracks modification records per entity,
+supporting six change types: \texttt{Created}, \texttt{SummaryUpdated},
+\texttt{Merged} (deduplication), \texttt{TypeChanged},
+\texttt{AttributesUpdated}, and \texttt{DecayMarked}. The
+\texttt{changes\_between(t1, t2)} method enables audit trail queries.
+
+\subsection{Graph-Level Forgetting Engine}
+
+The \texttt{temporal::forgetting} module provides a separate,
+graph-level forgetting mechanism distinct from the memory-layer
+evolution engine (\S\ref{sec:memory}). The \texttt{ForgettingEngine}
+operates directly on \texttt{Entity} nodes in the \texttt{GraphDriver}:
+
+\begin{equation}
+I_\text{decay}(e) = I_0(e) \cdot e^{-\lambda d}
+  + \frac{\ln(a+1)}{10}
+  + \frac{\ln(r+1)}{10}
+\end{equation}
+
+where $I_0$ is the entity's base importance, $\lambda$ is the
+\texttt{daily\_decay\_rate} (default 0.01), $d$ is days since last
+access, $a$ is the access count (log-scaled boost), and $r$ is
+the relationship count (connectivity boost). Entities with
+$I_\text{decay} < \tau_\text{prune}$ (default 0.1) and access
+count $<$ \texttt{min\_access\_count} (default 5) become prune
+candidates.
+
+The \texttt{decay\_pass(auto\_prune, group\_id)} method evaluates
+all entities, updates importance scores, and optionally deletes
+candidates in batches (\texttt{max\_prune\_batch}, default 100).
+A separate TTL-based expiration via \texttt{is\_expired()} removes
+entities exceeding \texttt{default\_ttl} regardless of importance.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Community Detection}
+\label{sec:community}
+
+NeuroGraph implements two community detection algorithms:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Louvain}: Greedy modularity optimization with
+    configurable resolution parameter, max iterations, and minimum
+    community size.
+  \item \textbf{Leiden}: Refinement phase on top of Louvain for
+    higher-quality, well-connected communities.
+\end{itemize}
+
+Both operate on the entity-relationship graph extracted from the
+\texttt{GraphDriver}. Detected communities are stored as
+\texttt{Community} objects with member entity IDs, hierarchical
+level, and optional LLM-generated summaries.
+
+The \texttt{IncrementalCommunityUpdater} supports post-ingestion
+updates: given a set of newly added entity IDs, it re-evaluates
+only the affected neighborhoods rather than rerunning detection
+on the full graph.
+
+The \texttt{CommunitySummarizer} generates natural-language summaries
+via LLM (with rule-based fallback), enabling the DRIFT global
+search path to use community summaries as map-reduce intermediaries.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Research Paper Intelligence}
+\label{sec:research}
+
+\subsection{PDF Ingestion Pipeline}
+
+The PDF module provides a two-tier parsing architecture:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fast mode}: Uses \texttt{pdf-extract} for rapid
+    text extraction (~1--5ms per page). Suitable for bulk ingestion.
+  \item \textbf{Structured mode}: Heuristic-based academic section
+    detection that identifies title, authors, abstract, sections
+    (Introduction, Methods, Results, etc.), references, equations,
+    and figures via regex patterns on formatting cues.
+  \item \textbf{Auto mode}: The \texttt{DocumentClassifier} analyzes
+    the raw text to estimate column count, detect academic indicators
+    (abstract, references, affiliations), and check for mathematical
+    symbols, then recommends the optimal strategy.
+\end{itemize}
+
+The \texttt{SmartChunker} splits text into semantically coherent
+chunks with configurable maximum tokens (default 512) and sentence
+overlap (default 2), respecting section boundaries.
+
+\subsection{Multi-Source Academic Search}
+
+The \texttt{papers} module provides unified search across three
+academic APIs through the \texttt{UnifiedPaperSearch} aggregator:
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{Academic search API integrations.}
+\label{tab:papers}
+\begin{tabularx}{\columnwidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{API} & \textbf{Features} \\
+\midrule
+arXiv & Atom XML feed & Categories, PDFs \\
+Semantic Scholar & REST v1 & Citations, refs \\
+PubMed & E-utilities & MeSH, PMIDs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Results are deduplicated by title similarity and can be sorted
+by relevance, citation count, or date. The CLI supports
+\texttt{--since} year filtering and \texttt{--download} for
+automatic PDF retrieval.
+
+\subsection{RAG Chat Engine}
+
+The chat module implements a complete conversational RAG pipeline:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Context Assembly}: The \texttt{ContextBuilder}
+    retrieves the top-$k$ relevant chunks from the knowledge
+    graph, formats them with source citations (paper title,
+    section, page number).
+  \item \textbf{Conversation History}: The \texttt{ConversationHistory}
+    maintains a sliding window of messages with role annotations
+    (User, Assistant, System) and attached source citations.
+  \item \textbf{RAG Pipeline}: Formats a system prompt incorporating
+    retrieved context, conversation history, and applicable
+    procedural rules from L4 memory.
+  \item \textbf{REPL}: Terminal-based interactive loop with
+    \texttt{/clear}, \texttt{/quit} commands and colored output.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{REST API and Dashboard}
+\label{sec:server}
+
+\subsection{API Design}
+
+The server module provides a RESTful API built on Axum 0.8 with
+Tower middleware for CORS and tracing:
+
+\begin{table}[H]
+\centering
+\scriptsize
+\caption{REST API endpoints.}
+\label{tab:api}
+\begin{tabular}{@{}llp{2.2cm}@{}}
+\toprule
+\textbf{Verb} & \textbf{Endpoint} & \textbf{Description} \\
+\midrule
+\textsf{GET}  & \texttt{/health} & Health check \\
+\textsf{GET}  & \texttt{/stats} & Graph statistics \\
+\textsf{POST} & \texttt{/papers/ingest} & PDF upload \\
+\textsf{POST} & \texttt{/papers/ingest-text} & Text ingestion \\
+\textsf{POST} & \texttt{/papers/ingest-url} & URL ingestion \\
+\textsf{GET}  & \texttt{/papers} & List papers \\
+\textsf{POST} & \texttt{/query} & NL query \\
+\textsf{GET}  & \texttt{/graph} & Graph overview \\
+\textsf{POST} & \texttt{/chat} & RAG chat \\
+\textsf{POST} & \texttt{/search/papers} & Paper search \\
+\textsf{POST} & \texttt{/search/entities} & Entity search \\
+\bottomrule
+\end{tabular}
+\vspace{2pt}
+
+\raggedright\scriptsize All paths prefixed with \texttt{/api/v1}.
+\end{table}
+
+All responses follow a uniform \texttt{ApiResponse\{success, data,
+error\}} envelope. The server state (\texttt{AppState}) wraps a
+shared \texttt{NeuroGraph} instance, paper metadata, and
+conversation histories using \texttt{parking\_lot::RwLock} for
+synchronization.
+
+\subsection{Embedded Dashboard}
+
+Static dashboard assets are embedded in the binary via
+\texttt{rust-embed}, enabling a single-binary deployment with no
+external file dependencies. The dashboard provides a G6-based
+graph visualization with node type encoding, importance sizing,
+and memory tier coloring.
+
+\subsection{Model Context Protocol (MCP)}
+\label{sec:mcp}
+
+The \texttt{neurograph-mcp} crate exposes NeuroGraph as an MCP
+server, enabling integration with Claude, Cursor, and VS~Code
+Copilot. The MCP server wraps the \texttt{neurograph-core} API
+and provides tool definitions for \texttt{add\_text},
+\texttt{query}, \texttt{search\_papers}, \texttt{entity\_history},
+and \texttt{stats}. Transport is supported over both \texttt{stdio}
+(for IDE integration) and Server-Sent Events (SSE) for web-based
+clients.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Embedding Subsystem}
+\label{sec:embedders}
+
+NeuroGraph supports four embedding providers behind the
+\texttt{Embedder} trait:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{HashEmbedder} (default): Deterministic 128-dim
+    vectors via SeaHash feature hashing. Zero-cost, no API keys,
+    suitable for structural deduplication.
+  \item \textbf{OpenAI Embedder}: \texttt{text-embedding-3-small}
+    via the \texttt{async-openai} crate.
+  \item \textbf{Ollama Embedder}: Local models (e.g.,
+    \texttt{nomic-embed-text}) via Ollama's HTTP API.
+  \item \textbf{Cached Embedder}: LRU cache wrapper (default
+    capacity 10,000) around any provider, keyed by BLAKE3 content
+    hash.
+\end{enumerate}
+
+The \texttt{EmbeddingRouter} selects the appropriate provider
+based on configuration and falls back gracefully if a provider
+is unavailable.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Command-Line Interface}
+\label{sec:cli}
+
+The CLI (\texttt{neurograph-cli}) provides 12 subcommands:
+
+\begin{lstlisting}[language=bash,style={}]
+neurograph ingest --pdf paper.pdf
+neurograph ingest --dir ./papers/ --strategy auto
+neurograph ingest --url https://arxiv.org/pdf/...
+neurograph query "Who works at Anthropic?" --at 2024
+neurograph search "attention" --arxiv --s2 --since 2023
+neurograph chat --model ollama:llama3.2
+neurograph dashboard --port 8000 --open
+neurograph serve --port 8000
+neurograph stats
+neurograph history "Alice"
+neurograph what-changed 2024-01-01 2025-01-01
+neurograph communities
+neurograph bench
+neurograph info
+\end{lstlisting}
+
+The CLI uses \texttt{clap} 4 for argument parsing, \texttt{colored}
+for terminal output, and \texttt{indicatif} for progress bars during
+bulk ingestion.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Deployment and Infrastructure}
+\label{sec:deployment}
+
+\subsection{Build and Distribution}
+
+NeuroGraph supports multiple distribution channels:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Cargo}: \texttt{cargo install neurograph-cli}
+  \item \textbf{Docker}: Multi-stage Dockerfile with Rust builder
+    and minimal runtime image
+  \item \textbf{Docker Compose}: Full stack with Neo4j, Ollama,
+    and dashboard
+\end{itemize}
+
+\subsection{Security and Compliance}
+
+The project implements comprehensive security practices:
+\texttt{cargo-deny} for dependency auditing, OSSF Security Insights
+YAML, a responsible AI transparency document, and a detailed
+SECURITY.md with vulnerability disclosure procedures.
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Related Work}
+\label{sec:related}
+
+NeuroGraph draws inspiration from and extends several systems:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Microsoft GraphRAG} \cite{graphrag2024}: Hierarchical
+    Leiden community detection and global/local search. NeuroGraph
+    extends this with DRIFT adaptive switching and five-strategy
+    hybrid retrieval.
+  \item \textbf{Graphiti} \cite{graphiti2024}: Temporal knowledge
+    graph with episode-based ingestion. NeuroGraph adds bi-temporal
+    validity, branch isolation, and RL-guided forgetting.
+  \item \textbf{Cognee}: Pipeline-oriented knowledge processing.
+    NeuroGraph adopts the clean \texttt{add/query} API pattern.
+  \item \textbf{LightRAG}: Lightweight RAG with knowledge graphs.
+    NeuroGraph provides richer retrieval and memory management.
+  \item \textbf{Mem0/EverMemOS}: Tiered memory with L1--L4
+    hierarchy. NeuroGraph implements the tiered model and adds
+    RL-guided evolution.
+  \item \textbf{A-MEM}: Zettelkasten self-organizing memory.
+    NeuroGraph implements the keyword evolution insight with
+    Ebbinghaus forgetting integration.
+  \item \textbf{MAGMA}: Multi-graph memory architecture.
+    NeuroGraph implements four orthogonal views with intent-aware
+    routing and RRF fusion.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+
+NeuroGraph demonstrates that a single, cohesive system can integrate
+temporal knowledge management, advanced hybrid retrieval,
+biologically-inspired memory evolution, and multi-agent collaboration.
+By implementing the entire stack in Rust, we achieve both developer
+ergonomics (via the builder pattern and zero-config defaults) and
+production-grade performance (async I/O, lock-free concurrency).
+
+\paragraph{Future Directions.}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{HNSW Vector Index}: Replace brute-force similarity
+    search with approximate nearest neighbors for sub-linear scaling.
+  \item \textbf{Neo4j Driver}: Full Cypher-backed persistent storage
+    for enterprise deployments.
+  \item \textbf{WASM/Python Bindings}: Cross-language SDKs via FFI
+    and WebAssembly compilation.
+  \item \textbf{Agentic Framework}: Multi-agent orchestration with
+    role-based branch policies and supervisor approval workflows.
+  \item \textbf{Continuous Learning}: Online RL policy updates from
+    user retrieval feedback, closing the forgetting optimization loop.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════════════════════
+\begin{thebibliography}{9}
+
+\bibitem{graphrag2024}
+Edge, D. \textit{et al.}
+\newblock From Local to Global: A Graph RAG Approach to Query-Focused
+  Summarization.
+\newblock \textit{arXiv preprint arXiv:2404.16130}, 2024.
+
+\bibitem{graphiti2024}
+Zep AI.
+\newblock Graphiti: Building Real-Time, Temporally Aware Knowledge Graphs.
+\newblock \textit{GitHub: getzep/graphiti}, 2024.
+
+\bibitem{amem2025}
+Xu, Z. \textit{et al.}
+\newblock A-MEM: Agentic Memory for LLM Agents.
+\newblock \textit{arXiv preprint}, 2025.
+
+\bibitem{evermemos2026}
+Zhang, L. \textit{et al.}
+\newblock EverMemOS: Tiered Memory Operating System for Lifelong AI Agents.
+\newblock \textit{arXiv preprint}, 2026.
+
+\bibitem{drift2026}
+Microsoft Research.
+\newblock DRIFT Search: Dynamic Reasoning and Inference with Flexible Traversal.
+\newblock \textit{GraphRAG v3 Documentation}, 2026.
+
+\bibitem{lightrag2024}
+Guo, Z. \textit{et al.}
+\newblock LightRAG: Simple and Fast Retrieval-Augmented Generation.
+\newblock \textit{arXiv preprint}, 2024.
+
+\bibitem{rrf2009}
+Cormack, G.V., Clarke, C.L.A., and Buettcher, S.
+\newblock Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank
+  Learning Methods.
+\newblock \textit{Proc. SIGIR}, 2009.
+
+\bibitem{leiden2019}
+Traag, V.A., Waltman, L., and van Eck, N.J.
+\newblock From Louvain to Leiden: guaranteeing well-connected communities.
+\newblock \textit{Scientific Reports}, 9(1):5233, 2019.
+
+\bibitem{ebbinghaus1885}
+Ebbinghaus, H.
+\newblock \"{U}ber das Ged\"{a}chtnis.
+\newblock Duncker \& Humblot, Leipzig, 1885.
+
+\end{thebibliography}
+
+\end{document}

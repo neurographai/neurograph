@@ -403,24 +403,31 @@ mod tests {
     fn test_decay_exponential() {
         let decay = DecayPolicy {
             base_rate: 0.1,
+            forget_threshold: 0.001, // Very low threshold so item survives RL step
             decay_function: DecayFunction::Exponential,
             ..Default::default()
         };
 
-        let mut evolution = MemoryEvolution::with_policies(decay, RetentionPolicy::default());
+        // Use epsilon=0 (no exploration) to make RL decisions deterministic
+        let retention = RetentionPolicy::new(0.1, 0.95, 0.0, 42);
+        let mut evolution = MemoryEvolution::with_policies(decay, retention);
         let mut items = vec![EvolvableItem {
             id: Uuid::new_v4(),
-            content: "Old item".to_string(),
+            content: "Old item with enough content words to score above zero on salience metric for testing".to_string(),
             importance: 1.0,
-            access_count: 1,
+            access_count: 5,
             last_accessed: Utc::now() - chrono::Duration::hours(48),
             created_at: Utc::now() - chrono::Duration::hours(72),
-            connectivity: 0,
-            embedding: vec![0.0; 64],
+            connectivity: 3,
+            embedding: vec![0.1; 64],
         }];
 
         evolution.evolve(&mut items);
-        // After 48 hours with rate 0.1, importance should be significantly reduced
+        // Item should survive (above forget_threshold) but importance should be reduced
+        assert!(
+            !items.is_empty(),
+            "Item should survive evolution with low forget_threshold"
+        );
         assert!(
             items[0].importance < 0.5,
             "Decayed importance should be low: {}",

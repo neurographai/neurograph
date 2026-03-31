@@ -66,6 +66,7 @@ async-openai = "0.25"
 # Hashing
 sha2 = "0.10"
 blake3 = "1"
+hex = "0.4"
 
 # Misc
 ordered-float = { version = "4", features = ["serde"] }

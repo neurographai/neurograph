@@ -147,6 +147,10 @@ graph TB
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions"/>
 </p>
+<p align="center">
+  <a href="docs/NeuroGraph_Paper.pdf"><img src="https://img.shields.io/badge/📄_Research_Paper-Read_the_Paper-FF6B6B?style=for-the-badge" alt="Research Paper"/></a>
+  <a href="docs/neurograph_paper.tex"><img src="https://img.shields.io/badge/LaTeX-Source-008080?style=for-the-badge&logo=latex&logoColor=white" alt="LaTeX Source"/></a>
+</p>
 
 ---
 
@@ -596,6 +600,8 @@ neurograph serve --port 8000
 
 ## Documentation
 
+- 📄 **[Research Paper (PDF)](docs/NeuroGraph_Paper.pdf)** — Comprehensive technical paper covering architecture, algorithms, and implementation
+- 📝 [LaTeX Source](docs/neurograph_paper.tex) — Paper source for citation and reference
 - [Architecture](docs/architecture.md)
 - [Temporal Engine](docs/temporal.md)
 - [Community Detection](docs/community.md)

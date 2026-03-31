@@ -49,6 +49,7 @@ async-openai = { workspace = true }
 # Hashing
 sha2 = { workspace = true }
 blake3 = { workspace = true }
+hex = { workspace = true }
 
 # Collections & concurrency
 ordered-float = { workspace = true }

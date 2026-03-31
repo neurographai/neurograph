@@ -80,7 +80,7 @@ pub use community::{
 pub use config::{EmbeddingProvider, NeuroGraphConfig, NeuroGraphConfigBuilder, StorageBackend};
 pub use drivers::traits::{DriverError, GraphDriver};
 pub use embedders::traits::Embedder;
-pub use graph::{Community, Entity, EntityId, Episode, Relationship};
+pub use graph::{Community, Entity, EntityId, Episode, Relationship, Saga, SagaId};
 pub use llm::traits::LlmClient;
 pub use temporal::{LogicalClock, TemporalDiff, TemporalSnapshot};
 
@@ -93,10 +93,21 @@ pub use multigraph::{
     FusionEngine, GraphEdge, GraphView, IntentRouter, IntentType, MemoryItem, MemoryTier,
     MultiGraphConfig, MultiGraphMemory, QueryOptions as MultiGraphQueryOptions,
 };
+
+// Retrieval re-exports (legacy + new)
 pub use retrieval::{
     BM25Index, CrossEncoderReranker, DriftResult, DriftSearch, DriftStrategy, PersonalizedPageRank,
     RerankCandidate, RerankResult,
+    // P0: MMR, SearchConfig, SearchResults
+    MmrReranker, SimilarityMetric,
+    ChannelConfig, RerankerType, SearchConfig, SearchMethod,
+    Channel, FlatResult, SearchMetadata, SearchResults, ScoredItem,
+    // P1: Node Distance, Episode Mentions
+    NodeDistanceReranker, EpisodeMentionsReranker, HasEpisodeIds,
 };
+
+// LLM re-exports (new P1 types)
+pub use llm::{LlmCache, PromptType, TokenTracker, TokenUsage};
 
 use std::sync::Arc;
 
