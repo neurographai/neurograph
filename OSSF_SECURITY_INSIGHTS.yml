@@ -4,8 +4,8 @@
 header:
   schema-version: "1.0.0"
   expiry-date: "2027-03-30T00:00:00Z"
-  last-updated: "2026-03-30"
-  last-reviewed: "2026-03-30"
+  last-updated: "2026-04-01"
+  last-reviewed: "2026-04-01"
   commit-hash: ""
   project-url: "https://github.com/neurographai/neurograph"
   project-release: "https://github.com/neurographai/neurograph/releases/latest"
@@ -28,12 +28,16 @@ contribution-policy:
 documentation:
   - "https://github.com/neurographai/neurograph/blob/main/README.md"
   - "https://github.com/neurographai/neurograph/blob/main/DEVELOPING.md"
+  - "https://github.com/neurographai/neurograph/blob/main/SECURITY.md"
 
 distribution-points:
-  - "https://crates.io/crates/neurograph"
-  - "https://pypi.org/project/neurograph/"
-  - "https://www.npmjs.com/package/@neurograph/sdk"
+  - "https://crates.io/crates/neurograph-core"
+  - "https://crates.io/crates/neurograph-cli"
+  - "https://crates.io/crates/neurograph-mcp"
+  - "https://crates.io/crates/neurograph-eval"
+  - "https://crates.io/crates/neurograph-embed-server"
   - "https://ghcr.io/neurographai/neurograph"
+  - "https://www.npmjs.com/package/@neurograph/sdk"
 
 security-artifacts:
   self-assessment:
@@ -71,6 +75,12 @@ security-testing:
       before-release: true
   - tool-type: "sast"
     tool-name: "cargo-deny"
+    tool-version: "latest"
+    integration:
+      ci: true
+      before-release: true
+  - tool-type: "container"
+    tool-name: "trivy"
     tool-version: "latest"
     integration:
       ci: true

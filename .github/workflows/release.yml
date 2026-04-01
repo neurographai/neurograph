@@ -1,6 +1,6 @@
 # ============================================================
 # Release Pipeline
-# Triggered by pushing a tag: git tag v0.1.0 && git push --tags
+# Triggered by pushing a tag: git tag v0.2.0-alpha && git push --tags
 # Builds binaries, publishes packages, creates GitHub release
 # ============================================================
 
@@ -14,20 +14,25 @@ permissions:
   contents: write
   packages: write
   id-token: write
+  attestations: write
 
 jobs:
-  # Create GitHub release
+  # ── Create GitHub release with changelog ─────────────────────
   create-release:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create.outputs.upload_url }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
       - name: Generate changelog
-        id: changelog
         run: |
           cargo install git-cliff
           git cliff --latest --strip header > RELEASE_NOTES.md
@@ -39,28 +44,36 @@ jobs:
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          generate_release_notes: true
 
-  # Build binaries for all platforms
+  # ── Build binaries for all platforms ─────────────────────────
   build-binaries:
+    name: Build ${{ matrix.name }}
     needs: create-release
     strategy:
+      fail-fast: false
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             name: neurograph-linux-amd64
+            cross: false
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             name: neurograph-linux-arm64
+            cross: true
           - target: x86_64-apple-darwin
             os: macos-latest
             name: neurograph-macos-amd64
+            cross: false
           - target: aarch64-apple-darwin
             os: macos-latest
             name: neurograph-macos-arm64
+            cross: false
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             name: neurograph-windows-amd64
+            cross: false
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -68,31 +81,81 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
 
       - name: Install cross
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: cargo install cross
+        if: matrix.cross
+        run: cargo install cross --locked
 
       - name: Build
         run: |
-          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-            cross build --release --target ${{ matrix.target }} --bin neurograph-cli --bin neurograph-server
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }} -p neurograph-cli
           else
-            cargo build --release --target ${{ matrix.target }} --bin neurograph-cli --bin neurograph-server
+            cargo build --release --target ${{ matrix.target }} -p neurograph-cli
           fi
         shell: bash
 
-      - name: Package
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/neurograph-cli dist/ 2>/dev/null || \
-          cp target/${{ matrix.target }}/release/neurograph-cli.exe dist/ 2>/dev/null || true
-          cp target/${{ matrix.target }}/release/neurograph-server dist/ 2>/dev/null || \
-          cp target/${{ matrix.target }}/release/neurograph-server.exe dist/ 2>/dev/null || true
+          cp target/${{ matrix.target }}/release/neurograph-cli dist/neurograph
           cd dist && tar czf ../${{ matrix.name }}.tar.gz *
         shell: bash
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir dist
+          copy target\${{ matrix.target }}\release\neurograph-cli.exe dist\neurograph.exe
+          cd dist && tar czf ..\${{ matrix.name }}.tar.gz *
+        shell: cmd
+
+      - name: Compute checksums
+        run: |
+          sha256sum ${{ matrix.name }}.tar.gz > ${{ matrix.name }}.tar.gz.sha256 2>/dev/null || \
+          shasum -a 256 ${{ matrix.name }}.tar.gz > ${{ matrix.name }}.tar.gz.sha256 2>/dev/null || \
+          certutil -hashfile ${{ matrix.name }}.tar.gz SHA256 > ${{ matrix.name }}.tar.gz.sha256
+        shell: bash
+        continue-on-error: true
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.name }}.tar.gz
+          files: |
+            ${{ matrix.name }}.tar.gz
+            ${{ matrix.name }}.tar.gz.sha256
+
+  # ── Publish Rust crates ──────────────────────────────────────
+  publish-crates:
+    name: Publish to crates.io
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish neurograph-core
+        run: cargo publish -p neurograph-core --no-verify
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
+
+      - name: Wait for index
+        run: sleep 45
+
+      - name: Publish neurograph-cli
+        run: cargo publish -p neurograph-cli --no-verify
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
+
+      - name: Wait for index
+        run: sleep 30
+
+      - name: Publish neurograph-mcp
+        run: cargo publish -p neurograph-mcp --no-verify
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true

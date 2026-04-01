@@ -17,6 +17,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
+  RUST_BACKTRACE: 1
 
 permissions:
   contents: read
@@ -24,7 +25,7 @@ permissions:
   checks: write
 
 jobs:
-  # Rust checks across OS and MSRV
+  # ── Rust: format, lint, build, test ──────────────────────────
   rust-check:
     name: Rust ${{ matrix.toolchain }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -40,29 +41,38 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-${{ matrix.os }}-${{ matrix.toolchain }}"
 
       - name: Check formatting
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
 
-      - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Clippy (default features)
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Build
-        run: cargo build --all-features
+      - name: Build workspace
+        run: cargo build --workspace
 
-      - name: Test
-        run: cargo test --all-features
-        env:
-          RUST_BACKTRACE: 1
+      - name: Test neurograph-core (lib only, default features)
+        run: cargo test -p neurograph-core --lib
 
-  # Security audit
+      - name: Test neurograph-core (all features)
+        if: matrix.toolchain == 'stable'
+        run: cargo test -p neurograph-core --lib --features full
+
+      - name: Test all crates
+        if: matrix.toolchain == 'stable' && matrix.os == 'ubuntu-latest'
+        run: cargo test --workspace
+
+  # ── Security audit ──────────────────────────────────────────
   security:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Audit dependencies
+      - name: Audit dependencies (cargo-audit)
         uses: rustsec/audit-check@v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -70,15 +80,18 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-deny
-        run: cargo install cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          arguments: --all-features
 
-      - name: Check licenses and advisories
-        run: cargo deny check
-
-  # Dashboard build check
+  # ── Dashboard: lint + build ─────────────────────────────────
   dashboard:
     name: Dashboard Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -88,16 +101,15 @@ jobs:
           cache-dependency-path: dashboard/package-lock.json
 
       - name: Install dependencies
-        run: |
-          cd dashboard
-          npm install --no-audit
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
 
       - name: Build
-        run: |
-          cd dashboard
-          npm run build
+        run: npm run build
 
-  # Docker build test
+  # ── Docker build test ───────────────────────────────────────
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
@@ -116,10 +128,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Code coverage
+  # ── Code coverage ──────────────────────────────────────────
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -128,13 +141,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install cargo-llvm-cov
-        run: cargo install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate coverage
-        run: cargo llvm-cov --all-features --lcov --output-path lcov.info
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}

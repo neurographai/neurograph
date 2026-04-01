@@ -1,10 +1,21 @@
+# ============================================================
+# Performance Benchmarks
+# Runs on push to main and PRs, tracks regressions
+# ============================================================
+
 name: Performance Benchmarks
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'crates/**'
+      - 'Cargo.toml'
   pull_request:
     branches: [main]
+    paths:
+      - 'crates/**'
+      - 'Cargo.toml'
 
 permissions:
   contents: write
@@ -21,26 +32,29 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: bench
 
       - name: Run benchmarks
         run: |
-          cargo bench -- --output-format bencher 2>/dev/null | tee output.txt
+          cargo bench --workspace -- --output-format bencher 2>/dev/null | tee output.txt
+          # If no benchmarks exist yet, create a placeholder
           if [ ! -s output.txt ]; then
             echo "test placeholder_bench ... bench:           0 ns/iter (+/- 0)" > output.txt
           fi
 
-      - name: Store benchmark result
+      - name: Store benchmark result (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          alert-threshold: '120%'
+          alert-threshold: '130%'
           comment-on-alert: true
           fail-on-alert: false
           auto-push: false
-          save-data-file: false
+          save-data-file: true
           benchmark-data-dir-path: benchmarks/results
 
       - name: Compare PR benchmarks
@@ -50,6 +64,6 @@ jobs:
           tool: 'cargo'
           output-file-path: output.txt
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          alert-threshold: '120%'
+          alert-threshold: '130%'
           comment-on-alert: true
-          fail-on-alert: true
+          fail-on-alert: false

@@ -1,6 +1,6 @@
 # ============================================================
 # Build and Publish Docker Images
-# Pushes to GHCR and Docker Hub with multi-arch and Trivy scan
+# Pushes to GHCR with multi-arch, Trivy scan, and SBOM
 # ============================================================
 
 name: Docker Publish
@@ -16,27 +16,34 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
 
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  REGISTRY_GHCR: ghcr.io
-  REGISTRY_DOCKER: docker.io
+  REGISTRY: ghcr.io
   IMAGE_NAME: neurographai/neurograph
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+  security-events: write
 
 jobs:
   build-and-push:
+    name: Build ${{ matrix.variant }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-
     strategy:
       matrix:
         include:
-          - dockerfile: docker/Dockerfile
+          - variant: full
+            dockerfile: docker/Dockerfile
             suffix: ""
             platforms: linux/amd64,linux/arm64
-          - dockerfile: docker/Dockerfile.minimal
+          - variant: minimal
+            dockerfile: docker/Dockerfile.minimal
             suffix: "-minimal"
             platforms: linux/amd64,linux/arm64
 
@@ -53,26 +60,24 @@ jobs:
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY_GHCR }}
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        if: ${{ env.HAS_DOCKERHUB == 'true' }}
+        if: secrets.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY_DOCKER }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        env:
-          HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        continue-on-error: true
 
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -96,18 +101,20 @@ jobs:
           sbom: true
 
       - name: Generate SBOM attestation
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.suffix }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
+  # ── Trivy vulnerability scan ────────────────────────────────
   scan:
+    name: Trivy Scan
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ghcr.io/neurographai/neurograph:latest
           format: 'sarif'
@@ -116,5 +123,6 @@ jobs:
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
           sarif_file: 'trivy-results.sarif'

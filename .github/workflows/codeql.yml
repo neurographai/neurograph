@@ -1,14 +1,19 @@
 # ============================================================
 # CodeQL Analysis
-# Runs static analysis on Rust code
+# SAST for JavaScript/TypeScript dashboard code
 # ============================================================
 
 name: CodeQL
 on:
   push:
     branches: [main]
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/codeql.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'dashboard/**'
   schedule:
     - cron: '0 6 * * 1'  # Weekly Monday 6:00 UTC
 
@@ -28,7 +33,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: actions
+          languages: javascript-typescript
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

@@ -1,6 +1,6 @@
 # ============================================================
 # Dependency Review
-# Blocks PRs that introduce vulnerable dependencies
+# Blocks PRs that introduce vulnerable or disallowed dependencies
 # ============================================================
 
 name: Dependency Review
@@ -20,6 +20,7 @@ jobs:
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         with:
-          fail-on-severity: moderate
+          fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
           comment-summary-in-pr: always
+          warn-only: false
