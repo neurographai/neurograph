@@ -4,7 +4,13 @@
 //! Axum-based REST API server for NeuroGraph.
 
 #[cfg(feature = "server")]
+pub mod chat_routes;
+#[cfg(feature = "server")]
+pub mod embed;
+#[cfg(feature = "server")]
 pub mod routes;
+#[cfg(feature = "server")]
+pub mod settings;
 #[cfg(feature = "server")]
 pub mod state;
 #[cfg(feature = "server")]

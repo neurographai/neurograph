@@ -18,6 +18,8 @@
 - [Embedding Architecture](#embedding-architecture)
 - [Temporal Architecture](#temporal-architecture)
 - [Community Detection Architecture](#community-detection-architecture)
+- [Chat Agent Architecture](#chat-agent-architecture)
+- [Multi-Provider LLM Router](#multi-provider-llm-router)
 - [Dashboard Architecture](#dashboard-architecture)
 - [Data Flow](#data-flow)
 - [Concurrency Model](#concurrency-model)
@@ -33,21 +35,28 @@ NeuroGraph is structured as a **Rust workspace** with a layered architecture:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                 NeuroGraph (Public API)                   │
-│      add_text · add_json · query · at · history           │
+│      add_text · add_json · query · at · history · chat   │
 ├──────────────────────────────────────────────────────────┤
 │              Engine (Orchestration Layer)                  │
 │    QueryRouter · ContextAssembler · CostTracker           │
 ├────────────────┬─────────────────┬───────────────────────┤
-│ Ingestion      │   Knowledge     │   Retrieval            │
-│ Pipeline       │   Layer         │   Engine               │
-│ ────────────   │ ─────────────   │ ──────────────         │
-│ extractors     │ temporal mgr    │ semantic search        │
-│ deduplication  │ fact versions   │ keyword (BM25)         │
-│ conflict res.  │ forgetting      │ graph traversal        │
-│ validators     │ branching       │ RRF fusion             │
+│ Chat Agent     │   Knowledge     │   Retrieval            │
+│ ────────────   │   Layer         │   Engine               │
+│ 11 intents     │ ─────────────   │ ──────────────         │
+│ tool planner   │ temporal mgr    │ semantic search        │
+│ tool executor  │ fact versions   │ keyword (BM25)         │
+│ follow-ups     │ forgetting      │ graph traversal        │
+│                │ branching       │ RRF fusion             │
 ├────────────────┼─────────────────┼───────────────────────┤
-│ LLM Client     │   Embedder      │   Community            │
-│ openai/regex   │ openai/hash     │ louvain/leiden         │
+│ Ingestion      │   Embedder      │   Community            │
+│ Pipeline       │ openai/hash     │ louvain/leiden         │
+│ ────────────   ├─────────────────┼───────────────────────┤
+│ extractors     │ Multi-Provider  │   REST API / Dashboard │
+│ deduplication  │ LLM Router      │ ──────────────         │
+│ conflict res.  │ ─────────────── │ Axum + embedded SPA    │
+│ validators     │ 6 providers     │ settings dashboard     │
+│                │ 5 strategies    │ chat endpoints         │
+│                │ fallback chains │ LLM management API     │
 ├────────────────┴─────────────────┴───────────────────────┤
 │                   Graph Driver (trait)                     │
 │      MemoryDriver · EmbeddedDriver (sled) · Neo4j         │
@@ -388,6 +397,182 @@ NeuroGraph implements **Louvain** and **Leiden** algorithms in pure Rust, operat
 
 ---
 
+## Chat Agent Architecture
+
+**Location:** `crates/neurograph-core/src/chat/`
+
+The chat agent is an intent-aware orchestrator that bridges natural-language queries with graph operations and LLM generation. It implements a **7-step processing pipeline**.
+
+```
+chat/
+├── agent.rs       # NeuroGraphAgent — the 7-step orchestrator
+├── intent.rs      # IntentClassifier — 11 intents, regex fast-path + LLM fallback
+├── tools.rs       # AgentTool enum, ToolPlanner, ToolExecutor
+├── response.rs    # AgentResponse — 5-part structured response protocol
+├── context.rs     # ContextBuilder — token-budgeted RAG context assembly
+├── history.rs     # ConversationHistory — sliding-window session tracking
+├── rag.rs         # RAG pipeline (retrieve → format → generate)
+├── repl.rs        # Terminal REPL for `neurograph chat`
+└── mod.rs
+```
+
+### 7-Step Agent Loop
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant User
+    participant Agent
+    participant Classifier
+    participant Planner
+    participant Executor
+    participant Router as LLM Router
+    participant Graph as NeuroGraph
+
+    User->>Agent: process(message)
+    Agent->>Classifier: 1. classify(message)
+    Classifier-->>Agent: ClassifiedIntent (intent, confidence)
+    Agent->>Planner: 2. plan(intent, entities)
+    Planner-->>Agent: Vec<AgentTool>
+    Agent->>Executor: 3. execute_tools(tools)
+    par Parallel-safe tools
+        Executor->>Graph: rag_retrieve, entity_lookup, paper_search
+    end
+    Executor-->>Agent: Vec<ToolResult>
+    Agent->>Agent: 4. build_context(results)
+    Agent->>Router: 5. route(task_type) → LLM
+    Router-->>Agent: answer + usage
+    Agent->>Agent: 6. generate_follow_ups()
+    Agent->>Agent: 7. update_session()
+    Agent-->>User: AgentResponse
+```
+
+### 11 Intent Types
+
+| Intent | Trigger Patterns | Tools Used |
+|--------|-----------------|------------|
+| **Explain** | "what is", "explain", "how does" | `rag_retrieve`, `entity_lookup`, `highlight_nodes` |
+| **Explore** | "connected to", "related", "expand" | `entity_lookup`, `expand_subgraph` |
+| **TemporalCompare** | "changed", "evolved", "over time" | `entity_history`, `rag_retrieve`, `highlight_nodes` |
+| **TimeTravel** | "as of", "in 2024", "snapshot" | `temporal_snapshot`, `rag_retrieve` |
+| **FindContradictions** | "contradict", "conflict", "inconsistent" | `find_contradictions`, `rag_retrieve` |
+| **Summarize** | "summarize", "overview", "key points" | `community_query`, `rag_retrieve` |
+| **Search** | "find", "search", "which paper" | `rag_retrieve`, `paper_search` |
+| **TraceRelationship** | "path between", "chain from" | `trace_relationship`, `highlight_nodes` |
+| **DiscoverThemes** | "themes", "clusters", "communities" | `community_query`, `switch_graph_view` |
+| **FilterGraph** | "filter", "show only", "focus on" | `filter_graph_edges`, `rag_retrieve` |
+| **General** | Fallback | `rag_retrieve` |
+
+### Tool Categories
+
+Tools are partitioned into three categories:
+
+1. **Retrieval tools** (read-only, parallel-safe): `rag_retrieve`, `entity_lookup`, `entity_history`, `community_query`, `temporal_snapshot`, `paper_search`, `what_changed`, `find_contradictions`, `trace_relationship`
+2. **Graph mutation tools** (produce dashboard actions): `highlight_nodes`, `expand_subgraph`, `switch_graph_view`, `filter_graph_edges`, `jump_to_timeline`, `open_node_panel`, `reset_graph_view`
+3. **Meta tools**: `suggest_follow_ups`, `explain_reasoning`
+
+Parallel-safe tools are executed concurrently via `futures::join_all`; sequential tools run in order.
+
+### 5-Part Structured Response
+
+Every `AgentResponse` contains:
+
+| Part | Type | Purpose |
+|------|------|---------|
+| `answer` | `String` | The generated answer text |
+| `evidence` | `Vec<EvidenceChunk>` | Supporting evidence with source provenance |
+| `graph_actions` | `Vec<GraphAction>` | Dashboard mutations (highlight, expand, filter) |
+| `follow_ups` | `Vec<FollowUpQuestion>` | Suggested follow-up questions with intent hints |
+| `meta` | `ResponseMeta` | Intent, tools used, model, tokens, cost, latency |
+
+Evidence sources are typed: `Paper { title, section, page }`, `Entity { id, name }`, `Community { id, topic }`, or `Temporal { timestamp, description }`.
+
+---
+
+## Multi-Provider LLM Router
+
+**Location:** `crates/neurograph-core/src/llm/`
+
+The LLM subsystem provides a provider-agnostic abstraction layer with smart routing, health monitoring, and per-call cost tracking across 6 providers.
+
+```
+llm/
+├── traits.rs          # LlmClient trait, LlmProvider enum, ProviderHealth
+├── router.rs          # LlmRouter — smart multi-provider dispatch
+├── registry.rs        # Static model catalog (10 models, pricing, capabilities)
+├── config.rs          # LlmConfig presets per provider
+├── token_tracker.rs   # Per-prompt-type token usage + cost tracking
+├── cache.rs           # LRU response cache with TTL
+├── openai.rs          # OpenAI client (async-openai)
+├── generic.rs         # GenericLlmClient (raw reqwest, OpenAI-compatible)
+└── providers/
+    ├── anthropic.rs    # Anthropic Messages API client
+    ├── gemini.rs       # Google Gemini API client
+    └── openai_compat.rs # OpenAI-compatible wrapper (Groq, xAI)
+```
+
+### 6 Supported Providers
+
+| Provider | Client | Models | Init |
+|----------|--------|--------|------|
+| **OpenAI** | `OpenAiClient` | GPT-4o, GPT-4o-mini, o4-mini | `OPENAI_API_KEY` |
+| **Anthropic** | `AnthropicClient` | Claude Sonnet 4.5, Haiku 3.5 | `ANTHROPIC_API_KEY` |
+| **Gemini** | `GeminiClient` | Gemini 2.5 Flash, 2.5 Pro | `GEMINI_API_KEY` |
+| **xAI Grok** | `OpenAiCompatClient` | Grok 3, Grok 3 Mini | `XAI_API_KEY` |
+| **Groq** | `OpenAiCompatClient` | Llama 3.3 70B, DeepSeek R1 | `GROQ_API_KEY` |
+| **Ollama** | `GenericLlmClient` | Any local model | Always available |
+
+### 5 Routing Strategies
+
+| Strategy | Behavior |
+|----------|----------|
+| **TaskAware** (default) | Maps each `TaskType` to the optimal provider (e.g., Groq for intent classification, Anthropic for RAG generation, Gemini for summarization) |
+| **CostOptimized** | Routes to cheapest available: Ollama → Groq → Gemini → OpenAI → xAI → Anthropic |
+| **LatencyOptimized** | Routes to fastest: Groq → OpenAI → Gemini → xAI → Anthropic → Ollama |
+| **Fixed** | Always use `preferred_provider` |
+| **Fallback** | Try primary, walk `fallback_chain` on error |
+
+### Task-Aware Routing Map
+
+| Task Type | Preferred Provider | Rationale |
+|-----------|-------------------|----------|
+| `IntentClassification` | Groq | Speed (~500 tok/s), cheap |
+| `EntityExtraction` | OpenAI | Best structured JSON output |
+| `RagGeneration` | Anthropic | Accuracy, long context |
+| `CommunitySummary` | Gemini | 1M context window |
+| `FollowUpGeneration` | Groq | Fast, creative |
+| `ConflictDetection` | Anthropic | Strong reasoning |
+| `TemporalAnalysis` | xAI Grok | Reasoning, large context |
+| `Deduplication` | OpenAI | Structured comparison |
+| `GeneralChat` | User preference | Configurable |
+
+### Health Monitoring & Fallback
+
+- **Health cache**: Cached per-provider with 60-second TTL
+- **Fallback chain**: Default: Groq → OpenAI → Gemini → Ollama
+- **Budget enforcement**: Atomic microdollar tracking, routes fail with `BudgetExceeded` when limit hit
+- **Runtime reconfiguration**: `set_provider()`, `remove_provider()`, `update_config()` — all hot-swappable via `RwLock`
+
+### Token Tracker
+
+The `TokenTracker` tracks usage at per-prompt-type granularity:
+
+| Prompt Type | Description |
+|-------------|-------------|
+| `EntityExtraction` | LLM-based NER |
+| `RelationshipExtraction` | Relationship identification |
+| `EntityResolution` | Deduplication fallback |
+| `CommunitySummary` | Community map-reduce |
+| `QueryRewrite` | Query expansion |
+| `AnswerGeneration` | RAG answer generation |
+| `Reranking` | Cross-encoder reranking |
+| `ConflictResolution` | Contradiction resolution |
+| `Custom(String)` | Extension point |
+
+Each record stores: input tokens, output tokens, call count, and estimated cost USD.
+
+---
+
 ## Dashboard Architecture
 
 **Location:** `dashboard/`
@@ -402,6 +587,7 @@ dashboard/
 │   ├── index.css            # Base resets, Inter + JetBrains Mono fonts
 │   ├── components/
 │   │   ├── GraphCanvas.tsx       # G6 graph renderer
+│   │   ├── ChatPanel.tsx         # Chat agent FAB + sliding panel
 │   │   ├── QueryPanel.tsx        # Natural-language query input + results
 │   │   ├── BranchDiffPanel.tsx   # Branch selector + diff viewer
 │   │   ├── NodeDetailPanel.tsx   # Right sidebar node inspector
@@ -435,7 +621,11 @@ dashboard/
 
 6. **Community visualization** — Communities are rendered as G6 Combos (grouped clusters) with distinct colors per community.
 
-7. **Production Dockerfile** — Multi-stage build: Node.js builder → Nginx runtime with SPA routing and API reverse proxy.
+7. **Chat Agent Panel** — Floating action button (FAB) opens a sliding chat panel that communicates via the `/api/v1/chat/agent` endpoint. Responses include evidence drawers, follow-up chips, and graph action bridging (e.g., clicking an entity in the chat highlights it on the graph).
+
+8. **Settings Dashboard** — Provider management UI for configuring API keys, testing provider health, viewing the model catalog, and tracking token/cost usage. Communicates via the `/api/v1/llm/*` management endpoints.
+
+9. **Production Dockerfile** — Multi-stage build: Node.js builder → Nginx runtime with SPA routing and API reverse proxy.
 
 ---
 

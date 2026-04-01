@@ -94,7 +94,7 @@ multi-strategy retrieval, and biologically-inspired forgetting
 for LLM-based agents. Existing graph-RAG systems treat facts as
 eternally valid, employ single-strategy retrieval, and lack
 mechanisms for bounded memory growth. NeuroGraph addresses these
-gaps through four contributions:
+gaps through five contributions:
 (1)~a \textbf{seven-strategy hybrid retrieval engine} combining
 semantic search, BM25, Personalized PageRank, graph traversal,
 cross-encoder reranking, MMR diversity, and node-distance scoring,
@@ -107,11 +107,18 @@ without sacrificing high-value low-frequency knowledge;
 (3)~a \textbf{MAGMA-style multi-graph architecture} indexing each
 memory item across four orthogonal views (semantic, temporal,
 causal, entity) with intent-aware query routing across eight
-intent types; and
+intent types;
 (4)~a \textbf{bi-temporal knowledge model} with fact version
 chains, point-in-time snapshots, and Git-like copy-on-write branch
-isolation for multi-agent memory.
-The system is implemented as a 35,000-line Rust workspace with
+isolation for multi-agent memory; and
+(5)~an \textbf{intent-aware chat agent} with 11 classified
+intents, tool-planned execution across 18 tools (retrieval,
+graph mutation, and meta), a 5-part structured response protocol,
+and a \textbf{multi-provider LLM router} that dispatches across
+six providers (OpenAI, Anthropic, Gemini, Groq, xAI~Grok, Ollama)
+via task-aware, cost-optimized, or latency-optimized routing
+with automatic fallback chains.
+The system is implemented as a 40,000-line Rust workspace with
 zero-configuration defaults, pluggable storage backends, and an
 embedded visualization dashboard.
 \end{abstract}
@@ -208,6 +215,14 @@ This paper makes the following contributions:
   \item A \textbf{research paper intelligence platform} with PDF
     parsing, multi-source search, RAG chat, and MCP integration
     (\S\ref{sec:research}, \S\ref{sec:mcp}).
+  \item An \textbf{intent-aware chat agent} with 11 intents,
+    18 tools (retrieval + graph mutation + meta), parallel execution,
+    and a 5-part structured response protocol with evidence provenance
+    and dashboard graph actions (\S\ref{sec:chatagent}).
+  \item A \textbf{multi-provider LLM router} dispatching across six
+    providers via five routing strategies (task-aware, cost-optimized,
+    latency-optimized, fixed, fallback) with health monitoring and
+    per-prompt-type token tracking (\S\ref{sec:llmrouter}).
 \end{itemize}
 
 We adopt the operating-system metaphor deliberately:
@@ -279,7 +294,7 @@ Implementation & Rust (35K LoC) & Python & Python & Python
 
 \subsection{Workspace Organization}
 
-NeuroGraph is organized as a Rust Cargo workspace comprising four
+NeuroGraph is organized as a Rust Cargo workspace comprising five
 crates:
 
 \begin{table}[H]
@@ -291,10 +306,12 @@ crates:
 \textbf{Crate} & \textbf{Responsibility} \\
 \midrule
 \texttt{neurograph-core} & Core library: graph, ingestion, retrieval,
-  memory, temporal, PDF, papers, chat, server, embedders, community \\
+  memory, temporal, PDF, papers, chat agent, LLM router, server,
+  embedders, community \\
 \texttt{neurograph-cli} & Command-line interface with 12 subcommands \\
 \texttt{neurograph-mcp} & Model Context Protocol server (stdio/SSE) \\
 \texttt{neurograph-eval} & Evaluation harness and benchmarks \\
+\texttt{neurograph-embed-server} & Standalone embedding HTTP server \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -550,6 +567,76 @@ and model name. The cache supports:
 Each cached entry records the response content, model name, input/output
 token counts, and timestamp---enabling cost tracking even for cached
 results.
+
+\subsection{Multi-Provider LLM Router}
+\label{sec:llmrouter}
+
+The \texttt{LlmRouter} dispatches LLM requests across six providers
+with five routing strategies, health monitoring, and automatic
+fallback chains.
+
+\paragraph{Supported Providers.}
+Six provider implementations are available:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{OpenAI} (\texttt{OpenAiClient}): GPT-4o, GPT-4o-mini,
+    o4-mini. Via \texttt{async-openai} crate.
+  \item \textbf{Anthropic} (\texttt{AnthropicClient}): Claude
+    Sonnet~4.5, Haiku~3.5. Native Messages API implementation.
+  \item \textbf{Gemini} (\texttt{GeminiClient}): Gemini~2.5 Flash
+    (1M context), Gemini~2.5 Pro. Native \texttt{generateContent} API.
+  \item \textbf{xAI Grok} (\texttt{OpenAiCompatClient}): Grok~3,
+    Grok~3 Mini. OpenAI-compatible endpoint.
+  \item \textbf{Groq} (\texttt{OpenAiCompatClient}): Llama~3.3-70B
+    ($\sim$500~tok/s), DeepSeek~R1.
+  \item \textbf{Ollama} (\texttt{GenericLlmClient}): Any local model
+    via \texttt{localhost:11434}. Always available, zero-cost.
+\end{enumerate}
+
+Providers are initialized from environment variables at startup and
+can be added/removed at runtime via \texttt{set\_provider()} and
+\texttt{remove\_provider()}.
+
+\paragraph{Routing Strategies.}
+Five strategies are supported via the \texttt{RoutingStrategy} enum:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{TaskAware} (default): Maps each \texttt{TaskType} to
+    the optimal provider---e.g., Groq for intent classification
+    (speed), OpenAI for entity extraction (structured output),
+    Anthropic for RAG generation (accuracy), Gemini for summarization
+    (1M context window).
+  \item \textbf{CostOptimized}: Routes to the cheapest available
+    provider: Ollama $\to$ Groq $\to$ Gemini $\to$ OpenAI $\to$
+    xAI $\to$ Anthropic.
+  \item \textbf{LatencyOptimized}: Fastest first: Groq $\to$ OpenAI
+    $\to$ Gemini $\to$ xAI $\to$ Anthropic $\to$ Ollama.
+  \item \textbf{Fixed}: Always use \texttt{preferred\_provider}.
+  \item \textbf{Fallback}: Try primary, walk \texttt{fallback\_chain}
+    on error.
+\end{itemize}
+
+\paragraph{Health Monitoring.}
+The router maintains a per-provider health cache with 60-second TTL.
+\texttt{check\_health(provider)} issues a lightweight test request
+and caches the result. Unhealthy providers are skipped during routing.
+
+\paragraph{Budget Enforcement.}
+The \texttt{RouterConfig} carries an optional \texttt{budget\_limit\_usd}.
+Before each route, the router checks accumulated spend via the
+\texttt{TokenTracker} and returns \texttt{LlmError::BudgetExceeded}
+when the limit is reached.
+
+\paragraph{Per-Task Overrides.}
+The \texttt{task\_overrides} map in \texttt{RouterConfig} allows
+fine-grained control: e.g., always use Anthropic for RAG generation
+regardless of routing strategy.
+
+\paragraph{Model Registry.}
+A static catalog of 10 models with \texttt{ModelInfo} records:
+model~ID, display name, provider, context window, max output tokens,
+input/output cost per 1M tokens, \texttt{ModelCapabilities}
+(streaming, function calling, structured output, vision, reasoning),
+recommended \texttt{TaskType}s, and \texttt{SpeedTier}
+(Instant/Fast/Standard/Slow).
 
 \paragraph{Token Usage Tracker (\texttt{TokenTracker}).}
 Tracks LLM token consumption at granular, per-prompt-type level.
@@ -1374,24 +1461,78 @@ by relevance, citation count, or date. The CLI supports
 \texttt{--since} year filtering and \texttt{--download} for
 automatic PDF retrieval.
 
-\subsection{RAG Chat Engine}
+\subsection{Intent-Aware Chat Agent}
+\label{sec:chatagent}
 
-The chat module implements a complete conversational RAG pipeline:
+The chat module implements a full agent loop that bridges
+natural-language queries with graph operations and LLM generation.
+The \texttt{NeuroGraphAgent} processes each user message through a
+7-step pipeline:
 
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Context Assembly}: The \texttt{ContextBuilder}
-    retrieves the top-$k$ relevant chunks from the knowledge
-    graph, formats them with source citations (paper title,
-    section, page number).
-  \item \textbf{Conversation History}: The \texttt{ConversationHistory}
-    maintains a sliding window of messages with role annotations
-    (User, Assistant, System) and attached source citations.
-  \item \textbf{RAG Pipeline}: Formats a system prompt incorporating
-    retrieved context, conversation history, and applicable
-    procedural rules from L4 memory.
-  \item \textbf{REPL}: Terminal-based interactive loop with
-    \texttt{/clear}, \texttt{/quit} commands and colored output.
-\end{itemize}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Intent Classification}: The \texttt{IntentClassifier}
+    classifies queries into 11 intent types using a two-stage approach:
+    (a)~regex fast-path (handles $\sim$70\% of queries, instant, free),
+    (b)~LLM fallback via a fast model for ambiguous queries. The 11
+    intents are: \texttt{Explain}, \texttt{Explore},
+    \texttt{TemporalCompare}, \texttt{TimeTravel},
+    \texttt{FindContradictions}, \texttt{Summarize}, \texttt{Search},
+    \texttt{TraceRelationship}, \texttt{DiscoverThemes},
+    \texttt{FilterGraph}, and \texttt{General}.
+  \item \textbf{Tool Planning}: The \texttt{ToolPlanner} maps each
+    classified intent to an ordered sequence of \texttt{AgentTool}s.
+    Tools span three categories: \emph{retrieval tools} (RAG retrieve,
+    entity lookup, entity history, community query, temporal snapshot,
+    paper search, contradiction detection, relationship tracing),
+    \emph{graph mutation tools} (highlight nodes, expand subgraph,
+    switch graph view, filter edges, jump timeline, open node panel,
+    reset view), and \emph{meta tools} (suggest follow-ups, explain
+    reasoning).
+  \item \textbf{Tool Execution}: Retrieval tools marked
+    \texttt{is\_parallel\_safe()} are executed concurrently via
+    \texttt{futures::join\_all}; sequential tools run in order.
+  \item \textbf{Context Assembly}: Tool results are merged into a
+    context string with deduplicated \texttt{EvidenceChunk}s
+    (capped at 10, sorted by relevance score).
+  \item \textbf{LLM Answer Generation}: The agent routes to the
+    best LLM for the task via the \texttt{LlmRouter}
+    (\S\ref{sec:llmrouter}), using intent-specific system prompts
+    and incorporating recent conversation history.
+  \item \textbf{Follow-Up Generation}: Intent-specific follow-up
+    questions are generated with \texttt{intent\_hint} annotations
+    for the UI.
+  \item \textbf{Session Update}: The conversation history is updated
+    with the user/assistant turn.
+\end{enumerate}
+
+\paragraph{Structured Response Protocol.}
+Every \texttt{AgentResponse} contains five parts:
+(1)~\texttt{answer} (generated text),
+(2)~\texttt{evidence} (\texttt{Vec<EvidenceChunk>} with typed sources:
+\texttt{Paper\{title, section, page\}}, \texttt{Entity\{id, name\}},
+\texttt{Community\{id, topic\}}, \texttt{Temporal\{timestamp,
+description\}}),
+(3)~\texttt{graph\_actions} (dashboard mutations: highlight, expand,
+filter, switch view),
+(4)~\texttt{follow\_ups} (suggested questions with intent hints),
+(5)~\texttt{meta} (intent classification, tools used, model name,
+tokens, cost, latency, session ID).
+
+\paragraph{Fallback Behavior.}
+When no LLM provider is available, the agent returns a context-based
+fallback answer (truncated to 500 characters) with halved confidence,
+ensuring the system remains functional in offline mode.
+
+\paragraph{Conversation Management.}
+The \texttt{ConversationHistory} maintains a sliding window of
+messages with role annotations (User, Assistant, System) and
+attached source citations. The \texttt{last\_n(k)} method retrieves
+recent context for multi-turn conversations.
+
+\paragraph{REPL Interface.}
+A terminal-based interactive loop is provided via \texttt{neurograph
+chat --model ollama:llama3.2}, with \texttt{/clear} and
+\texttt{/quit} commands and colored output.
 
 % ════════════════════════════════════════════════════════════════════════════
 \section{REST API and Dashboard}
@@ -1400,40 +1541,66 @@ The chat module implements a complete conversational RAG pipeline:
 \subsection{API Design}
 
 The server module provides a RESTful API built on Axum 0.8 with
-Tower middleware for CORS and tracing:
+Tower middleware for CORS and tracing. The API has grown from 11
+endpoints to 21, organized into four groups:
 
 \begin{table}[H]
 \centering
 \scriptsize
-\caption{REST API endpoints.}
+\caption{REST API endpoints (all prefixed with \texttt{/api/v1}).}
 \label{tab:api}
-\begin{tabular}{@{}llp{2.2cm}@{}}
+\begin{tabular}{@{}llp{2.1cm}@{}}
 \toprule
 \textbf{Verb} & \textbf{Endpoint} & \textbf{Description} \\
 \midrule
+\multicolumn{3}{@{}l}{\textit{Core}} \\
 \textsf{GET}  & \texttt{/health} & Health check \\
 \textsf{GET}  & \texttt{/stats} & Graph statistics \\
-\textsf{POST} & \texttt{/papers/ingest} & PDF upload \\
-\textsf{POST} & \texttt{/papers/ingest-text} & Text ingestion \\
-\textsf{POST} & \texttt{/papers/ingest-url} & URL ingestion \\
-\textsf{GET}  & \texttt{/papers} & List papers \\
 \textsf{POST} & \texttt{/query} & NL query \\
 \textsf{GET}  & \texttt{/graph} & Graph overview \\
-\textsf{POST} & \texttt{/chat} & RAG chat \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Papers \& Search}} \\
+\textsf{POST} & \texttt{/papers/ingest} & PDF upload \\
+\textsf{POST} & \texttt{/papers/ingest-text} & Text ingestion \\
 \textsf{POST} & \texttt{/search/papers} & Paper search \\
 \textsf{POST} & \texttt{/search/entities} & Entity search \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{Chat Agent}} \\
+\textsf{POST} & \texttt{/chat} & Simple RAG chat \\
+\textsf{POST} & \texttt{/chat/agent} & Full agent loop \\
+\textsf{POST} & \texttt{/chat/intent} & Intent only (fast) \\
+\textsf{GET}  & \texttt{/chat/sessions} & List sessions \\
+\textsf{G/D}  & \texttt{/chat/sessions/:id} & Get/delete session \\
+\midrule
+\multicolumn{3}{@{}l}{\textit{LLM Management}} \\
+\textsf{GET}  & \texttt{/llm/providers} & Provider health \\
+\textsf{POST} & \texttt{/llm/test} & Test API key \\
+\textsf{GET}  & \texttt{/llm/models} & Model catalog \\
+\textsf{GET}  & \texttt{/llm/usage} & Token/cost stats \\
+\textsf{G/P}  & \texttt{/llm/router/config} & Router config \\
 \bottomrule
 \end{tabular}
-\vspace{2pt}
-
-\raggedright\scriptsize All paths prefixed with \texttt{/api/v1}.
 \end{table}
 
 All responses follow a uniform \texttt{ApiResponse\{success, data,
 error\}} envelope. The server state (\texttt{AppState}) wraps a
-shared \texttt{NeuroGraph} instance, paper metadata, and
-conversation histories using \texttt{parking\_lot::RwLock} for
-synchronization.
+shared \texttt{NeuroGraph} instance, \texttt{LlmRouter},
+\texttt{NeuroGraphAgent}, paper metadata, and conversation
+histories using \texttt{parking\_lot::RwLock} for synchronization.
+
+The \texttt{/chat/agent} endpoint is the primary entry point for
+intelligent interaction: it runs the full 7-step agent loop
+(\S\ref{sec:chatagent}), returning an \texttt{AgentResponse} with
+evidence, graph actions, and follow-up suggestions. The
+\texttt{/chat/intent} endpoint provides low-latency intent preview
+for UI feedback (e.g., showing ``Searching\ldots'' vs.
+``Explaining\ldots'' while the full response is generated).
+
+The \texttt{/llm/*} endpoints enable a settings dashboard in the
+frontend: users can test API keys, view provider health, browse
+the full model catalog with pricing, inspect per-prompt-type token
+usage and cost breakdown, and reconfigure the router strategy
+and task overrides at runtime.
 
 \subsection{Embedded Dashboard}
 
@@ -1441,7 +1608,9 @@ Static dashboard assets are embedded in the binary via
 \texttt{rust-embed}, enabling a single-binary deployment with no
 external file dependencies. The dashboard provides a G6-based
 graph visualization with node type encoding, importance sizing,
-and memory tier coloring.
+memory tier coloring, a sliding chat agent panel with evidence
+drawers and follow-up chips, and a settings dashboard for
+LLM provider management.
 
 \subsection{Model Context Protocol (MCP)}
 \label{sec:mcp}

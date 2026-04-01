@@ -14,7 +14,7 @@
   <a href="https://github.com/neurographai/neurograph/discussions"><img src="https://img.shields.io/github/discussions/neurographai/neurograph?style=flat-square&color=purple&label=Discussions" alt="Discussions"/></a>
 </p>
 
->  **Pre-release software** — NeuroGraph is under active development (`v0.1.0-alpha`). APIs may change. Not yet published to crates.io.
+>  **Pre-release software** — NeuroGraph is under active development (`v0.2.0-alpha`). APIs may change. Not yet published to crates.io.
 
 <img width="2752" height="1536" alt="neuro graph banner" src="https://github.com/user-attachments/assets/5b05cad5-cd8b-478f-9066-443e814c9f90" />
 
@@ -22,7 +22,7 @@
 
 # NeuroGraph
 
-> A Rust-powered research paper intelligence platform — ingest PDFs, search across arXiv/Semantic Scholar/PubMed, build temporal knowledge graphs, and chat with your research using AI.
+> A Rust-powered research paper intelligence platform — ingest PDFs, search across arXiv/Semantic Scholar/PubMed, build temporal knowledge graphs, and chat with your research using a multi-provider AI agent.
 
 NeuroGraph is an open-source knowledge graph engine that treats **time as a first-class dimension**. Feed it research papers, and it extracts entities, builds a knowledge graph, and lets you query it with natural language. Every fact has a validity window, every query can time-travel, and the graph can branch like Git.
 
@@ -55,7 +55,7 @@ graph TB
             direction LR
             PDF["PDF Ingestion<br/>(fast + structured)"]
             SEARCH["Paper Search<br/>(arXiv/S2/PubMed)"]
-            RAG["RAG Chat<br/>(Ollama/OpenAI)"]
+            AGENT["Chat Agent<br/>(11 intents, tool planning)"]
         end
 
         subgraph INGESTION["Ingestion Pipeline"]
@@ -80,6 +80,17 @@ graph TB
             BM25["BM25<br/>Search"]
             GRAPH_WALK["Graph<br/>Walk"]
             RRF["RRF<br/>Fusion"]
+        end
+
+        subgraph LLM_LAYER["Multi-Provider LLM"]
+            direction LR
+            ROUTER["Smart Router<br/>(task-aware)"]
+            OPENAI_P["OpenAI"]
+            ANTHROPIC_P["Anthropic"]
+            GEMINI_P["Gemini"]
+            GROQ_P["Groq"]
+            XAI_P["xAI Grok"]
+            OLLAMA_P["Ollama"]
         end
     end
 
@@ -114,9 +125,10 @@ graph TB
 
     class RS,CLI,MCP,API clientNode
     class PARSER,NER,REL,DEDUP,TEMPORAL,COMMUNITY,MEMORY,DECAY,SEMANTIC,BM25,GRAPH_WALK,RRF engineNode
-    class PDF,SEARCH,RAG researchNode
+    class PDF,SEARCH,AGENT researchNode
     class SLED,MEMORY_DRV storageNode
     class REACT,G6,TIMELINE dashNode
+    class ROUTER,OPENAI_P,ANTHROPIC_P,GEMINI_P,GROQ_P,XAI_P,OLLAMA_P researchNode
 ```
 
 <br/>
@@ -139,6 +151,10 @@ graph TB
 <p align="center">
   <b>AI / LLM</b><br/>
   <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"/>
+  <img src="https://img.shields.io/badge/Anthropic-D4A574?style=for-the-badge&logo=anthropic&logoColor=white" alt="Anthropic"/>
+  <img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini"/>
+  <img src="https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white" alt="Groq"/>
+  <img src="https://img.shields.io/badge/xAI_Grok-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="xAI Grok"/>
   <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white" alt="Ollama"/>
   <img src="https://img.shields.io/badge/Offline_Mode-333333?style=for-the-badge&logo=shield&logoColor=white" alt="Offline"/>
 </p>
@@ -283,6 +299,9 @@ cargo install --path crates/neurograph-cli
 | **PDF Ingestion** — Two-tier parser (fast text + structured academic detection) | **Beta** |
 | **Paper Search** — Multi-source aggregator (arXiv, Semantic Scholar, PubMed) | **Beta** |
 | **RAG Chat** — Context-aware chat with conversation history | **Beta** |
+| **Multi-Provider LLM Router** — Smart routing across 6 providers with task-aware selection | **Beta** |
+| **Chat Agent** — Intent-aware agent loop with 11 intents, tool planning, graph actions | **Beta** |
+| **Settings Dashboard** — Provider management, API key testing, usage tracking | **Beta** |
 | **REST API & Dashboard** — Axum-based server with embedded React SPA | **Beta** |
 | **Universal Embedding Router** — 19 models, 7 providers, TOML config, LRU cache, auto-fallback | **Stable** |
 | **HNSW Vector Index** — O(log n) approximate nearest-neighbor search | **Stable** |
@@ -292,8 +311,8 @@ cargo install --path crates/neurograph-cli
 | **Entity Extraction (Offline)** — Regex-based NER, no API key needed | **Stable** |
 | **MCP Server** — Claude/Cursor integration via Model Context Protocol (stdio) | **Beta** |
 | **CLI** — Full command suite: ingest, query, search, chat, dashboard, bench | **Beta** |
-| **Interactive Dashboard** — React 19 + G6 graph visualization | **Alpha** |
-| **Intent-Aware Query Router** — Classifies queries → semantic/temporal/causal | **Alpha** |
+| **Interactive Dashboard** — React 19 + G6 graph visualization + Chat Panel | **Beta** |
+| **Intent-Aware Query Router** — Classifies queries → semantic/temporal/causal | **Beta** |
 | **Tiered Memory System** — Working / Episodic / Semantic / Procedural layers | **Alpha** |
 | **Intelligent Forgetting** — Importance-based decay with RL-guided retention | **Alpha** |
 | **Graph Branching** — Branch + diff knowledge graphs (multigraph feature flag) | **Alpha** |
@@ -518,7 +537,10 @@ The ablation matrix systematically toggles: hybrid retrieval, cross-encoder rera
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | No | Enables OpenAI embeddings + LLM extraction |
-| `GEMINI_API_KEY` | No | Google Gemini embeddings (incl. Embedding 2 Preview) |
+| `ANTHROPIC_API_KEY` | No | Anthropic Claude models via chat agent |
+| `GEMINI_API_KEY` | No | Google Gemini models + embeddings |
+| `XAI_API_KEY` | No | xAI Grok models via chat agent |
+| `GROQ_API_KEY` | No | Groq ultra-fast inference (Llama, Mixtral) |
 | `COHERE_API_KEY` | No | Cohere embed-v4.0 |
 | `VOYAGE_API_KEY` | No | Voyage AI embeddings (v3 Large, v4 Large/Lite) |
 | `JINA_API_KEY` | No | Jina embeddings (v3, v4) |
@@ -540,10 +562,14 @@ The ablation matrix systematically toggles: hybrid retrieval, cross-encoder rera
 | Provider | Models | Local/Cloud | Status |
 |----------|--------|-------------|--------|
 | OpenAI | GPT-4o, GPT-4o-mini | Cloud | **Working** |
+| Anthropic | Claude Sonnet 4.5, Claude Haiku | Cloud | **Working** |
+| Google Gemini | Gemini 2.5 Flash, Gemini 2.5 Pro | Cloud | **Working** |
+| xAI | Grok-3, Grok-3-mini | Cloud | **Working** |
+| Groq | Llama 3.3-70B, Mixtral (ultra-fast) | Cloud | **Working** |
 | Ollama | Any model via OpenAI-compatible API | Local | **Working** |
 | **None (offline)** | **Regex NER + rule-based** | **Local** | **Default** |
 
-> Anthropic, Gemini, and other providers are planned but not yet integrated.
+> The LLM router supports task-aware routing (e.g., Groq for intent classification, Anthropic for long-form answers), cost-optimized selection, and automatic fallback chains.
 
 </details>
 
@@ -624,14 +650,24 @@ neurograph serve --port 8000
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/v1/health` | GET | Health check |
-| `/api/v1/ingest` | POST | Ingest text/JSON into knowledge graph |
-| `/api/v1/ingest/pdf` | POST | Upload and parse PDF |
+| `/api/v1/papers/ingest` | POST | Ingest PDF into knowledge graph |
+| `/api/v1/papers/ingest-text` | POST | Ingest raw text |
 | `/api/v1/query` | POST | Natural language query |
-| `/api/v1/search` | POST | Search research papers |
-| `/api/v1/chat` | POST | RAG chat with conversation context |
-| `/api/v1/entities` | GET | List/search entities |
+| `/api/v1/search/papers` | POST | Search research papers |
+| `/api/v1/search/entities` | POST | Search entities |
+| `/api/v1/chat` | POST | Simple RAG chat |
+| `/api/v1/chat/agent` | POST | **Full agent loop** — intent classification, tool planning, graph actions |
+| `/api/v1/chat/intent` | POST | Classify intent only (fast, for UI preview) |
+| `/api/v1/chat/sessions` | GET | List chat sessions |
+| `/api/v1/chat/sessions/:id` | GET/DELETE | Get or delete a session |
+| `/api/v1/llm/providers` | GET | List all LLM providers and health status |
+| `/api/v1/llm/test` | POST | Test a provider with an API key |
+| `/api/v1/llm/models` | GET | Full model catalog |
+| `/api/v1/llm/usage` | GET | Token and cost breakdown |
+| `/api/v1/llm/router/config` | GET/POST | Get or update router configuration |
 | `/api/v1/graph` | GET | Get graph data for visualization |
 | `/api/v1/stats` | GET | Graph statistics |
+| `/ws/process` | WS | WebSocket PDF processing pipeline |
 | `/*` | GET | Dashboard SPA (when using `neurograph dashboard`) |
 
 ---
@@ -653,7 +689,17 @@ neurograph serve --port 8000
 
 > See the [issue tracker](https://github.com/neurographai/neurograph/issues) for the full roadmap.
 
-**v0.1.0 (current)**
+**v0.2.0 (current)**
+- [x] Multi-provider LLM router — OpenAI, Anthropic, Gemini, Groq, xAI Grok, Ollama
+- [x] Intent-aware chat agent — 11 intents, tool planning, parallel execution
+- [x] Settings dashboard — provider management, API key testing, usage tracking
+- [x] Chat panel — FAB, evidence drawer, follow-up chips, graph action bridging
+- [x] Agent API endpoints — `/api/v1/chat/agent`, intent preview, session management
+- [x] LLM management API — provider health, model catalog, router config
+- [x] Smart routing — task-aware, cost-optimized, latency-optimized, fallback chains
+- [x] Token tracking — per-prompt-type usage with cost estimation
+
+**v0.1.0**
 - [x] Temporal knowledge graph with bi-temporal facts
 - [x] Hybrid retrieval (semantic + BM25 + graph walk + RRF)
 - [x] PDF ingestion with academic structure detection
@@ -669,14 +715,14 @@ neurograph serve --port 8000
 - [ ] FastEmbed integration (`--features local-embed`)
 - [ ] LongMemEval benchmark baseline numbers
 
-**v0.2.0**
+**v0.3.0**
 - [ ] Python SDK (HTTP client)
 - [ ] TypeScript SDK (HTTP client)
 - [ ] Neo4j driver
 - [ ] CI-tracked performance benchmarks
 - [ ] OCR support for scanned PDFs
 
-**v0.3.0**
+**v0.4.0**
 - [ ] Multi-agent branch/merge protocol
 - [ ] WASM build for browser
 - [ ] Distributed sharding

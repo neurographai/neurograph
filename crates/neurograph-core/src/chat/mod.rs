@@ -3,9 +3,13 @@
 
 //! RAG chat engine for conversational interaction with the knowledge graph.
 
+pub mod agent;
 pub mod context;
 pub mod history;
+pub mod intent;
 pub mod rag;
+pub mod response;
+pub mod tools;
 
 #[cfg(feature = "chat")]
 pub mod repl;

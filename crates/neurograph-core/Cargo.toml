@@ -77,7 +77,7 @@ crossterm = { workspace = true, optional = true }
 colored = { workspace = true, optional = true }
 
 # Optional — REST server
-axum = { workspace = true, optional = true }
+axum = { version = "0.8", features = ["multipart", "ws"], optional = true }
 tower = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 rust-embed = { workspace = true, optional = true }

@@ -3,9 +3,10 @@
 
 //! REST API route definitions and handlers.
 
+use super::embed;
 use super::state::{AppState, PaperEntry};
 use axum::{
-    extract::{Multipart, Path as AxumPath, Query, State},
+    extract::{DefaultBodyLimit, Multipart, Path as AxumPath, Query, State},
     http::StatusCode,
     response::Json,
     routing::{get, post},
@@ -20,6 +21,10 @@ pub fn create_router(state: AppState, _cors_origins: &[String]) -> Router {
         .allow_origin(Any)
         .allow_methods(Any)
         .allow_headers(Any);
+
+    // Merge chat agent + settings sub-routers
+    let chat = super::chat_routes::chat_router();
+    let settings = super::settings::settings_router();
 
     Router::new()
         // Health
@@ -37,11 +42,19 @@ pub fn create_router(state: AppState, _cors_origins: &[String]) -> Router {
         // Knowledge graph
         .route("/api/v1/query", post(query))
         .route("/api/v1/graph", get(get_graph))
-        // Chat
-        .route("/api/v1/chat", post(chat))
+        // Chat (legacy simple endpoint)
+        .route("/api/v1/chat", post(chat_simple))
         .route("/api/v1/chat/history", get(chat_history))
+        // Embed pipeline (merged from neurograph-embed-server)
+        .route("/api/v1/upload", post(embed::upload_pdf_handler))
+        .route("/api/v1/models", get(embed::models_handler))
+        .route("/ws/process", get(embed::ws_upgrade_handler))
+        // Chat agent + settings sub-routers
+        .merge(chat)
+        .merge(settings)
         .with_state(state)
         .layer(cors)
+        .layer(DefaultBodyLimit::max(100 * 1024 * 1024))
 }
 
 // ─── Request / Response Types ──────────────────────────────────
@@ -92,7 +105,7 @@ pub struct ApiResponse<T: Serialize> {
 }
 
 impl<T: Serialize> ApiResponse<T> {
-    fn ok(data: T) -> Json<Self> {
+    pub(crate) fn ok(data: T) -> Json<Self> {
         Json(Self {
             success: true,
             data: Some(data),
@@ -101,7 +114,7 @@ impl<T: Serialize> ApiResponse<T> {
     }
 }
 
-fn api_error(msg: &str) -> (StatusCode, Json<ApiResponse<()>>) {
+pub(crate) fn api_error(msg: &str) -> (StatusCode, Json<ApiResponse<()>>) {
     (
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(ApiResponse {
@@ -312,10 +325,38 @@ async fn query(
         .query(&body.query)
         .await
         .map_err(|e| api_error(&e.to_string()))?;
+
+    // Build reasoning path from entities involved
+    let reasoning_path: Vec<serde_json::Value> = result
+        .entities
+        .iter()
+        .enumerate()
+        .map(|(i, e)| {
+            serde_json::json!({
+                "node": e.name,
+                "relation": if i < result.relationships.len() {
+                    result.relationships[i].relationship_type.clone()
+                } else {
+                    "related".to_string()
+                },
+                "confidence": result.confidence,
+            })
+        })
+        .collect();
+
     Ok(ApiResponse::ok(serde_json::json!({
         "answer": result.answer,
         "confidence": result.confidence,
         "sources": result.entities.iter().map(|e| &e.name).collect::<Vec<_>>(),
+        "entities": serde_json::to_value(&result.entities).unwrap_or_default(),
+        "relationships": serde_json::to_value(&result.relationships).unwrap_or_default(),
+        "reasoning_path": reasoning_path,
+        "cost": {
+            "model": "neurograph-local",
+            "tokens": 0,
+            "usd": result.cost_usd,
+            "latency_ms": result.latency_ms,
+        },
     })))
 }
 
@@ -373,19 +414,50 @@ async fn search_entities(
 
 async fn get_graph(
     State(state): State<AppState>,
+    Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, (StatusCode, Json<ApiResponse<()>>)> {
-    let stats_map = state
+    let limit: usize = params
+        .get("limit")
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(500);
+
+    // Fetch entities
+    let entities = state
         .graph
-        .stats()
+        .driver
+        .list_entities(None, limit)
         .await
         .map_err(|e| api_error(&e.to_string()))?;
+
+    // Fetch relationships for each entity (deduplicate by id)
+    let mut relationships = Vec::new();
+    let mut seen_rel_ids = std::collections::HashSet::new();
+    for entity in &entities {
+        if let Ok(rels) = state.graph.driver.get_entity_relationships(&entity.id).await {
+            for rel in rels {
+                if seen_rel_ids.insert(rel.id.clone()) {
+                    relationships.push(rel);
+                }
+            }
+        }
+    }
+
+    // Fetch communities
+    let communities = state
+        .graph
+        .driver
+        .list_communities(None)
+        .await
+        .unwrap_or_default();
+
     Ok(ApiResponse::ok(serde_json::json!({
-        "nodes": stats_map.get("entities").copied().unwrap_or(0),
-        "edges": stats_map.get("relationships").copied().unwrap_or(0),
+        "entities": serde_json::to_value(&entities).unwrap_or_default(),
+        "relationships": serde_json::to_value(&relationships).unwrap_or_default(),
+        "communities": serde_json::to_value(&communities).unwrap_or_default(),
     })))
 }
 
-async fn chat(
+async fn chat_simple(
     State(state): State<AppState>,
     Json(body): Json<ChatRequest>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, (StatusCode, Json<ApiResponse<()>>)> {

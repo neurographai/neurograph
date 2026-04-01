@@ -143,6 +143,10 @@ impl LlmClient for OpenAiClient {
         )
     }
 
+    fn provider(&self) -> super::traits::LlmProvider {
+        super::traits::LlmProvider::OpenAI
+    }
+
     async fn complete(&self, request: CompletionRequest) -> LlmResult<CompletionResponse> {
         let start = Instant::now();
 

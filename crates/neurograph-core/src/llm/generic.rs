@@ -119,6 +119,15 @@ impl LlmClient for GenericLlmClient {
         )
     }
 
+    fn provider(&self) -> super::traits::LlmProvider {
+        match self.config.provider.as_str() {
+            "groq" => super::traits::LlmProvider::Groq,
+            "xai" | "grok" => super::traits::LlmProvider::XaiGrok,
+            "ollama" => super::traits::LlmProvider::Ollama,
+            _ => super::traits::LlmProvider::Ollama,
+        }
+    }
+
     async fn complete(&self, request: CompletionRequest) -> LlmResult<CompletionResponse> {
         let start = Instant::now();
 

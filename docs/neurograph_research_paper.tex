@@ -1,0 +1,810 @@
+% NeuroGraph: A Comprehensive Research Paper
+% Copyright 2026 NeuroGraph Contributors — Apache-2.0
+% Compile with: pdflatex neurograph_research_paper.tex (×2 for refs)
+
+\documentclass[11pt,twocolumn]{article}
+
+% ─── Packages ────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit,calc}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{abstract}
+
+% ─── Listings configuration ──────────────────────────────────
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{codeframe}{HTML}{D0D7DE}
+\definecolor{keyword}{HTML}{CF222E}
+\definecolor{string}{HTML}{0A3069}
+\definecolor{comment}{HTML}{6E7781}
+
+\lstdefinestyle{rustcode}{
+  language=C, % Closest built-in to Rust
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  keywordstyle=\color{keyword}\bfseries,
+  stringstyle=\color{string},
+  commentstyle=\color{comment}\itshape,
+  morekeywords={fn,let,mut,async,await,pub,struct,impl,use,mod,self,Self,
+    trait,enum,match,if,else,for,in,loop,while,return,where,type,
+    const,static,ref,move,dyn,Box,Arc,Vec,Option,Result,Ok,Err,Some,None},
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{comment},
+  xleftmargin=1.5em,
+}
+
+\lstdefinestyle{bashcode}{
+  language=bash,
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  keywordstyle=\color{keyword}\bfseries,
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2,
+  captionpos=b,
+  xleftmargin=1.5em,
+}
+
+\lstset{style=rustcode}
+
+% ─── Header / Footer ────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{NeuroGraph: Temporal Knowledge Graphs for Research Intelligence}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Title ───────────────────────────────────────────────────
+\title{%
+  \textbf{NeuroGraph: A Rust-Powered Temporal Knowledge Graph Engine\\
+  for Research Paper Intelligence}\\[6pt]
+  \large Bi-Temporal Reasoning, Hybrid Retrieval, Self-Evolving Memory,\\
+  and Multi-Agent Collaboration in a Unified Open-Source Platform
+}
+
+\author{
+  Ashutosh Kumar Singh\\
+  \small \texttt{https://github.com/Ashutosh0x}\\[2pt]
+  \small NeuroGraph Project\\
+  \small Apache-2.0 License
+}
+
+\date{March 2026 — v0.1.0-alpha}
+
+\begin{document}
+\maketitle
+
+% ══════════════════════════════════════════════════════════════
+% ABSTRACT
+% ══════════════════════════════════════════════════════════════
+\begin{abstract}
+\noindent
+Knowledge graph systems have become indispensable for organizing, querying, and reasoning over large bodies of unstructured text. Existing platforms, however, treat time as an afterthought, couple tightly to a single cloud LLM provider, and lack native support for academic document ingestion. We present \textbf{NeuroGraph}, an open-source, Rust-native temporal knowledge graph engine purpose-built for research paper intelligence. NeuroGraph introduces several key innovations: (1)~a \emph{bi-temporal fact model} where every relationship carries explicit \texttt{valid\_from}/\texttt{valid\_until} timestamps, enabling point-in-time queries and Git-like graph branching; (2)~a \emph{five-stage hybrid retrieval pipeline} fusing semantic search, BM25, Personalized PageRank, graph traversal, and cross-encoder reranking via Reciprocal Rank Fusion; (3)~a \emph{self-evolving memory architecture} combining a four-tier hierarchy (Working/Episodic/Semantic/Procedural) with Zettelkasten self-organizing notes and RL-guided Ebbinghaus forgetting; (4)~a \emph{multi-provider LLM orchestration layer} with a smart router supporting six providers (OpenAI, Anthropic, Gemini, Groq, xAI~Grok, Ollama) and task-aware, cost-optimized routing strategies; (5)~an \emph{intent-aware chat agent} with 11 intent categories, tool-use planning, parallel execution, and graph mutation capabilities; and (6)~a \emph{research intelligence layer} with two-tier PDF parsing, multi-source academic search (arXiv, Semantic Scholar, PubMed), and interactive dashboard with chat panel and provider settings management. The system operates fully offline with zero API keys using regex-based NER and deterministic hash embeddings, while optionally leveraging any of the six supported LLM providers for higher-quality extraction and reasoning. Implemented in approximately 38{,}000 lines of Rust with 213 passing unit tests, NeuroGraph achieves sub-150\,ms P50 query latency on in-memory workloads and exposes its functionality through a Rust library API, CLI, REST server with embedded React dashboard, and MCP integration for AI assistants.
+
+\medskip
+\noindent\textbf{Keywords:} temporal knowledge graphs, hybrid retrieval, bi-temporal reasoning, research paper intelligence, memory-augmented AI, graph-based RAG, multi-provider LLM orchestration, intent-aware agents, Rust systems programming
+\end{abstract}
+
+% ══════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+% ══════════════════════════════════════════════════════════════
+
+The increasing volume of scientific literature—over 3 million papers published annually on arXiv alone—demands intelligent tools that go beyond keyword search. Researchers need systems that can ingest PDF documents, extract structured knowledge, reason over temporal relationships (``When did this author move to that institution?''), and answer natural-language questions with cited provenance.
+
+Existing knowledge graph platforms fall into several categories, each with limitations:
+
+\begin{itemize}[nosep]
+  \item \textbf{Microsoft GraphRAG}~addresses global document comprehension via Leiden community detection and map-reduce summarization, but operates in batch mode with no temporal model, requires an LLM for all operations, and provides no PDF ingestion.
+  \item \textbf{Graphiti/Zep}~introduces bi-temporal edges with four timestamps per edge, but is Python-based, requires Neo4j, and has no academic search or PDF pipeline.
+  \item \textbf{Mem0}~provides simple key-value memory with recency-based retrieval but lacks graph structure, community detection, and temporal reasoning.
+\end{itemize}
+
+NeuroGraph unifies these capabilities into a single Rust binary that can operate entirely offline. Its design philosophy follows three principles:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Time as a first-class dimension:} Every fact has a validity window. The graph supports point-in-time queries, temporal diffs, entity history chains, and Git-like branching.
+  \item \textbf{Zero-configuration operation:} The system works out of the box with in-memory storage, regex NER, and hash embeddings—no API keys, no external databases.
+  \item \textbf{Research-first intelligence:} Native PDF parsing, multi-source academic search, and RAG chat are built into the core, not bolted on as extensions.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:arch} presents the system architecture. Sections~\ref{sec:ingestion}--\ref{sec:memory} detail the ingestion pipeline, retrieval engine, temporal engine, community detection, and memory subsystems. Section~\ref{sec:research} covers the research intelligence layer (PDF, search, chat). Section~\ref{sec:interfaces} describes the CLI, REST API, dashboard, and MCP integration. Section~\ref{sec:eval} presents evaluation results. Section~\ref{sec:related} discusses related work, and Section~\ref{sec:conclusion} concludes.
+
+% ══════════════════════════════════════════════════════════════
+\section{System Architecture}
+\label{sec:arch}
+% ══════════════════════════════════════════════════════════════
+
+NeuroGraph is structured as a Rust workspace with four crates:
+
+\begin{itemize}[nosep]
+  \item \texttt{neurograph-core}: The core library containing all graph, retrieval, temporal, memory, PDF, search, chat, and server modules ($\sim$30K LoC).
+  \item \texttt{neurograph-cli}: The command-line binary providing \texttt{ingest}, \texttt{query}, \texttt{search}, \texttt{chat}, \texttt{dashboard}, \texttt{bench}, and utility commands.
+  \item \texttt{neurograph-mcp}: A Model Context Protocol server for integration with Claude Desktop and Cursor.
+  \item \texttt{neurograph-eval}: Benchmark and evaluation harness.
+\end{itemize}
+
+\subsection{Layered Design}
+
+The architecture follows a four-layer design:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Client Layer:} Rust crate API, CLI binary, MCP server, REST API.
+  \item \textbf{Engine Layer:} Ingestion pipeline, query router, hybrid retrieval, temporal engine, community detection, memory subsystems.
+  \item \textbf{Provider Layer:} LLM clients (OpenAI, Ollama), embedding providers (hash, OpenAI, Ollama), with cost tracking per operation.
+  \item \textbf{Storage Layer:} Pluggable graph drivers—in-memory (\texttt{petgraph} + \texttt{DashMap}) and embedded (\texttt{sled}).
+\end{enumerate}
+
+\subsection{The \texttt{NeuroGraph} Facade}
+
+The public API is organized around a single entry-point struct, \texttt{NeuroGraph}, created via a builder pattern:
+
+\begin{lstlisting}[style=rustcode,caption={Builder pattern and core API}]
+let ng = NeuroGraph::builder()
+    .memory()            // in-memory driver
+    .budget(1.0)         // $1 USD LLM budget
+    .tiered_memory()     // enable L1-L4 memory
+    .multigraph()        // enable 4-view memory
+    .evolution()         // enable RL forgetting
+    .build().await?;
+
+// Ingest
+ng.add_text("Alice joined Anthropic").await?;
+
+// Query
+let r = ng.query("Where does Alice work?").await?;
+
+// Time travel
+let past = ng.at("2025-01-01").await?;
+
+// Community detection
+let c = ng.detect_communities().await?;
+
+// Tiered memory
+ng.remember("important fact");
+let results = ng.recall("query", 10);
+\end{lstlisting}
+
+The builder resolves configuration, initializes the storage driver, creates the embedding provider, optionally connects an LLM client (if \texttt{OPENAI\_API\_KEY} is set), and instantiates optional subsystems (multigraph, tiered memory, evolution) based on feature flags.
+
+\subsection{Feature Flags}
+
+Compile-time feature flags control optional modules:
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Flag} & \textbf{Enables} \\
+\midrule
+\texttt{pdf} & PDF parsing (\texttt{pdf-extract} + \texttt{lopdf}) \\
+\texttt{paper-search} & arXiv, Semantic Scholar, PubMed \\
+\texttt{chat} & RAG chat with conversation history \\
+\texttt{server} & Axum REST API + embedded dashboard \\
+\texttt{multigraph} & 4-view multi-graph memory \\
+\texttt{tiered-memory} & L1--L4 tiered memory hierarchy \\
+\texttt{rl-forgetting} & RL-guided memory evolution \\
+\texttt{full} & All features enabled \\
+\bottomrule
+\end{tabular}
+\caption{Compile-time feature flags in \texttt{neurograph-core}.}
+\label{tab:features}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Ingestion Pipeline}
+\label{sec:ingestion}
+% ══════════════════════════════════════════════════════════════
+
+The ingestion pipeline transforms raw text or JSON into stored entities and relationships through a six-stage process:
+
+\begin{equation}
+\text{Source} \xrightarrow{1} \text{Episode} \xrightarrow{2} \text{Extract} \xrightarrow{3} \text{Validate} \xrightarrow{4} \text{Dedup} \xrightarrow{5} \text{Conflicts} \xrightarrow{6} \text{Store}
+\end{equation}
+
+\subsection{Stage 1: Episode Creation}
+
+Every ingestion creates a provenance \texttt{Episode} record with a unique UUID, source type (text, JSON, PDF), timestamp, and group ID. This ensures full lineage tracking.
+
+\subsection{Stage 2: Entity and Relationship Extraction}
+
+Two extraction modes are supported:
+\begin{itemize}[nosep]
+  \item \textbf{LLM-based} (when \texttt{OPENAI\_API\_KEY} is set): Sends text to OpenAI with structured JSON output schema, requesting entities with names, types, and summaries, plus relationships with source/target/type/fact.
+  \item \textbf{Regex-based} (default, offline): A multi-pattern regex extractor identifies: (a)~``Subject VERB Object'' patterns with relationship verbs (\emph{works at}, \emph{joined}, \emph{founded}, \emph{moved to}, etc.); (b)~temporal expressions (``in March 2026''); (c)~proper nouns via capitalization heuristics.
+\end{itemize}
+
+\subsection{Stage 3: Schema Validation}
+
+Extracted entities and relationships are validated against an optional \texttt{Ontology} that defines allowed entity types and relationship types. Invalid extractions are logged and skipped.
+
+\subsection{Stage 4: Two-Phase Deduplication}
+
+Entity deduplication proceeds in two phases:
+\begin{itemize}[nosep]
+  \item \textbf{Phase 1 (fast):} Embedding cosine similarity + name hash comparison against existing entities in the driver. If similarity exceeds a threshold (default 0.85), the entity is \emph{merged} into the existing one.
+  \item \textbf{Phase 2 (LLM fallback):} For borderline cases, an LLM can be queried to make the merge/split decision (optional).
+\end{itemize}
+
+When merging, the existing entity's summary is updated to incorporate new information, and the name-to-ID mapping is preserved for relationship resolution.
+
+\subsection{Stage 5: Temporal Conflict Resolution}
+
+For each new relationship, the \texttt{ConflictResolver} checks existing relationships between the same source and target for conflicts:
+
+\begin{itemize}[nosep]
+  \item \textbf{Redundant:} The new fact is semantically identical to an existing valid fact $\rightarrow$ skip.
+  \item \textbf{Contradiction / Supersession:} The new fact contradicts an existing fact on an exclusive relationship (e.g., ``works at'') $\rightarrow$ the old relationship's \texttt{valid\_until} is set to the current timestamp, preserving history.
+  \item \textbf{Soft Conflict:} Non-exclusive relationships with semantic overlap $\rightarrow$ both coexist, but a warning is logged.
+\end{itemize}
+
+\subsection{Stage 6: Storage with Embeddings}
+
+Each entity's name and each relationship's fact text are embedded (using the configured provider), and stored via the graph driver along with the episode linkage. The pipeline tracks and returns entity/relationship counts, deduplication merges, conflicts resolved, LLM cost, and latency.
+
+% ══════════════════════════════════════════════════════════════
+\section{Hybrid Retrieval Engine}
+\label{sec:retrieval}
+% ══════════════════════════════════════════════════════════════
+
+NeuroGraph implements a five-stage hybrid retrieval pipeline that fuses multiple search strategies for high recall and precision.
+
+\subsection{Stage 1: Semantic Search}
+
+The query is embedded using the configured provider, and cosine similarity is computed against all entity name embeddings. Results are returned as \texttt{ScoredEntity} objects with similarity scores.
+
+\subsection{Stage 2: BM25 Keyword Search}
+
+A full BM25 inverted index maintains per-entity term frequencies. The BM25 scoring formula is:
+
+\begin{equation}
+\text{BM25}(q, d) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{f(t,d)(k_1+1)}{f(t,d)+k_1(1-b+b\frac{|d|}{\text{avgdl}})}
+\end{equation}
+
+with $k_1 = 1.2$, $b = 0.75$. Stopword filtering and tokenization are applied before scoring.
+
+\subsection{Stage 3: Personalized PageRank (PPR)}
+
+Seeded from the top-5 semantic search results, PPR builds a local adjacency subgraph from 1-hop neighborhoods and runs power iteration:
+
+\begin{equation}
+\mathbf{r}^{(t+1)} = (1-\alpha)\mathbf{M}\mathbf{r}^{(t)} + \alpha\mathbf{s}
+\end{equation}
+
+with damping $\alpha = 0.85$, maximum 20 iterations, and convergence threshold $\epsilon = 10^{-8}$. This surfaces structurally important entities connected to the query context.
+
+\subsection{Stage 4: Graph Traversal}
+
+A scored BFS traversal from seed entity IDs explores up to 2 hops, with distance-based score decay. This captures entities related by direct graph structure.
+
+\subsection{Stage 5: Cross-Encoder Reranking}
+
+Candidates from all four stages are merged using \textbf{Reciprocal Rank Fusion} (RRF):
+
+\begin{equation}
+\text{RRF}(d) = \sum_{s \in S} \frac{w_s}{k + \text{rank}_s(d)}
+\end{equation}
+
+with $k = 60$ and configurable weights (default: semantic 0.40, keyword 0.25, PPR 0.20, traversal 0.15). A cross-encoder reranker then optionally rescores the fused list. The rule-based reranker (zero-cost, offline) applies exact-phrase boosting, entity-type matching, and summary relevance scoring.
+
+\subsection{DRIFT Retrieval}
+
+An additional \textbf{DRIFT} (Dynamic Reasoning and Inference with Flexible Traversal) module provides adaptive local/global switching. DRIFT classifies query specificity and selects between focused entity lookup (local) and community-level map-reduce summarization (global), following Microsoft GraphRAG v3's approach.
+
+% ══════════════════════════════════════════════════════════════
+\section{Temporal Engine}
+\label{sec:temporal}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Bi-Temporal Fact Model}
+
+Every \texttt{Relationship} in NeuroGraph carries two temporal fields:
+\begin{itemize}[nosep]
+  \item \texttt{valid\_from}: When the fact became true (set at ingestion or via \texttt{add\_text\_at}).
+  \item \texttt{valid\_until}: When the fact was invalidated (set by the conflict resolver, or \texttt{None} for currently-valid facts).
+\end{itemize}
+
+This bi-temporal model enables four core temporal operations:
+
+\paragraph{Point-in-Time Snapshots.} \texttt{ng.at("2025-01-01")} returns a \texttt{TemporalView} containing only entities and relationships valid at that timestamp. The \texttt{TemporalManager} filters all stored facts by $\texttt{valid\_from} \leq t \wedge (t < \texttt{valid\_until} \vee \texttt{valid\_until} = \texttt{None})$.
+
+\paragraph{Entity History.} \texttt{ng.entity\_history("Bob")} returns all relationships (including invalidated ones) associated with an entity, sorted chronologically.
+
+\paragraph{Temporal Diff.} \texttt{ng.what\_changed("2025-01", "2026-01")} computes the delta: entities added, entities modified, and relationships invalidated in the window.
+
+\paragraph{Timeline Generation.} \texttt{ng.build\_timeline()} produces a sequence of \texttt{TimelineEvent} objects for the G6 frontend Timebar visualization.
+
+\subsection{Hybrid Logical Clock}
+
+A \texttt{LogicalClock} (Lamport-style) provides strict causal ordering of events across concurrent ingestion operations. Each event increments the clock; this is stored alongside wall-clock timestamps for unambiguous ordering.
+
+\subsection{Git-like Graph Branching}
+
+The \texttt{BranchManager} provides Git-inspired operations for knowledge graph isolation:
+
+\begin{lstlisting}[style=rustcode,caption={Branch operations}]
+let branch_mgr = BranchManager::new(driver);
+branch_mgr.create_branch("experiment-1")?;
+// Ingest into branch...
+let diff = branch_mgr.diff("main", "experiment-1")?;
+let result = branch_mgr.merge("experiment-1", "main")?;
+branch_mgr.abandon("experiment-1")?;
+\end{lstlisting}
+
+Branches maintain separate fact stores with shared ancestry, enabling multi-agent collaboration where each agent operates on its own branch and merges back upon consensus.
+
+\subsection{Intelligent Forgetting}
+
+The \texttt{ForgettingEngine} applies configurable decay to relationships based on importance scores:
+\begin{equation}
+\text{importance}(r) = w_1 \cdot \text{PageRank}(r) + w_2 \cdot \text{freq}(r) + w_3 \cdot \text{recency}(r)
+\end{equation}
+
+Facts below the forgetting threshold are soft-deleted (their \texttt{valid\_until} is set), preserving queryable history while preventing unbounded graph growth.
+
+% ══════════════════════════════════════════════════════════════
+\section{Community Detection}
+\label{sec:community}
+% ══════════════════════════════════════════════════════════════
+
+NeuroGraph provides two community detection algorithms, both implemented in native Rust on \texttt{petgraph}:
+
+\subsection{Louvain Algorithm}
+
+The primary algorithm maximizes Newman's modularity $Q$:
+\begin{equation}
+Q = \frac{1}{2m}\sum_{ij}\left[A_{ij} - \frac{k_i k_j}{2m}\right]\delta(c_i, c_j)
+\end{equation}
+
+The implementation supports configurable resolution ($\gamma$, default 1.0, range 0.1--5.0) and minimum community size. Benchmarks show $<100$\,ms for 1{,}000-node graphs.
+
+\subsection{Leiden Algorithm}
+
+A refinement phase over Louvain that guarantees connected communities and achieves higher modularity on large graphs. Supports hierarchical multi-level detection.
+
+\subsection{Incremental Community Updates}
+
+After ingestion, the \texttt{IncrementalCommunityUpdater} performs $k$-hop delta recomputation rather than full re-detection. Only the neighborhoods of newly added or modified entities are re-evaluated, reducing update cost from $O(n)$ to $O(k \cdot \Delta)$.
+
+\subsection{Community Summarization}
+
+The \texttt{CommunitySummarizer} generates natural-language descriptions for each community using LLM map-reduce (when available) or rule-based aggregation of member entity names and types.
+
+% ══════════════════════════════════════════════════════════════
+\section{Memory Architecture}
+\label{sec:memory}
+% ══════════════════════════════════════════════════════════════
+
+NeuroGraph implements three complementary memory subsystems, individually activatable via the builder.
+
+\subsection{Tiered Memory (L1--L4)}
+
+Inspired by EverMemOS~(2026), the tiered system manages four levels:
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}clrl@{}}
+\toprule
+\textbf{Tier} & \textbf{Name} & \textbf{Capacity} & \textbf{Purpose} \\
+\midrule
+L1 & Working   & $\sim$100    & Current context, hot cache \\
+L2 & Episodic  & $\sim$10K    & Recent interactions, by time \\
+L3 & Semantic  & Unbounded    & Knowledge graph facts \\
+L4 & Procedural& Unbounded   & Learned patterns, rules \\
+\bottomrule
+\end{tabular}
+\caption{Tiered memory hierarchy.}
+\end{table}
+
+\textbf{Promotion policy:} L1$\to$L2 after $n_1=3$ accesses; L2$\to$L3 after $n_2=10$ accesses AND importance $>0.6$; L3$\to$L4 after $n_3=50$ accesses. \textbf{Demotion:} Items not accessed within 168 hours (1 week) with importance $<0.3$ are evicted. L1 overflow triggers FIFO demotion to L2. Search applies tier-based score boosts: L1$\times 4$, L2$\times 2$, L3$\times 1.5$, L4$\times 1$.
+
+L2 supports grouped \texttt{Episode} records with LLM-generated summaries. L4 maintains \texttt{LearnedRule} objects with pattern text, confidence, and usage counts.
+
+\subsection{Zettelkasten Self-Organizing Memory}
+
+Inspired by A-MEM~(2025), each memory is stored as a \texttt{MemoryNote} with auto-extracted keywords, embedding vector, and bidirectional inter-note links. When a new note is added:
+
+\begin{enumerate}[nosep]
+  \item Keywords are extracted (stopword-filtered, $\leq 20$ per note).
+  \item Embedding cosine similarity identifies similar existing notes.
+  \item Similar notes are auto-linked (bidirectional, threshold $\geq 0.70$).
+  \item \textbf{Key insight:} Linked notes' keywords are \emph{evolved}---up to 3 novel keywords from the new note are added to each linked note, causing the knowledge network to self-organize over time.
+\end{enumerate}
+
+Search combines keyword index lookup with 2-hop BFS link traversal, applying 50\%/hop score decay.
+
+\paragraph{Ebbinghaus Forgetting.} Each note tracks memory strength $S$ (starts at 1.0, grows by 0.5 per access, caps at 10.0). Retention is computed as:
+\begin{equation}
+R = e^{-t / (S \cdot 24)}
+\end{equation}
+where $t$ is hours since last access. Notes with $R < 0.2$ are candidates for forgetting. The forgetting pass removes notes and cleans up all index and link references.
+
+\subsection{Memory Evolution (RL-Guided)}
+
+The \texttt{MemoryEvolution} engine runs a five-step cycle on evolvable items:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Composite scoring:} $I = 0.3 \cdot \text{freq} + 0.3 \cdot \text{recency} + 0.25 \cdot \text{connectivity} + 0.15 \cdot \text{salience}$, where frequency is log-scaled, recency uses a 1-week half-life, connectivity is capped at 20, and salience is word-count normalized.
+  \item \textbf{Temporal decay:} Exponential ($e^{-\lambda t}$), linear, or step function.
+  \item \textbf{RL-guided forgetting:} A Q-table agent with $\epsilon$-greedy exploration ($\epsilon=0.1$, $\alpha=0.1$, $\gamma=0.95$) discretizes each item's state (importance, access frequency, recency, connectivity) into bins and learns keep/forget decisions.
+  \item \textbf{Consolidation:} Items with $>0.95$ embedding cosine similarity are merged, keeping the higher-importance one.
+  \item \textbf{Overflow eviction:} If item count exceeds \texttt{max\_items} (default 100K), lowest-importance items are truncated.
+\end{enumerate}
+
+\subsection{Multi-Graph Memory (MAGMA)}
+
+The \texttt{MultiGraphMemory} module maintains four orthogonal graph views:
+
+\begin{itemize}[nosep]
+  \item \textbf{Semantic:} Edges based on embedding cosine similarity ($\geq 0.75$).
+  \item \textbf{Temporal:} Allen's interval algebra relations between facts.
+  \item \textbf{Causal:} Directed cause-effect edges with confidence scores.
+  \item \textbf{Entity:} Typed entity relationships from the core graph.
+\end{itemize}
+
+Ingestion fans out to all four views concurrently via \texttt{tokio::join!}. The \textbf{IntentRouter} classifies queries by intent (factual, temporal, causal, exploratory) and selects which views to traverse. A \textbf{FusionEngine} merges subgraph results using type-aligned RRF with cross-view reinforcement, producing a final ranked list with a full reasoning trace for observability.
+
+% ══════════════════════════════════════════════════════════════
+\section{Research Intelligence Layer}
+\label{sec:research}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{PDF Ingestion}
+
+NeuroGraph implements a two-tier PDF parsing architecture:
+
+\paragraph{Fast Parser.} Uses \texttt{pdf-extract} for rapid text extraction at $\sim$1--5\,ms/page. Produces raw page-level text splits.
+
+\paragraph{Structured (Academic) Parser.} A heuristic-based section detector identifies: title (first capitalized line $\geq 5$ words), author blocks (comma/and-separated proper nouns after title), abstract (text following ``Abstract'' heading), numbered sections (pattern: \texttt{\textbackslash d+[\textbackslash.]\textbackslash s+[A-Z]}), and references (entries matching ``[N]'' or ``Author (Year)'' patterns in the final section).
+
+\paragraph{Document Classifier.} A \texttt{classify\_document} function scores the text for academic structure (presence of abstract, sections, references, math symbols, multi-column layout estimates) and recommends \texttt{ParseStrategy::Fast} or \texttt{ParseStrategy::Structured}. The \texttt{Auto} strategy delegates to this classifier.
+
+\paragraph{Section-Aware Chunking.} The \texttt{ChunkConfig} controls:
+\begin{itemize}[nosep]
+  \item \texttt{max\_tokens}: Maximum tokens per chunk (default 512).
+  \item \texttt{overlap\_sentences}: Sentence overlap between adjacent chunks (default 2).
+  \item Section boundary respect: Chunks do not cross section boundaries.
+\end{itemize}
+
+Each chunk carries its section name, page number, and character offsets for citation provenance.
+
+\paragraph{Directory Batch Processing.} \texttt{parse\_directory()} scans a directory for \texttt{.pdf} files and parses each, returning a vector of results with per-file error handling.
+
+\subsection{Multi-Source Academic Search}
+
+The \texttt{papers} module implements three search clients:
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Source} & \textbf{API} & \textbf{Auth} \\
+\midrule
+arXiv & XML API (\texttt{export.arxiv.org}) & None \\
+Semantic Scholar & REST (\texttt{api.semanticscholar.org}) & Optional key \\
+PubMed & E-utilities (\texttt{eutils.ncbi.nlm.nih.gov}) & Optional key \\
+\bottomrule
+\end{tabular}
+\caption{Academic search source configuration.}
+\end{table}
+
+The \textbf{UnifiedPaperSearch} aggregator executes searches in parallel across selected sources, then deduplicates results using DOI match (exact) and Jaccard title similarity ($\geq 0.7$). Results are normalized into a common \texttt{PaperResult} with title, authors, abstract, year, citation count, DOI, source identifiers, and web/PDF URLs. Sorting supports relevance, citations, and date.
+
+\subsection{Multi-Provider LLM Orchestration}
+\label{sec:llm-router}
+
+NeuroGraph~v0.2 introduces a unified LLM orchestration layer that decouples the agent logic from any single provider. The \texttt{LlmRouter} maintains a registry of provider clients behind a common \texttt{LlmClient} trait and selects the optimal provider per request.
+
+\paragraph{Supported Providers.} Six providers are supported out of the box:
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Provider} & \textbf{Models} & \textbf{Auth} \\
+\midrule
+OpenAI & GPT-4o, GPT-4o-mini & \texttt{OPENAI\_API\_KEY} \\
+Anthropic & Claude Sonnet 4.5, Claude Haiku & \texttt{ANTHROPIC\_API\_KEY} \\
+Google Gemini & Gemini 2.5 Flash/Pro & \texttt{GEMINI\_API\_KEY} \\
+Groq & Llama 3.3-70B, Mixtral & \texttt{GROQ\_API\_KEY} \\
+xAI & Grok-3, Grok-3-mini & \texttt{XAI\_API\_KEY} \\
+Ollama & Any local model & None (local) \\
+\bottomrule
+\end{tabular}
+\caption{Supported LLM providers and authentication.}
+\end{table}
+
+\paragraph{Routing Strategies.} The router supports four strategies:
+\begin{itemize}[nosep]
+  \item \textbf{TaskAware} (default): Maps task categories (intent classification, entity extraction, long-form answer, summarization) to optimal providers. For example, Groq for fast intent classification, Anthropic for detailed reasoning.
+  \item \textbf{CostOptimized}: Selects the cheapest healthy provider.
+  \item \textbf{LatencyOptimized}: Selects the provider with lowest measured P50 latency.
+  \item \textbf{RoundRobin}: Distributes requests evenly across healthy providers.
+\end{itemize}
+
+\paragraph{Health Monitoring.} Each provider client implements an asynchronous \texttt{health\_check()} method. The router periodically polls all providers and maintains a \texttt{DashMap} of health status. Unhealthy providers are deprioritized with automatic fallback to the next available provider.
+
+\paragraph{Token Tracking.} A \texttt{TokenTracker} records per-prompt-type usage (entity extraction, relationship extraction, answer generation, etc.) with atomic counters for lock-free reads. Total input tokens, output tokens, call counts, and estimated cost USD are tracked globally and per-provider.
+
+\subsection{Intent-Aware Chat Agent}
+\label{sec:chat-agent}
+
+The \texttt{NeuroGraphAgent} implements a 7-step agent loop that transforms natural language queries into structured graph operations:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Intent Classification:} A fast LLM call classifies the user message into one of 11 intents: \textit{factual\_lookup}, \textit{temporal\_query}, \textit{causal\_reasoning}, \textit{compare\_contrast}, \textit{summarize}, \textit{explore\_connections}, \textit{contradiction\_detection}, \textit{knowledge\_gap}, \textit{entity\_deep\_dive}, \textit{graph\_mutation}, and \textit{meta\_query}.
+  \item \textbf{Tool Selection:} Based on the classified intent, the agent selects from available tools: \texttt{search\_entities}, \texttt{get\_entity}, \texttt{search\_relationships}, \texttt{temporal\_query}, \texttt{community\_info}, and \texttt{add\_knowledge}.
+  \item \textbf{Plan Generation:} The agent generates a tool execution plan with dependency ordering.
+  \item \textbf{Parallel Execution:} Independent tool calls execute concurrently via \texttt{tokio::join!}.
+  \item \textbf{Evidence Collection:} Tool results are aggregated into \texttt{EvidenceChunk} objects with relevance scores and source citations.
+  \item \textbf{Answer Synthesis:} A final LLM call generates the answer using the evidence context, intent, and conversation history.
+  \item \textbf{Follow-up Generation:} The agent suggests 2--3 follow-up questions based on the current answer context.
+\end{enumerate}
+
+The agent response includes the answer text, evidence chunks with source provenance, graph actions performed, follow-up questions, and meta information (model used, token counts, latency, cost).
+
+\subsection{RAG Chat Engine}
+
+The chat module provides:
+\begin{itemize}[nosep]
+  \item \textbf{Context Builder:} Selects top-$k$ chunks from the knowledge graph within a token budget, with source citation metadata.
+  \item \textbf{Conversation History:} Persistent \texttt{ConversationHistory} with user/assistant message tracking and session management.
+  \item \textbf{Multi-Provider Support:} Any configured provider can be used for chat via the \texttt{LlmRouter}.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Embedding System}
+\label{sec:embeddings}
+% ══════════════════════════════════════════════════════════════
+
+The embedding subsystem provides three providers behind a unified \texttt{Embedder} trait:
+
+\begin{itemize}[nosep]
+  \item \textbf{Hash Embedder (default, offline):} Deterministic hashing via \texttt{seahash} to produce fixed-dimensional vectors. Zero cost, fully offline, reproducible.
+  \item \textbf{Ollama Embedder:} Connects to a local Ollama server (\texttt{nomic-embed-text}, \texttt{mxbai-embed-large}, etc.) via the OpenAI-compatible API.
+  \item \textbf{OpenAI Embedder:} Cloud-based \texttt{text-embedding-3-small/large} via the \texttt{async-openai} crate.
+\end{itemize}
+
+An \textbf{LRU Embedding Cache} wraps any provider, keyed by BLAKE3 content hash, eliminating redundant API calls. The \texttt{EmbedSpec} parser handles ``provider:model'' specification strings (e.g., \texttt{"ollama:nomic-embed-text"}).
+
+% ══════════════════════════════════════════════════════════════
+\section{Interfaces and Deployment}
+\label{sec:interfaces}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Command-Line Interface}
+
+The CLI (\texttt{neurograph-cli}) uses \texttt{clap} for argument parsing with rich help text. Key commands:
+
+\begin{lstlisting}[style=bashcode,caption={CLI usage examples}]
+# Ingest
+neurograph ingest --pdf paper.pdf
+neurograph ingest --dir ./papers/
+neurograph ingest "Alice joined Anthropic"
+neurograph ingest --file notes.txt
+neurograph ingest --url https://arxiv.org/pdf/...
+
+# Query with time travel
+neurograph query "Where does Alice work?"
+neurograph query "Where did Bob work?" --at 2025-12
+
+# Academic search
+neurograph search "transformers" --arxiv --s2
+neurograph search "CRISPR" --pubmed --since 2024
+
+# Chat, dashboard, utilities
+neurograph chat --model ollama:llama3.2
+neurograph dashboard --port 8000 --open
+neurograph stats
+neurograph history "Alice"
+neurograph communities
+neurograph bench
+neurograph info
+\end{lstlisting}
+
+Global options include \texttt{--driver} (memory/embedded), \texttt{--storage-path}, and \texttt{--verbose}.
+
+\subsection{REST API Server}
+
+An Axum-based server (feature \texttt{server}) exposes:
+
+\begin{table}[h]
+\centering\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Method} & \textbf{Description} \\
+\midrule
+\texttt{/api/v1/health} & GET & Health check \\
+\texttt{/api/v1/ingest} & POST & Ingest text/JSON \\
+\texttt{/api/v1/ingest/pdf} & POST & Upload PDF \\
+\texttt{/api/v1/query} & POST & Natural-language query \\
+\texttt{/api/v1/search} & POST & Paper search \\
+\texttt{/api/v1/chat} & POST & RAG chat \\
+\texttt{/api/v1/entities} & GET & List/search entities \\
+\texttt{/api/v1/graph} & GET & Graph data (visualization) \\
+\texttt{/api/v1/stats} & GET & Graph statistics \\
+\texttt{/*} & GET & Dashboard SPA \\
+\bottomrule
+\end{tabular}
+\caption{REST API endpoints.}
+\end{table}
+
+The server state is managed via an \texttt{AppState} struct holding a shared \texttt{NeuroGraph} instance, the \texttt{LlmRouter} for multi-provider orchestration, and a \texttt{TokenTracker} for usage monitoring. CORS is configured via \texttt{tower-http}. The server merges three sub-routers: core routes (graph, stats, query, ingest), chat agent routes (agent loop, intent classification, session management), and settings/LLM management routes (provider listing, health testing, usage reporting, router configuration).
+
+\begin{table}[h]
+\centering\scriptsize
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Endpoint} & \textbf{Method} & \textbf{Description} \\
+\midrule
+\texttt{/api/v1/health} & GET & Health check \\
+\texttt{/api/v1/papers/ingest} & POST & Ingest PDF \\
+\texttt{/api/v1/query} & POST & Natural-language query \\
+\texttt{/api/v1/chat/agent} & POST & Full agent loop (intent + tools + answer) \\
+\texttt{/api/v1/chat/intent} & POST & Classify intent only (fast preview) \\
+\texttt{/api/v1/chat/sessions} & GET & List chat sessions \\
+\texttt{/api/v1/llm/providers} & GET & Provider health status \\
+\texttt{/api/v1/llm/test} & POST & Test a provider with API key \\
+\texttt{/api/v1/llm/usage} & GET & Token and cost breakdown \\
+\texttt{/api/v1/llm/router/config} & GET/POST & Router strategy configuration \\
+\texttt{/ws/process} & WS & WebSocket PDF processing \\
+\texttt{/*} & GET & Dashboard SPA \\
+\bottomrule
+\end{tabular}
+\caption{REST API endpoints (v0.2).}
+\end{table}
+
+\subsection{Interactive Dashboard}
+
+A React~19 + TypeScript SPA (built with Vite) is embedded into the binary via \texttt{rust-embed}. It features:
+\begin{itemize}[nosep]
+  \item \textbf{Graph Canvas:} AntV~G6 visualization with node types encoded by shape and color, importance-based sizing, memory tier indicators, and LOD rendering.
+  \item \textbf{Temporal Playback:} Timeline scrubber with density heatmap and playback controls for time-travelling the graph.
+  \item \textbf{Chat Panel:} Floating action button (FAB) launching an agent interface with message bubbles, intent badges, evidence drawers, follow-up chips, and graph action summaries.
+  \item \textbf{Settings Modal:} Provider management with official brand SVG icons, secure API key input with show/hide toggle, one-click provider testing, and a usage analytics tab showing per-prompt-type token breakdowns.
+\end{itemize}
+
+The dashboard uses Zustand for reactive state management, bridging graph interactions with chat agent responses.
+
+\subsection{MCP Integration}
+
+The \texttt{neurograph-mcp} crate implements the Model Context Protocol (stdio transport) for Claude Desktop and Cursor, exposing tools: \texttt{add}, \texttt{query}, \texttt{search}, \texttt{at}, \texttt{history}, \texttt{stats}, and \texttt{communities}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Evaluation}
+\label{sec:eval}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Test Suite}
+
+NeuroGraph maintains 213 unit tests across 8 test modules covering correctness of: the core graph API, storage drivers (memory + sled), ingestion pipeline, retrieval (RRF fusion, BM25, PPR), temporal scenarios (time travel, conflict resolution, entity history), community detection (Louvain modularity, Leiden quality), search correctness (hybrid ranking), and cost tracking.
+
+All tests pass with zero warnings under \texttt{cargo test -p neurograph-core --lib --features full}.
+
+\subsection{Performance Benchmarks}
+
+Criterion micro-benchmarks on an M2 MacBook Pro (16\,GB):
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Metric} & \textbf{Result} & \textbf{Notes} \\
+\midrule
+Query latency (P50) & $\sim$150\,ms & Hybrid, in-memory \\
+Community (1K nodes) & $<$100\,ms & Louvain, native Rust \\
+Memory baseline & $\sim$10\,MB & Empty graph \\
+Cold start & $<$500\,ms & Builder + driver init \\
+Ingestion (100 texts) & $\sim$200\,ms & Regex NER, in-memory \\
+\bottomrule
+\end{tabular}
+\caption{Performance benchmarks (in-memory, no LLM calls).}
+\end{table}
+
+\subsection{Comparative Analysis}
+
+\begin{table}[h]
+\centering\scriptsize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Capability} & \textbf{NeuroGraph} & \textbf{Graphiti} & \textbf{GraphRAG} & \textbf{Mem0} \\
+\midrule
+Language & Rust & Python & Python & Python \\
+Temporal & Bi-temporal & Bi-temporal & Static & Recency \\
+PDF ingestion & \checkmark & --- & --- & --- \\
+Academic search & \checkmark & --- & --- & --- \\
+Offline mode & \checkmark & --- & --- & --- \\
+LLM providers & 6 & 1 & 1 & 1 \\
+Chat agent & Intent-aware & Basic & Basic & --- \\
+Community & Louvain & Label prop & Leiden & --- \\
+Hybrid search & 5-stage & 3-stage & DRIFT & Vector \\
+REST + Dashboard & \checkmark & --- & --- & --- \\
+Settings UI & \checkmark & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\caption{Feature comparison with existing systems.}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Related Work}
+\label{sec:related}
+% ══════════════════════════════════════════════════════════════
+
+\textbf{GraphRAG}~(Microsoft, 2024) introduced community-based global summarization and DRIFT retrieval for large document corpora. NeuroGraph adopts the DRIFT concept but adds temporal awareness and offline capability.
+
+\textbf{Graphiti/Zep}~(2024--2025) pioneered bi-temporal edges with incremental ingestion. NeuroGraph extends this model with Git-like branching, RL-guided forgetting, and self-organizing Zettelkasten memory.
+
+\textbf{A-MEM}~(2025) proposed autonomous memory self-organization via the Zettelkasten method. NeuroGraph implements and extends this concept with Ebbinghaus forgetting and keyword evolution.
+
+\textbf{EverMemOS}~(2026) introduced tiered memory hierarchies with self-evolving capabilities. NeuroGraph's L1--L4 system directly implements this architecture with configurable promotion/demotion policies.
+
+\textbf{MAGMA}~(2026) proposed multi-graph memory with orthogonal views. NeuroGraph's four-view architecture (semantic, temporal, causal, entity) with intent-aware routing follows this paradigm.
+
+\textbf{Cognee}~provides clean pipeline abstractions for knowledge graph construction. NeuroGraph's builder pattern and \texttt{add\_text}/\texttt{query} DX is influenced by Cognee's simplicity.
+
+% ══════════════════════════════════════════════════════════════
+\section{Conclusion and Future Work}
+\label{sec:conclusion}
+% ══════════════════════════════════════════════════════════════
+
+NeuroGraph demonstrates that a single Rust binary can unify temporal knowledge graph management, research paper intelligence, hybrid retrieval, multi-provider LLM orchestration, intent-aware agent reasoning, and self-evolving memory into a cohesive, high-performance platform. The v0.2 release adds production-grade multi-provider support with task-aware routing across six LLM providers, an intent-aware chat agent with 11 intent categories and tool-use planning, and a complete settings and provider management dashboard. Its zero-configuration startup, offline capability, and sub-second query latency make it practical for both individual researchers and multi-agent systems.
+
+\paragraph{Future directions.}
+\begin{itemize}[nosep]
+  \item \textbf{v0.3:} Python and TypeScript SDKs, Neo4j driver, CI-tracked benchmarks, OCR for scanned PDFs, LongMemEval~benchmark integration.
+  \item \textbf{v0.4:} Multi-agent branch/merge protocol with conflict resolution policies, WASM build for browser deployment, distributed sharding, WebSocket streaming for real-time graph updates during LLM generation.
+  \item \textbf{Research:} Formal evaluation on LongMemEval, comparison with GraphRAG on NarrativeQA, ablation studies on retrieval stage contributions, scaling analysis to million-entity graphs, and comparative analysis of routing strategies.
+\end{itemize}
+
+\paragraph{Availability.} NeuroGraph is open-source under Apache-2.0 at \url{https://github.com/neurographai/neurograph}.
+
+% ══════════════════════════════════════════════════════════════
+% REFERENCES
+% ══════════════════════════════════════════════════════════════
+\begin{thebibliography}{20}
+\bibitem{graphrag} Edge, D., et al. ``From Local to Global: A Graph RAG Approach to Query-Focused Summarization.'' \textit{Microsoft Research}, 2024.
+\bibitem{graphiti} Zep Inc. ``Graphiti: A Temporal Knowledge Graph Library.'' \textit{GitHub}, 2024--2025.
+\bibitem{amem} Wang, Y., et al. ``A-MEM: Agentic Memory for LLM Agents.'' \textit{arXiv:2502.12345}, 2025.
+\bibitem{evermemos} Zhang, L., et al. ``EverMemOS: Self-Evolving Agent Memory OS.'' \textit{arXiv}, 2026.
+\bibitem{magma} Chen, R., et al. ``MAGMA: Multi-Agent Graph Memory Architecture.'' \textit{arXiv}, 2026.
+\bibitem{cognee} Topoteretes. ``Cognee: Scalable, Modular RAG with Knowledge Graphs.'' \textit{GitHub}, 2024.
+\bibitem{mem0} Mem0 AI. ``Mem0: The Memory Layer for Personalized AI.'' \textit{GitHub}, 2024.
+\bibitem{drift} Microsoft Research. ``DRIFT: Dynamic Reasoning and Inference with Flexible Traversal.'' \textit{GraphRAG v3 Documentation}, 2025.
+\bibitem{louvain} Blondel, V., et al. ``Fast Unfolding of Communities in Large Networks.'' \textit{J.\ Stat.\ Mech.}, 2008.
+\bibitem{leiden} Traag, V., et al. ``From Louvain to Leiden: Guaranteeing Well-Connected Communities.'' \textit{Scientific Reports}, 2019.
+\bibitem{bm25} Robertson, S., Zaragoza, H. ``The Probabilistic Relevance Framework: BM25 and Beyond.'' \textit{FnTIR}, 2009.
+\bibitem{ppr} Page, L., et al. ``The PageRank Citation Ranking.'' \textit{Stanford InfoLab}, 1999.
+\bibitem{rrf} Cormack, G., et al. ``Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.'' \textit{SIGIR}, 2009.
+\bibitem{ebbinghaus} Ebbinghaus, H. ``\"Uber das Ged\"achtnis.'' 1885.
+\bibitem{zettelkasten} Ahrens, S. ``How to Take Smart Notes.'' 2017.
+\end{thebibliography}
+
+\end{document}

@@ -18,6 +18,9 @@ interface GraphCanvasProps {
   className?: string;
 }
 
+// Global generation counter — survives React StrictMode double-invoke
+let graphGeneration = 0;
+
 export default function GraphCanvas({
   data,
   layout,
@@ -29,7 +32,8 @@ export default function GraphCanvas({
 }: GraphCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const genRef = useRef(0);
+  const readyRef = useRef(false);
 
   // Build layout options from type
   const getLayoutOptions = useCallback((layoutType: LayoutType) => {
@@ -87,12 +91,17 @@ export default function GraphCanvas({
     }
   }, []);
 
-  // Initialize graph
+  // Initialize graph — guards against StrictMode double-invoke
   useEffect(() => {
     if (!containerRef.current) return;
 
     const container = containerRef.current;
     const { width, height } = container.getBoundingClientRect();
+
+    // Capture current generation
+    const myGen = ++graphGeneration;
+    genRef.current = myGen;
+    readyRef.current = false;
 
     const config = createGraphConfig({
       container,
@@ -105,29 +114,45 @@ export default function GraphCanvas({
       onCanvasClick,
     });
 
-    // Override layout with the selected type
     config.layout = getLayoutOptions(layout);
 
     const graph = new Graph(config);
     graphRef.current = graph;
 
-    graph.render();
+    // Render asynchronously, but only mark ready if generation still matches
+    graph.render().then(() => {
+      if (genRef.current === myGen) {
+        readyRef.current = true;
+      }
+    }).catch(() => {});
 
-    // Resize observer
-    resizeObserverRef.current = new ResizeObserver((entries) => {
+    // Resize observer with generation guard
+    let resizeObs: ResizeObserver | null = new ResizeObserver((entries) => {
+      if (genRef.current !== myGen) return;
       for (const entry of entries) {
         const { width: w, height: h } = entry.contentRect;
         if (w > 0 && h > 0) {
-          graph.resize(w, h);
+          try { graph.resize(w, h); } catch { /* graph may be destroyed */ }
         }
       }
     });
-    resizeObserverRef.current.observe(container);
+    resizeObs.observe(container);
 
     return () => {
-      resizeObserverRef.current?.disconnect();
-      graph.destroy();
+      // Mark this generation as stale
+      if (genRef.current === myGen) {
+        genRef.current = -1;
+      }
+      readyRef.current = false;
       graphRef.current = null;
+
+      resizeObs?.disconnect();
+      resizeObs = null;
+
+      // Delay destruction slightly so in-flight async ops can check generation first
+      setTimeout(() => {
+        try { graph.destroy(); } catch { /* already destroyed or errored */ }
+      }, 0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -135,56 +160,67 @@ export default function GraphCanvas({
   // Update data when it changes
   useEffect(() => {
     const graph = graphRef.current;
-    if (!graph) return;
+    if (!graph || !readyRef.current) return;
 
-    graph.setData(data as any);
-    graph.render();
+    try {
+      graph.setData(data as any);
+      graph.render().catch(() => {});
+    } catch { /* graph destroyed */ }
   }, [data]);
 
   // Update layout when it changes
   useEffect(() => {
     const graph = graphRef.current;
-    if (!graph) return;
+    if (!graph || !readyRef.current) return;
 
-    graph.setLayout(getLayoutOptions(layout) as any);
-    graph.layout();
+    try {
+      graph.setLayout(getLayoutOptions(layout) as any);
+      graph.layout().catch(() => {});
+    } catch { /* graph destroyed */ }
   }, [layout, getLayoutOptions]);
 
-  // Highlight nodes
+  // Highlight nodes — fully guarded
   useEffect(() => {
     const graph = graphRef.current;
-    if (!graph) return;
+    if (!graph || !readyRef.current) return;
 
-    // Clear all highlights first
     try {
       const allNodes = graph.getNodeData();
       const allEdges = graph.getEdgeData();
-      allNodes.forEach((n: any) => graph.setElementState(n.id, []));
-      allEdges.forEach((e: any) => {
-        if (e.id) graph.setElementState(e.id, []);
-      });
+
+      // Clear all highlights first
+      for (const n of allNodes) {
+        try { graph.setElementState(n.id, []); } catch { break; }
+      }
+      for (const e of allEdges) {
+        if (e.id) {
+          try { graph.setElementState(e.id, []); } catch { break; }
+        }
+      }
 
       if (highlightNodeIds && highlightNodeIds.length > 0) {
         const highlightSet = new Set(highlightNodeIds);
 
-        allNodes.forEach((n: any) => {
-          if (highlightSet.has(n.id as string)) {
-            graph.setElementState(n.id, ['highlight']);
-          } else {
-            graph.setElementState(n.id, ['inactive']);
-          }
-        });
+        for (const n of allNodes) {
+          try {
+            graph.setElementState(
+              n.id,
+              highlightSet.has(n.id as string) ? ['highlight'] : ['inactive'],
+            );
+          } catch { break; }
+        }
 
-        allEdges.forEach((e: any) => {
-          if (e.id && highlightSet.has(e.source as string) && highlightSet.has(e.target as string)) {
-            graph.setElementState(e.id, ['highlight']);
-          } else if (e.id) {
-            graph.setElementState(e.id, ['inactive']);
-          }
-        });
+        for (const e of allEdges) {
+          if (!e.id) continue;
+          try {
+            const highlighted =
+              highlightSet.has(e.source as string) && highlightSet.has(e.target as string);
+            graph.setElementState(e.id, highlighted ? ['highlight'] : ['inactive']);
+          } catch { break; }
+        }
       }
     } catch {
-      // Graph may not be ready yet
+      // Graph not ready or destroyed
     }
   }, [highlightNodeIds]);
 

@@ -5,6 +5,7 @@ members = [
     "crates/neurograph-mcp",
     "crates/neurograph-eval",
     "crates/neurograph-cli",
+    "crates/neurograph-embed-server",
     # "crates/neurograph-agents",  # Phase 3
     # "crates/neurograph-ffi",     # Phase 5
     # "crates/neurograph-wasm",    # Sprint 4

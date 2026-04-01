@@ -1,0 +1,56 @@
+[package]
+name = "neurograph-embed-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "High-performance Rust embedding server — PDF → Chunk → Embed → Graph via WebSocket"
+
+[[bin]]
+name = "neurograph-embed-server"
+path = "src/main.rs"
+
+[dependencies]
+# Core engine (PDF parsing + embedders)
+neurograph-core = { path = "../neurograph-core", features = ["pdf", "server"] }
+
+# Async runtime
+tokio = { workspace = true }
+futures = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Web server + WebSocket
+axum = { version = "0.8", features = ["multipart", "ws"] }
+tower = { workspace = true }
+tower-http = { workspace = true }
+
+# HTTP client (for Ollama)
+reqwest = { workspace = true }
+
+# Data types
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Hashing (fallback embeddings)
+sha2 = { workspace = true }
+
+# Concurrency
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+
+# Temp files
+tempfile = { workspace = true }
+
+# Regex (concept extraction)
+regex = { workspace = true }

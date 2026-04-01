@@ -214,7 +214,7 @@ pub struct NeuroGraph {
     config: NeuroGraphConfig,
 
     /// Graph storage driver.
-    driver: Arc<dyn GraphDriver>,
+    pub(crate) driver: Arc<dyn GraphDriver>,
 
     /// Embedding provider.
     embedder: Arc<dyn Embedder>,
